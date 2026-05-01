@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { loadEmbedder, embed, cosineSimilarity } from './embeddings';
 import { getAllDocs, putDoc, clearDocs, countDocs, DocRecord } from './db';
 import './App.css';
@@ -417,7 +418,9 @@ export default function App() {
             <div className="modal-meta">
               {selectedDoc.path} &nbsp;·&nbsp; similarité : {selectedDoc.score.toFixed(2)}
             </div>
-            <pre className="modal-body">{selectedDoc.content}</pre>
+            <div className="modal-body">
+              <ReactMarkdown>{selectedDoc.content}</ReactMarkdown>
+            </div>
           </div>
         </div>
       )}
