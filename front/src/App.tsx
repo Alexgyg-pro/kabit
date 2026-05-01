@@ -23,6 +23,7 @@ interface Source {
   path: string;
   title: string;
   score: number;
+  content: string;
 }
 
 interface HistoryEntry {
@@ -48,6 +49,7 @@ export default function App() {
   const [answer, setAnswer] = useState('');
   const [sources, setSources] = useState<Source[]>([]);
   const [isAsking, setIsAsking] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<Source | null>(null);
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyDepth, setHistoryDepth] = useState('0');
@@ -160,7 +162,7 @@ export default function App() {
         return;
       }
 
-      setSources(scored.map((r) => ({ path: r.doc.path, title: r.doc.title, score: r.score })));
+      setSources(scored.map((r) => ({ path: r.doc.path, title: r.doc.title, score: r.score, content: r.doc.content })));
 
       // 3. Contexte
       const contextBlocks = scored
@@ -381,10 +383,11 @@ export default function App() {
               <div className="sources">
                 <div className="sources-label">Sources :</div>
                 {sources.map((s) => (
-                  <div key={s.path} className="source-item">
+                  <div key={s.path} className="source-item source-item--clickable" onClick={() => setSelectedDoc(s)}>
                     <span className="source-icon">📄</span>
                     <span className="source-name">{s.title || s.path}</span>
                     <span className="source-score">similarité : {s.score.toFixed(2)}</span>
+                    <span className="source-open">Voir</span>
                   </div>
                 ))}
               </div>
@@ -402,6 +405,22 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Modale document source */}
+      {selectedDoc && (
+        <div className="modal-overlay" onClick={() => setSelectedDoc(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">📄 {selectedDoc.title}</span>
+              <button className="modal-close" onClick={() => setSelectedDoc(null)}>✕</button>
+            </div>
+            <div className="modal-meta">
+              {selectedDoc.path} &nbsp;·&nbsp; similarité : {selectedDoc.score.toFixed(2)}
+            </div>
+            <pre className="modal-body">{selectedDoc.content}</pre>
+          </div>
+        </div>
+      )}
 
       {/* Admin */}
       <details className="admin-panel">
