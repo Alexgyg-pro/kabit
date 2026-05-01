@@ -280,10 +280,100 @@
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
+  border-radius: 6px;
+  padding: 4px 6px;
+  margin: 0 -6px;
 }
+.source-item--clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.source-item--clickable:hover { background: #2d3748; }
+.source-item--clickable:hover .source-open { opacity: 1; }
 .source-icon { font-size: 0.9rem; }
 .source-name { color: #93c5fd; flex: 1; }
 .source-score { color: #64748b; font-size: 0.78rem; }
+.source-open {
+  font-size: 0.75rem;
+  color: #3b82f6;
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-weight: 600;
+}
+
+/* ── Modale document source ──────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.modal-card {
+  background: #1e2333;
+  border: 1px solid #2d3748;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 780px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #2d3748;
+  gap: 12px;
+}
+
+.modal-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #93c5fd;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.modal-close:hover { color: #e2e8f0; background: #374151; }
+
+.modal-meta {
+  padding: 6px 18px;
+  font-size: 0.75rem;
+  color: #64748b;
+  border-bottom: 1px solid #2d3748;
+}
+
+.modal-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: #cbd5e1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  flex: 1;
+}
 
 /* ── Historique ──────────────────────────────────────────────────────────── */
 .history-summary {
