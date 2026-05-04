@@ -46,6 +46,26 @@
 .btn-theme-toggle:hover,
 .btn-admin-open:hover { color: var(--text-primary); border-color: var(--text-secondary); }
 
+.btn-role-toggle {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-role-toggle:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+.btn-role-toggle--admin {
+  background: #451a03;
+  border-color: #ca8a04;
+  color: var(--code-text);
+  font-weight: 600;
+}
+.btn-role-toggle--admin:hover { background: #4d2107; border-color: #eab308; }
+
 /* ── Status bar ──────────────────────────────────────────────────────────── */
 .status-bar {
   display: flex;

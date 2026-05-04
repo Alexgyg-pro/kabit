@@ -53,6 +53,16 @@ export default function App() {
     setTheme(t);
   }
 
+  const [role, setRole] = useState<'tech' | 'admin'>(() => {
+    return (localStorage.getItem('role') as 'tech' | 'admin') || 'tech';
+  });
+
+  function toggleRole() {
+    const next = role === 'tech' ? 'admin' : 'tech';
+    localStorage.setItem('role', next);
+    setRole(next);
+  }
+
   const [appStatus, setAppStatus] = useState<AppStatus>('init');
   const [statusMsg, setStatusMsg] = useState('Initialisation...');
   const [selectedModel, setSelectedModel] = useState('llama-3.3-70b-versatile');
@@ -320,13 +330,22 @@ export default function App() {
         <h1>CAGPT — Assistant Techniciens Support</h1>
         <div className="header-actions">
           <button
+            className={`btn-role-toggle ${role === 'admin' ? 'btn-role-toggle--admin' : ''}`}
+            onClick={toggleRole}
+            title={role === 'tech' ? 'Passer en mode Administrateur' : 'Passer en mode Technicien'}
+          >
+            {role === 'tech' ? '👤 Technicien' : '🔑 Admin'}
+          </button>
+          <button
             className="btn-theme-toggle"
             onClick={() => toggleTheme(theme === 'dark' ? 'light' : 'dark')}
             title={theme === 'dark' ? 'Passer en thème clair' : 'Passer en thème sombre'}
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          <button className="btn-admin-open" onClick={() => setShowAdmin(true)} title="Administration">⚙</button>
+          {role === 'admin' && (
+            <button className="btn-admin-open" onClick={() => setShowAdmin(true)} title="Administration">⚙</button>
+          )}
         </div>
       </header>
 
