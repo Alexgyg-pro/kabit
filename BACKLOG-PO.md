@@ -33,6 +33,8 @@
 - [ ] La sauvegarde écrit le fichier via le backend et déclenche une réindexation
 - [ ] Un message de confirmation est affiché après sauvegarde
 
+**Note :** cette US couvre l'édition JSON brut. L'évolution vers des formulaires structurés (un formulaire par laptop, application, service) est tracée en US-015.
+
 ---
 
 ### US-014 — Liste de fiches
@@ -49,6 +51,14 @@
 - [ ] Chaque fiche est cliquable et ouvre la modale d'édition existante (US-011)
 - [ ] La liste est scrollable et affiche le titre de chaque fiche
 - [ ] La liste est actualisée après l'ajout d'une nouvelle fiche
+
+### US-015 — Formulaires d'édition du catalogue
+
+**En tant qu'** administrateur,
+**Je veux** éditer le catalogue via des formulaires structurés (un formulaire par laptop, application, service),
+**Afin de** modifier les données sans risque d'erreur de syntaxe JSON et avec une expérience plus guidée.
+
+**Note :** évolution de US-013 (textarea JSON brut). À affiner avant développement.
 
 ---
 
