@@ -21,30 +21,85 @@ const GROQ_MODELS = [
 
 type AppStatus = 'init' | 'loading-model' | 'indexing' | 'ready' | 'error';
 
-// Aplatit un objet JSON en texte naturel pour l'embedding (clé valeur, sans symboles structurels)
-function flattenJson(obj: unknown): string {
-  if (obj === null || obj === undefined) return '';
-  if (typeof obj === 'string') return obj;
-  if (typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
-  if (Array.isArray(obj)) return obj.map(flattenJson).filter(Boolean).join('\n');
-  if (typeof obj === 'object') {
-    return Object.entries(obj as Record<string, unknown>)
-      .map(([k, v]) => `${k.replace(/_/g, ' ')} ${flattenJson(v)}`)
-      .filter(Boolean)
-      .join('\n');
-  }
-  return '';
+interface JsonChunk {
+  id: string;
+  title: string;
+  embeddingText: string;
+  displayContent: string;
 }
 
-// Retourne le texte à embeder selon le type de fichier
-function toEmbeddingText(content: string, filePath: string): string {
-  if (filePath.endsWith('.json')) {
-    try { return flattenJson(JSON.parse(content)).slice(0, 2000); } catch { /* JSON invalide */ }
+// Découpe un catalogue JSON structuré en chunks sémantiques indexables séparément
+function extractCatalogueChunks(content: string, filePath: string): JsonChunk[] {
+  let data: Record<string, unknown>;
+  try { data = JSON.parse(content); } catch { return []; }
+
+  const chunks: JsonChunk[] = [];
+  const co = String(data.entreprise ?? 'FinCorp');
+
+  // Laptops — enrichis de synonymes français pour résoudre le saut sémantique FR/EN
+  const mat = data.materiel as Record<string, Array<Record<string, unknown>>> | undefined;
+  if (mat) {
+    const synos: Record<string, string> = {
+      laptop_ordinaire:    'ordinateur laptop portable standard collaborateur poste travail',
+      laptop_developpeur:  'ordinateur laptop portable développeur ingénieur data technique',
+      laptop_luxe:         'ordinateur laptop portable cadre dirigeant direction premium luxe MacBook Surface',
+    };
+    for (const [cat, syno] of Object.entries(synos)) {
+      for (const lp of mat[cat] ?? []) {
+        const id = String(lp.id);
+        const svcs = ((lp.services_cibles as string[]) ?? []).join(' ');
+        chunks.push({
+          id: `${filePath}#${id}`,
+          title: `${co} — Matériel : ${lp.modele} (${id})`,
+          embeddingText: `${syno} ${id} ${lp.modele} ${lp.processeur} ${lp.ram} ${lp.stockage} ${lp.os} ${lp.profil} services ${svcs}`,
+          displayContent: JSON.stringify(lp, null, 2),
+        });
+      }
+    }
   }
-  return content.slice(0, 2000);
+
+  // Applications métier
+  for (const app of (data.applications_metier as Array<Record<string, unknown>>) ?? []) {
+    const id = String(app.id);
+    const svcs = ((app.services_cibles as string[]) ?? []).join(' ');
+    chunks.push({
+      id: `${filePath}#${id}`,
+      title: `${co} — Application : ${app.nom} (${id})`,
+      embeddingText: `application logiciel outil ${id} ${app.nom} ${app.editeur} ${app.type} ${app.licences} services ${svcs} support ${app.contact_support}`,
+      displayContent: JSON.stringify(app, null, 2),
+    });
+  }
+
+  // Services / départements
+  for (const svc of (data.services as Array<Record<string, unknown>>) ?? []) {
+    const id = String(svc.id);
+    const lps  = ((svc.laptops as string[]) ?? []).join(' ');
+    const apps = ((svc.applications_metier as string[]) ?? []).join(' ');
+    chunks.push({
+      id: `${filePath}#service-${id}`,
+      title: `${co} — Service ${svc.nom} (${id})`,
+      embeddingText: `service département équipe ${id} ${svc.nom} ${svc.description} ordinateurs laptops ${lps} applications ${apps}`,
+      displayContent: JSON.stringify(svc, null, 2),
+    });
+  }
+
+  // Outils support
+  const support = data.support as Record<string, unknown> | undefined;
+  for (const outil of (support?.outils as Array<Record<string, unknown>>) ?? []) {
+    const id = String(outil.id);
+    chunks.push({
+      id: `${filePath}#${id}`,
+      title: `${co} — Outil support : ${outil.nom}`,
+      embeddingText: `outil support informatique console portail administration ${id} ${outil.nom} ${outil.type} ${outil.description} ${outil.acces}`,
+      displayContent: JSON.stringify(outil, null, 2),
+    });
+  }
+
+  return chunks;
 }
 
 interface Source {
+  id: string;
   path: string;
   title: string;
   score: number;
@@ -160,26 +215,44 @@ export default function App() {
       }
 
       await clearDocs();
-      let done = 0;
+      let totalDocs = 0;
 
       for (const file of files) {
-        setStatusMsg(`Indexation : ${done}/${files.length} fichiers — ${file.title}`);
         const contentRes = await fetch(`${BACKEND}/corpus/file?path=${encodeURIComponent(file.path)}`);
         const content = await contentRes.text();
-        const embedding = await embed(toEmbeddingText(content, file.path));
-        const doc: DocRecord = {
-          id: file.path,
-          path: file.path,
-          title: file.title,
-          content,
-          embedding,
-          timestamp: Date.now(),
-        };
-        await putDoc(doc);
-        done++;
-        setDocCount(done);
+
+        if (file.path.endsWith('.json')) {
+          const chunks = extractCatalogueChunks(content, file.path);
+          for (const chunk of chunks) {
+            setStatusMsg(`Indexation — ${chunk.title}`);
+            const embedding = await embed(chunk.embeddingText);
+            await putDoc({
+              id: chunk.id,
+              path: file.path,
+              title: chunk.title,
+              content: chunk.displayContent,
+              embedding,
+              timestamp: Date.now(),
+            });
+            totalDocs++;
+            setDocCount(totalDocs);
+          }
+        } else {
+          setStatusMsg(`Indexation — ${file.title}`);
+          const embedding = await embed(content.slice(0, 2000));
+          await putDoc({
+            id: file.path,
+            path: file.path,
+            title: file.title,
+            content,
+            embedding,
+            timestamp: Date.now(),
+          });
+          totalDocs++;
+          setDocCount(totalDocs);
+        }
       }
-      setStatusMsg(`Cache prêt — ${done} documents indexés`);
+      setStatusMsg(`Cache prêt — ${totalDocs} documents indexés`);
       setAppStatus('ready');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -219,7 +292,7 @@ export default function App() {
         return;
       }
 
-      setSources(scored.map((r) => ({ path: r.doc.path, title: r.doc.title, score: r.score, content: r.doc.content })));
+      setSources(scored.map((r) => ({ id: r.doc.id, path: r.doc.path, title: r.doc.title, score: r.score, content: r.doc.content })));
 
       // 3. Contexte
       const contextBlocks = scored
@@ -513,7 +586,7 @@ export default function App() {
               <div className="sources">
                 <div className="sources-label">Sources :</div>
                 {sources.map((s) => (
-                  <div key={s.path} className="source-item source-item--clickable" onClick={() => openDoc(s)}>
+                  <div key={s.id} className="source-item source-item--clickable" onClick={() => openDoc(s)}>
                     <span className="source-icon">📄</span>
                     <span className="source-name">{s.title || s.path}</span>
                     <span className="source-score">similarité : {s.score.toFixed(2)}</span>
