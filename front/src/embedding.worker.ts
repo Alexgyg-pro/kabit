@@ -12,7 +12,7 @@ self.addEventListener('message', async (event: MessageEvent) => {
 
   if (type === 'load') {
     try {
-      embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { dtype: 'q8' });
+      embedder = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2', { dtype: 'q8' });
       self.postMessage({ type: 'loaded', id });
     } catch (error) {
       self.postMessage({ type: 'error', id, error: String(error) });
