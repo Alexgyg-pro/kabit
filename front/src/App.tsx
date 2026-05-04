@@ -79,6 +79,9 @@ export default function App() {
   const [sources, setSources] = useState<Source[]>([]);
   const [isAsking, setIsAsking] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<Source | null>(null);
+  const [isEditingDoc, setIsEditingDoc] = useState(false);
+  const [editDocContent, setEditDocContent] = useState('');
+  const [editDocMsg, setEditDocMsg] = useState('');
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyDepth, setHistoryDepth] = useState('0');
@@ -311,6 +314,39 @@ export default function App() {
     return data;
   }
 
+  function openDoc(doc: Source) {
+    setSelectedDoc(doc);
+    setIsEditingDoc(false);
+    setEditDocContent('');
+    setEditDocMsg('');
+  }
+
+  function closeDoc() {
+    setSelectedDoc(null);
+    setIsEditingDoc(false);
+    setEditDocContent('');
+    setEditDocMsg('');
+  }
+
+  async function handleSaveDoc() {
+    if (!selectedDoc) return;
+    try {
+      const res = await fetch(`${BACKEND}/corpus/file`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: selectedDoc.path, content: editDocContent }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setSelectedDoc({ ...selectedDoc, content: editDocContent });
+      setIsEditingDoc(false);
+      setNeedsReindex(true);
+      setEditDocMsg('');
+    } catch (e) {
+      setEditDocMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
   async function handleSaveSystemPrompt(content: string): Promise<void> {
     const res = await fetch(`${BACKEND}/system-prompt`, {
       method: 'POST',
@@ -447,7 +483,7 @@ export default function App() {
               <div className="sources">
                 <div className="sources-label">Sources :</div>
                 {sources.map((s) => (
-                  <div key={s.path} className="source-item source-item--clickable" onClick={() => setSelectedDoc(s)}>
+                  <div key={s.path} className="source-item source-item--clickable" onClick={() => openDoc(s)}>
                     <span className="source-icon">📄</span>
                     <span className="source-name">{s.title || s.path}</span>
                     <span className="source-score">similarité : {s.score.toFixed(2)}</span>
@@ -488,18 +524,43 @@ export default function App() {
 
       {/* Modale document source */}
       {selectedDoc && (
-        <div className="modal-overlay" onClick={() => setSelectedDoc(null)}>
+        <div className="modal-overlay" onClick={closeDoc}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <span className="modal-title">📄 {selectedDoc.title}</span>
-              <button className="modal-close" onClick={() => setSelectedDoc(null)}>✕</button>
+              <div className="modal-header-actions">
+                {role === 'admin' && !isEditingDoc && (
+                  <button
+                    className="btn-doc-edit"
+                    onClick={() => { setIsEditingDoc(true); setEditDocContent(selectedDoc.content); }}
+                  >
+                    ✏️ Modifier
+                  </button>
+                )}
+                <button className="modal-close" onClick={closeDoc}>✕</button>
+              </div>
             </div>
             <div className="modal-meta">
               {selectedDoc.path} &nbsp;·&nbsp; similarité : {selectedDoc.score.toFixed(2)}
             </div>
-            <div className="modal-body">
-              <ReactMarkdown>{selectedDoc.content}</ReactMarkdown>
-            </div>
+            {isEditingDoc ? (
+              <div className="modal-edit-body">
+                <textarea
+                  className="doc-edit-textarea"
+                  value={editDocContent}
+                  onChange={(e) => setEditDocContent(e.target.value)}
+                />
+                <div className="modal-edit-footer">
+                  <button className="btn-save" onClick={handleSaveDoc}>Sauvegarder</button>
+                  <button className="btn-doc-cancel" onClick={() => { setIsEditingDoc(false); setEditDocMsg(''); }}>Annuler</button>
+                  {editDocMsg && <span className="admin-msg">{editDocMsg}</span>}
+                </div>
+              </div>
+            ) : (
+              <div className="modal-body">
+                <ReactMarkdown>{selectedDoc.content}</ReactMarkdown>
+              </div>
+            )}
           </div>
         </div>
       )}

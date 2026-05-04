@@ -83,6 +83,26 @@ app.get('/corpus/file', (req, res) => {
   }
 });
 
+// PUT /corpus/file — met à jour le contenu d'un fichier existant
+app.put('/corpus/file', (req, res) => {
+  try {
+    const { path: filePath, content } = req.body;
+    if (!filePath || typeof content !== 'string') {
+      return res.status(400).json({ error: 'path et content requis' });
+    }
+    const safePath = path.basename(filePath);
+    const fullPath = path.join(CORPUS_DIR, safePath);
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({ error: 'Fichier introuvable' });
+    }
+    fs.writeFileSync(fullPath, content, 'utf-8');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erreur PUT /corpus/file:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /corpus/add — ajoute une nouvelle procédure
 app.post('/corpus/add', (req, res) => {
   try {

@@ -443,6 +443,12 @@
   text-overflow: ellipsis;
 }
 
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .modal-close {
   background: transparent;
   border: none;
@@ -454,6 +460,61 @@
   line-height: 1;
 }
 .modal-close:hover { color: var(--text-primary); background: var(--border-subtle); }
+
+.btn-doc-edit {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-doc-edit:hover { border-color: var(--accent); color: var(--accent-link); }
+
+.modal-edit-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  padding: 12px 18px 0;
+  gap: 10px;
+}
+
+.doc-edit-textarea {
+  flex: 1;
+  min-height: 360px;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+.doc-edit-textarea:focus { outline: none; border-color: var(--accent); }
+
+.modal-edit-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 14px;
+}
+
+.btn-doc-cancel {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.btn-doc-cancel:hover { border-color: #dc2626; color: #fca5a5; }
 
 .modal-meta {
   padding: 6px 18px;
