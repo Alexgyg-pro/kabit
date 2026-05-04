@@ -4,7 +4,56 @@
 
 ## À faire
 
-*(vide)*
+### ÉPIQUE — Gestion des rôles
+
+Distinguer le technicien de support et l'administrateur afin de protéger les actions sensibles (corpus, pré-prompt) tout en laissant au technicien la liberté de personnaliser son interface.
+
+Stories enfants : US-009, US-010.
+
+---
+
+### US-010 — Sélection du rôle actif
+
+**En tant que** utilisateur de l'application,
+**Je veux** pouvoir basculer entre le rôle Technicien et le rôle Administrateur d'un simple clic,
+**Afin de** simuler les deux contextes d'utilisation sans mécanisme d'authentification.
+
+**Critères d'acceptance :**
+
+- [ ] Un sélecteur visible dans l'interface permet de choisir entre Technicien et Administrateur
+- [ ] Le changement est immédiat, sans rechargement ni authentification
+- [ ] Le rôle actif est clairement indiqué dans l'interface
+- [ ] Le rôle est persisté entre les sessions (localStorage)
+
+---
+
+### US-009 — Privilèges administrateur sur le corpus
+
+**En tant que** administrateur,
+**Je veux** que l'ajout, la modification et la suppression d'éléments du corpus soient réservés au rôle administrateur,
+**Afin de** limiter les erreurs involontaires de la part des techniciens.
+
+**Critères d'acceptance :**
+
+- [ ] En mode Technicien, les actions d'ajout, modification et suppression du corpus sont masquées ou désactivées
+- [ ] En mode Technicien, la modification du pré-prompt système est masquée ou désactivée
+- [ ] En mode Administrateur, toutes les actions de la modale admin sont accessibles
+- [ ] Le bouton ⚙ admin est visible uniquement en mode Administrateur
+
+---
+
+### US-008 — Déplacement du bouton du thème
+
+**En tant que** technicien de support,
+**Je veux** que le bouton pour choisir le thème soit accessible depuis la page principale,
+**Afin de** pouvoir personnaliser l'interface sans ouvrir la modale d'administration.
+
+**Critères d'acceptance :**
+
+- [ ] Un bouton ou toggle thème est visible dans le header de la page principale
+- [ ] Le bouton n'est plus dans la modale admin
+- [ ] Le changement de thème reste instantané sur toute l'interface
+- [ ] Le choix reste persisté entre les sessions (localStorage)
 
 ---
 
@@ -14,27 +63,62 @@
 
 Regrouper dans une page dédiée les configurations de l'application et l'administration du corpus, afin d'améliorer l'expérience UI et de centraliser les outils de gestion.
 
-Stories enfants : US-003, US-004 (thème), US-004 (pré-prompt éditable).
+Stories enfants : US-003, US-004 (thème), US-005 (pré-prompt éditable).
 
 **Livré le :** 04/05/2026
 
 ---
 
-### ✅ US-003 — Création de la page admin
+### ✅ US-007 — Rendu Markdown dans la zone de réponse
 
 **En tant que** technicien de support,
-**Je veux** une page admin dédiée qui regroupe les outils de configuration et d'administration du corpus,
-**Afin de** disposer d'un espace séparé de l'interface principale, plus clair et extensible.
+**Je veux** que les réponses du modèle soient rendues en Markdown (titres, gras, listes, blocs de code…),
+**Afin d'** améliorer la lisibilité et l'expérience UI.
 
 **Critères d'acceptance :**
 
-- [x] Bouton ⚙ dans le header ouvre la modale d'administration
-- [x] La modale contient une section Corpus (ajout de procédure + réindexer)
-- [x] La modale contient une section Pré-prompt
-- [x] La modale contient une section Préférences
-- [x] Fermeture par croix, clic en dehors, ou bouton Fermer
+- [x] Titres H1/H2/H3 stylés avec hiérarchie visuelle claire
+- [x] Gras, italique, code inline rendus correctement
+- [x] Listes à puces et numérotées mises en forme
+- [x] Blocs de code avec fond sombre et coloration distincte
+- [x] Blockquotes stylés avec bordure latérale
 
-**Livré le :** 04/05/2026 — branche `feature/page-admin-modale`
+**Livré le :** 04/05/2026 — branche `feature/rendu-markdown-reponse` (regroupé avec US-006)
+
+---
+
+### ✅ US-006 — Affichage de la question en tête de réponse
+
+**En tant que** technicien de support,
+**Je veux** que la question que je pose apparaisse en tête de la réponse, avec un style qui la distingue clairement,
+**Afin d'** avoir sous les yeux la question à laquelle j'ai obtenu une réponse.
+
+**Critères d'acceptance :**
+
+- [x] La question s'affiche au-dessus de la réponse dès qu'une réponse est produite
+- [x] Style distinct : fond sombre, bordure bleue à gauche, texte en italique
+- [x] La question affichée correspond bien à celle qui a déclenché la réponse visible
+
+**Livré le :** 04/05/2026 — branche `feature/rendu-markdown-reponse` (regroupé avec US-007)
+
+---
+
+### ✅ US-005 — Pré-prompt éditable depuis l'interface
+
+**En tant que** technicien de support,
+**Je veux** rédiger mon propre pré-prompt depuis l'interface,
+**Afin de** personnaliser les instructions envoyées au modèle sans modifier de fichier manuellement.
+
+**Note :** Le pré-prompt éditable ici modifie directement `system-prompt.md` (instructions de contexte métier). Il se situe en tête de chaque appel, avant les documents RAG et la question.
+
+**Critères d'acceptance :**
+
+- [x] Textarea éditable dans la section Pré-prompt de la modale admin
+- [x] Bouton "Sauvegarder" écrit le contenu dans `system-prompt.md` via le backend
+- [x] Confirmation visuelle après sauvegarde
+- [x] Le nouveau pré-prompt est pris en compte dès la question suivante
+
+**Livré le :** 04/05/2026 — branche `feature/edition-preprompt`
 
 ---
 
@@ -55,56 +139,21 @@ Stories enfants : US-003, US-004 (thème), US-004 (pré-prompt éditable).
 
 ---
 
-### ✅ US-004 — Pré-prompt éditable depuis l'interface
+### ✅ US-003 — Création de la page admin
 
 **En tant que** technicien de support,
-**Je veux** rédiger mon propre pré-prompt depuis l'interface,
-**Afin de** personnaliser les instructions envoyées au modèle sans modifier de fichier manuellement.
-
-**Note :** Le pré-prompt éditable ici modifie directement `system-prompt.md` (instructions de contexte métier). Il se situe en tête de chaque appel, avant les documents RAG et la question.
+**Je veux** une page admin dédiée qui regroupe les outils de configuration et d'administration du corpus,
+**Afin de** disposer d'un espace séparé de l'interface principale, plus clair et extensible.
 
 **Critères d'acceptance :**
 
-- [x] Textarea éditable dans la section Pré-prompt de la modale admin
-- [x] Bouton "Sauvegarder" écrit le contenu dans `system-prompt.md` via le backend
-- [x] Confirmation visuelle après sauvegarde
-- [x] Le nouveau pré-prompt est pris en compte dès la question suivante
+- [x] Bouton ⚙ dans le header ouvre la modale d'administration
+- [x] La modale contient une section Corpus (ajout de procédure + réindexer)
+- [x] La modale contient une section Pré-prompt
+- [x] La modale contient une section Préférences
+- [x] Fermeture par croix, clic en dehors, ou bouton Fermer
 
-**Livré le :** 04/05/2026 — branche `feature/edition-preprompt`
-
----
-
-### ✅ US-005 — Affichage de la question en tête de réponse
-
-**En tant que** technicien de support,
-**Je veux** que la question que je pose apparaisse en tête de la réponse, avec un style qui la distingue clairement,
-**Afin d'** avoir sous les yeux la question à laquelle j'ai obtenu une réponse.
-
-**Critères d'acceptance :**
-
-- [x] La question s'affiche au-dessus de la réponse dès qu'une réponse est produite
-- [x] Style distinct : fond sombre, bordure bleue à gauche, texte en italique
-- [x] La question affichée correspond bien à celle qui a déclenché la réponse visible
-
-**Livré le :** 04/05/2026 — branche `feature/rendu-markdown-reponse` (regroupé avec US-006)
-
----
-
-### ✅ US-006 — Rendu Markdown dans la zone de réponse
-
-**En tant que** technicien de support,
-**Je veux** que les réponses du modèle soient rendues en Markdown (titres, gras, listes, blocs de code…),
-**Afin d'** améliorer la lisibilité et l'expérience UI.
-
-**Critères d'acceptance :**
-
-- [x] Titres H1/H2/H3 stylés avec hiérarchie visuelle claire
-- [x] Gras, italique, code inline rendus correctement
-- [x] Listes à puces et numérotées mises en forme
-- [x] Blocs de code avec fond sombre et coloration distincte
-- [x] Blockquotes stylés avec bordure latérale
-
-**Livré le :** 04/05/2026 — branche `feature/rendu-markdown-reponse` (regroupé avec US-005)
+**Livré le :** 04/05/2026 — branche `feature/page-admin-modale`
 
 ---
 
