@@ -14,6 +14,7 @@ Stories enfants : US-009, US-010.
 
 ### US-010 — Sélection du rôle actif
 
+
 **En tant que** utilisateur de l'application,
 **Je veux** pouvoir basculer entre le rôle Technicien et le rôle Administrateur d'un simple clic,
 **Afin de** simuler les deux contextes d'utilisation sans mécanisme d'authentification.
@@ -42,7 +43,9 @@ Stories enfants : US-009, US-010.
 
 ---
 
-### US-008 — Déplacement du bouton du thème
+## Terminé
+
+### ✅ US-008 — Déplacement du bouton du thème
 
 **En tant que** technicien de support,
 **Je veux** que le bouton pour choisir le thème soit accessible depuis la page principale,
@@ -50,14 +53,14 @@ Stories enfants : US-009, US-010.
 
 **Critères d'acceptance :**
 
-- [ ] Un bouton ou toggle thème est visible dans le header de la page principale
-- [ ] Le bouton n'est plus dans la modale admin
-- [ ] Le changement de thème reste instantané sur toute l'interface
-- [ ] Le choix reste persisté entre les sessions (localStorage)
+- [x] Un bouton ou toggle thème est visible dans le header de la page principale
+- [x] Le bouton n'est plus dans la modale admin
+- [x] Le changement de thème reste instantané sur toute l'interface
+- [x] Le choix reste persisté entre les sessions (localStorage)
+
+**Livré le :** 04/05/2026 — branche `feature/theme-header`
 
 ---
-
-## Terminé
 
 ### ✅ ÉPIQUE — Page admin
 
