@@ -24,9 +24,16 @@
   letter-spacing: 0.02em;
 }
 
-.btn-admin-open {
+.header-actions {
   position: absolute;
   right: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-theme-toggle,
+.btn-admin-open {
   background: transparent;
   border: 1px solid var(--border-subtle);
   color: var(--text-muted);
@@ -36,6 +43,7 @@
   cursor: pointer;
   transition: color 0.2s, border-color 0.2s;
 }
+.btn-theme-toggle:hover,
 .btn-admin-open:hover { color: var(--text-primary); border-color: var(--text-secondary); }
 
 /* ── Status bar ──────────────────────────────────────────────────────────── */
