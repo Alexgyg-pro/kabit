@@ -289,6 +289,17 @@ export default function App() {
     return data;
   }
 
+  async function handleSaveSystemPrompt(content: string): Promise<void> {
+    const res = await fetch(`${BACKEND}/system-prompt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    setSystemPrompt(content);
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="app">
@@ -460,6 +471,7 @@ export default function App() {
           needsReindex={needsReindex}
           onReindex={() => { runIndexing(); setShowAdmin(false); }}
           onSave={handleAdminSave}
+          onSaveSystemPrompt={handleSaveSystemPrompt}
           onClose={() => setShowAdmin(false)}
         />
       )}

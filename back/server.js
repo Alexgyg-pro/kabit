@@ -20,7 +20,22 @@ app.get('/system-prompt', (req, res) => {
     const content = fs.readFileSync(SYSTEM_PROMPT_PATH, 'utf-8');
     res.type('text/plain').send(content);
   } catch (err) {
-    console.error('Erreur /system-prompt:', err);
+    console.error('Erreur GET /system-prompt:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /system-prompt — sauvegarde le contenu dans system-prompt.md
+app.post('/system-prompt', (req, res) => {
+  try {
+    const { content } = req.body;
+    if (typeof content !== 'string') {
+      return res.status(400).json({ error: 'Champ content requis' });
+    }
+    fs.writeFileSync(SYSTEM_PROMPT_PATH, content, 'utf-8');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erreur POST /system-prompt:', err);
     res.status(500).json({ error: err.message });
   }
 });

@@ -5,26 +5,46 @@ interface AdminModalProps {
   needsReindex: boolean;
   onReindex: () => void;
   onSave: (title: string, content: string) => Promise<{ path: string }>;
+  onSaveSystemPrompt: (content: string) => Promise<void>;
   onClose: () => void;
 }
 
-export default function AdminModal({ systemPrompt, needsReindex, onReindex, onSave, onClose }: AdminModalProps) {
+export default function AdminModal({
+  systemPrompt,
+  needsReindex,
+  onReindex,
+  onSave,
+  onSaveSystemPrompt,
+  onClose,
+}: AdminModalProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [msg, setMsg] = useState('');
+  const [corpusMsg, setCorpusMsg] = useState('');
 
-  async function handleSave() {
+  const [editablePrompt, setEditablePrompt] = useState(systemPrompt);
+  const [promptMsg, setPromptMsg] = useState('');
+
+  async function handleSaveCorpus() {
     if (!title.trim() || !content.trim()) {
-      setMsg('Titre et contenu requis');
+      setCorpusMsg('Titre et contenu requis');
       return;
     }
     try {
       const data = await onSave(title, content);
-      setMsg(`✅ Fichier créé : ${data.path}`);
+      setCorpusMsg(`✅ Fichier créé : ${data.path}`);
       setTitle('');
       setContent('');
     } catch (e) {
-      setMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
+      setCorpusMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  async function handleSavePrompt() {
+    try {
+      await onSaveSystemPrompt(editablePrompt);
+      setPromptMsg('✅ Pré-prompt sauvegardé');
+    } catch (e) {
+      setPromptMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
@@ -72,8 +92,8 @@ export default function AdminModal({ systemPrompt, needsReindex, onReindex, onSa
                 rows={8}
               />
               <div className="admin-save-row">
-                <button className="btn-save" onClick={handleSave}>Sauvegarder</button>
-                {msg && <span className="admin-msg">{msg}</span>}
+                <button className="btn-save" onClick={handleSaveCorpus}>Sauvegarder</button>
+                {corpusMsg && <span className="admin-msg">{corpusMsg}</span>}
               </div>
             </div>
           </section>
@@ -85,13 +105,16 @@ export default function AdminModal({ systemPrompt, needsReindex, onReindex, onSa
               Instructions système envoyées au modèle avant chaque échange (fichier <code>system-prompt.md</code>).
             </p>
             <textarea
-              className="admin-textarea admin-textarea--disabled"
-              rows={4}
-              value={systemPrompt}
-              disabled
-              placeholder="Aucun pré-prompt chargé"
+              className="admin-textarea"
+              rows={5}
+              value={editablePrompt}
+              onChange={(e) => setEditablePrompt(e.target.value)}
+              placeholder="Entrez les instructions système..."
             />
-            <p className="admin-coming-soon">✏️ Édition depuis l'interface — disponible prochainement</p>
+            <div className="admin-save-row">
+              <button className="btn-save" onClick={handleSavePrompt}>Sauvegarder</button>
+              {promptMsg && <span className="admin-msg">{promptMsg}</span>}
+            </div>
           </section>
 
         </div>
