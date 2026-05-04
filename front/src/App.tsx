@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { loadEmbedder, embed, cosineSimilarity } from './embeddings';
 import { getAllDocs, putDoc, clearDocs, countDocs, DocRecord } from './db';
+import AdminModal from './AdminModal';
 import './App.css';
 
 const BACKEND = 'http://localhost:3001';
@@ -45,6 +46,7 @@ export default function App() {
   const [selectedModel, setSelectedModel] = useState('llama-3.3-70b-versatile');
   const [docCount, setDocCount] = useState(0);
   const [needsReindex, setNeedsReindex] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
 
   const [systemPrompt, setSystemPrompt] = useState('');
   const [showSystemPrompt, setShowSystemPrompt] = useState(false);
@@ -59,10 +61,6 @@ export default function App() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyDepth, setHistoryDepth] = useState('0');
 
-  // Admin panel
-  const [adminTitle, setAdminTitle] = useState('');
-  const [adminContent, setAdminContent] = useState('');
-  const [adminMsg, setAdminMsg] = useState('');
 
   const abortRef = useRef<AbortController | null>(null);
   const answerRef = useRef<HTMLDivElement>(null);
@@ -279,27 +277,16 @@ export default function App() {
   }
 
   // ── Admin ─────────────────────────────────────────────────────────────────
-  async function handleAdminSave() {
-    if (!adminTitle.trim() || !adminContent.trim()) {
-      setAdminMsg('Titre et contenu requis');
-      return;
-    }
-    try {
-      const res = await fetch(`${BACKEND}/corpus/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: adminTitle, content: adminContent }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setAdminMsg(`Fichier créé : ${data.path}`);
-      setAdminTitle('');
-      setAdminContent('');
-      setNeedsReindex(true);
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setAdminMsg(`Erreur : ${msg}`);
-    }
+  async function handleAdminSave(title: string, content: string): Promise<{ path: string }> {
+    const res = await fetch(`${BACKEND}/corpus/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, content }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    setNeedsReindex(true);
+    return data;
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -308,6 +295,7 @@ export default function App() {
       {/* Header */}
       <header className="header">
         <h1>CAGPT — Assistant Techniciens Support</h1>
+        <button className="btn-admin-open" onClick={() => setShowAdmin(true)} title="Administration">⚙</button>
       </header>
 
       {/* Bannières de statut */}
@@ -465,35 +453,16 @@ export default function App() {
         </div>
       )}
 
-      {/* Admin */}
-      <details className="admin-panel">
-        <summary>Administration — Ajouter une procédure</summary>
-        <div className="admin-content">
-          <input
-            type="text"
-            placeholder="Titre de la procédure"
-            value={adminTitle}
-            onChange={(e) => setAdminTitle(e.target.value)}
-            className="admin-input"
-          />
-          <textarea
-            placeholder="Contenu en markdown..."
-            value={adminContent}
-            onChange={(e) => setAdminContent(e.target.value)}
-            className="admin-textarea"
-            rows={8}
-          />
-          <div className="admin-footer">
-            <button className="btn-save" onClick={handleAdminSave}>Sauvegarder</button>
-            {adminMsg && <span className="admin-msg">{adminMsg}</span>}
-          </div>
-          {needsReindex && (
-            <div className="reindex-notice">
-              Nouveau fichier ajouté — cliquez sur "Réindexer" pour l'intégrer au cache.
-            </div>
-          )}
-        </div>
-      </details>
+      {/* Modale admin */}
+      {showAdmin && (
+        <AdminModal
+          systemPrompt={systemPrompt}
+          needsReindex={needsReindex}
+          onReindex={() => { runIndexing(); setShowAdmin(false); }}
+          onSave={handleAdminSave}
+          onClose={() => setShowAdmin(false)}
+        />
+      )}
     </div>
   );
 }
