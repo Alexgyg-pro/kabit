@@ -4,16 +4,43 @@
 
 ## À faire
 
-### ÉPIQUE — Gestion des rôles
+*(vide)*
+
+---
+
+## Terminé
+
+### ✅ US-011 — Édition d'une fiche corpus depuis la modale
+
+**En tant que** administrateur,
+**Je veux** pouvoir modifier le contenu d'une fiche corpus directement depuis sa modale de visualisation,
+**Afin de** corriger ou enrichir une procédure sans quitter l'interface.
+
+**Critères d'acceptance :**
+
+- [x] En mode Administrateur, un bouton "Modifier" est visible dans l'en-tête de la modale source
+- [x] Le mode édition affiche le contenu brut en markdown (non rendu) dans un textarea
+- [x] Les boutons "Sauvegarder" et "Annuler" sont disponibles en mode édition
+- [x] La sauvegarde écrit le fichier modifié via le backend
+- [x] La visualisation est mise à jour immédiatement après sauvegarde
+- [x] Une réindexation est déclenchée après sauvegarde
+- [x] Le bouton "Modifier" est absent en mode Technicien
+
+**Livré le :** 04/05/2026 — branche `feature/edition-fiche-corpus`
+
+---
+
+### ✅ ÉPIQUE — Gestion des rôles
 
 Distinguer le technicien de support et l'administrateur afin de protéger les actions sensibles (corpus, pré-prompt) tout en laissant au technicien la liberté de personnaliser son interface.
 
 Stories enfants : US-009, US-010.
 
+**Livré le :** 04/05/2026
+
 ---
 
-### US-010 — Sélection du rôle actif
-
+### ✅ US-010 — Sélection du rôle actif
 
 **En tant que** utilisateur de l'application,
 **Je veux** pouvoir basculer entre le rôle Technicien et le rôle Administrateur d'un simple clic,
@@ -21,14 +48,16 @@ Stories enfants : US-009, US-010.
 
 **Critères d'acceptance :**
 
-- [ ] Un sélecteur visible dans l'interface permet de choisir entre Technicien et Administrateur
-- [ ] Le changement est immédiat, sans rechargement ni authentification
-- [ ] Le rôle actif est clairement indiqué dans l'interface
-- [ ] Le rôle est persisté entre les sessions (localStorage)
+- [x] Un sélecteur visible dans l'interface permet de choisir entre Technicien et Administrateur
+- [x] Le changement est immédiat, sans rechargement ni authentification
+- [x] Le rôle actif est clairement indiqué dans l'interface
+- [x] Le rôle est persisté entre les sessions (localStorage)
+
+**Livré le :** 04/05/2026 — branche `feature/gestion-roles`
 
 ---
 
-### US-009 — Privilèges administrateur sur le corpus
+### ✅ US-009 — Privilèges administrateur sur le corpus
 
 **En tant que** administrateur,
 **Je veux** que l'ajout, la modification et la suppression d'éléments du corpus soient réservés au rôle administrateur,
@@ -36,14 +65,14 @@ Stories enfants : US-009, US-010.
 
 **Critères d'acceptance :**
 
-- [ ] En mode Technicien, les actions d'ajout, modification et suppression du corpus sont masquées ou désactivées
-- [ ] En mode Technicien, la modification du pré-prompt système est masquée ou désactivée
-- [ ] En mode Administrateur, toutes les actions de la modale admin sont accessibles
-- [ ] Le bouton ⚙ admin est visible uniquement en mode Administrateur
+- [x] En mode Technicien, les actions d'ajout, modification et suppression du corpus sont masquées ou désactivées
+- [x] En mode Technicien, la modification du pré-prompt système est masquée ou désactivée
+- [x] En mode Administrateur, toutes les actions de la modale admin sont accessibles
+- [x] Le bouton ⚙ admin est visible uniquement en mode Administrateur
+
+**Livré le :** 04/05/2026 — branche `feature/gestion-roles`
 
 ---
-
-## Terminé
 
 ### ✅ US-008 — Déplacement du bouton du thème
 
