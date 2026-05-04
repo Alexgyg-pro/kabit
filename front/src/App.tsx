@@ -47,6 +47,7 @@ export default function App() {
   const [needsReindex, setNeedsReindex] = useState(false);
 
   const [systemPrompt, setSystemPrompt] = useState('');
+  const [showSystemPrompt, setShowSystemPrompt] = useState(false);
 
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
@@ -309,7 +310,14 @@ export default function App() {
 
       {/* Bannières de statut */}
       <div className="status-bar">
-        <StatusBadge hasKey={!!GROQ_API_KEY} docCount={docCount} appStatus={appStatus} statusMsg={statusMsg} />
+        <StatusBadge
+          hasKey={!!GROQ_API_KEY}
+          docCount={docCount}
+          appStatus={appStatus}
+          statusMsg={statusMsg}
+          systemPrompt={systemPrompt}
+          onShowSystemPrompt={() => setShowSystemPrompt(true)}
+        />
 
         <div className="controls">
           <label>
@@ -415,6 +423,22 @@ export default function App() {
         )}
       </main>
 
+      {/* Modale pré-prompt */}
+      {showSystemPrompt && (
+        <div className="modal-overlay" onClick={() => setShowSystemPrompt(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">Pré-prompt actif</span>
+              <button className="modal-close" onClick={() => setShowSystemPrompt(false)}>✕</button>
+            </div>
+            <div className="modal-meta">system-prompt.md</div>
+            <div className="modal-body">
+              <pre className="system-prompt-content">{systemPrompt.trim()}</pre>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modale document source */}
       {selectedDoc && (
         <div className="modal-overlay" onClick={() => setSelectedDoc(null)}>
@@ -472,11 +496,15 @@ function StatusBadge({
   docCount,
   appStatus,
   statusMsg,
+  systemPrompt,
+  onShowSystemPrompt,
 }: {
   hasKey: boolean;
   docCount: number;
   appStatus: AppStatus;
   statusMsg: string;
+  systemPrompt: string;
+  onShowSystemPrompt: () => void;
 }) {
   const groqBadge = hasKey
     ? { cls: 'badge-green', label: '✅ Groq prêt' }
@@ -495,6 +523,10 @@ function StatusBadge({
     <div className="badges">
       <span className={`badge ${groqBadge.cls}`}>{groqBadge.label}</span>
       <span className={`badge ${cacheBadge.cls}`}>{cacheBadge.label}</span>
+      {systemPrompt
+        ? <span className="badge badge-green badge--clickable" onClick={onShowSystemPrompt}>📋 Pré-prompt actif</span>
+        : <span className="badge badge-grey">📋 Pas de pré-prompt</span>
+      }
     </div>
   );
 }
