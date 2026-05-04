@@ -26,12 +26,12 @@ function flattenJson(obj: unknown): string {
   if (obj === null || obj === undefined) return '';
   if (typeof obj === 'string') return obj;
   if (typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
-  if (Array.isArray(obj)) return obj.map(flattenJson).filter(Boolean).join(' ');
+  if (Array.isArray(obj)) return obj.map(flattenJson).filter(Boolean).join('\n');
   if (typeof obj === 'object') {
     return Object.entries(obj as Record<string, unknown>)
-      .map(([k, v]) => `${k} ${flattenJson(v)}`)
+      .map(([k, v]) => `${k.replace(/_/g, ' ')} ${flattenJson(v)}`)
       .filter(Boolean)
-      .join(' ');
+      .join('\n');
   }
   return '';
 }
@@ -224,8 +224,12 @@ export default function App() {
       // 3. Contexte
       const contextBlocks = scored
         .map((r, i) => {
-          const label = r.doc.path.endsWith('.json') ? 'DONNÉES STRUCTURÉES' : 'PROCÉDURE';
-          return `--- [${label}] Document ${i + 1} : ${r.doc.title} ---\n${r.doc.content.slice(0, 1500)}`;
+          const isJson = r.doc.path.endsWith('.json');
+          const label = isJson ? 'DONNÉES STRUCTURÉES' : 'PROCÉDURE';
+          const body = isJson
+            ? toEmbeddingText(r.doc.content, r.doc.path)
+            : r.doc.content.slice(0, 1500);
+          return `--- [${label}] Document ${i + 1} : ${r.doc.title} ---\n${body}`;
         })
         .join('\n\n');
 
