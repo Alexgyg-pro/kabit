@@ -226,9 +226,9 @@ export default function App() {
         .map((r, i) => {
           const isJson = r.doc.path.endsWith('.json');
           const label = isJson ? 'DONNÉES STRUCTURÉES' : 'PROCÉDURE';
-          const body = isJson
-            ? toEmbeddingText(r.doc.content, r.doc.path)
-            : r.doc.content.slice(0, 1500);
+          // JSON : contenu brut intégral — le LLM lit nativement la structure
+          // MD  : tronqué à 1500 chars (texte narratif, potentiellement long)
+          const body = isJson ? r.doc.content : r.doc.content.slice(0, 1500);
           return `--- [${label}] Document ${i + 1} : ${r.doc.title} ---\n${body}`;
         })
         .join('\n\n');
