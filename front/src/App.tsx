@@ -318,7 +318,16 @@ export default function App() {
       {/* Header */}
       <header className="header">
         <h1>CAGPT — Assistant Techniciens Support</h1>
-        <button className="btn-admin-open" onClick={() => setShowAdmin(true)} title="Administration">⚙</button>
+        <div className="header-actions">
+          <button
+            className="btn-theme-toggle"
+            onClick={() => toggleTheme(theme === 'dark' ? 'light' : 'dark')}
+            title={theme === 'dark' ? 'Passer en thème clair' : 'Passer en thème sombre'}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+          <button className="btn-admin-open" onClick={() => setShowAdmin(true)} title="Administration">⚙</button>
+        </div>
       </header>
 
       {/* Bannières de statut */}
@@ -481,11 +490,9 @@ export default function App() {
         <AdminModal
           systemPrompt={systemPrompt}
           needsReindex={needsReindex}
-          theme={theme}
           onReindex={() => { runIndexing(); setShowAdmin(false); }}
           onSave={handleAdminSave}
           onSaveSystemPrompt={handleSaveSystemPrompt}
-          onToggleTheme={toggleTheme}
           onClose={() => setShowAdmin(false)}
         />
       )}

@@ -3,22 +3,18 @@ import { useState } from 'react';
 interface AdminModalProps {
   systemPrompt: string;
   needsReindex: boolean;
-  theme: 'dark' | 'light';
   onReindex: () => void;
   onSave: (title: string, content: string) => Promise<{ path: string }>;
   onSaveSystemPrompt: (content: string) => Promise<void>;
-  onToggleTheme: (t: 'dark' | 'light') => void;
   onClose: () => void;
 }
 
 export default function AdminModal({
   systemPrompt,
   needsReindex,
-  theme,
   onReindex,
   onSave,
   onSaveSystemPrompt,
-  onToggleTheme,
   onClose,
 }: AdminModalProps) {
   const [title, setTitle] = useState('');
@@ -118,28 +114,6 @@ export default function AdminModal({
             <div className="admin-save-row">
               <button className="btn-save" onClick={handleSavePrompt}>Sauvegarder</button>
               {promptMsg && <span className="admin-msg">{promptMsg}</span>}
-            </div>
-          </section>
-
-          {/* ── Section Préférences ──────────────────────────────────── */}
-          <section className="admin-section">
-            <h2 className="admin-section-title">Préférences</h2>
-            <div className="admin-theme-row">
-              <span className="admin-label">Thème</span>
-              <div className="theme-toggle">
-                <button
-                  className={`theme-btn ${theme === 'dark' ? 'theme-btn--active' : ''}`}
-                  onClick={() => onToggleTheme('dark')}
-                >
-                  🌙 Sombre
-                </button>
-                <button
-                  className={`theme-btn ${theme === 'light' ? 'theme-btn--active' : ''}`}
-                  onClick={() => onToggleTheme('light')}
-                >
-                  ☀️ Clair
-                </button>
-              </div>
             </div>
           </section>
 
