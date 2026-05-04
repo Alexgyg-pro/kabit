@@ -46,6 +46,8 @@ export default function App() {
   const [docCount, setDocCount] = useState(0);
   const [needsReindex, setNeedsReindex] = useState(false);
 
+  const [systemPrompt, setSystemPrompt] = useState('');
+
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [sources, setSources] = useState<Source[]>([]);
@@ -78,6 +80,11 @@ export default function App() {
       setStatusMsg('Erreur chargement modèle embedding');
       return;
     }
+
+    try {
+      const spRes = await fetch(`${BACKEND}/system-prompt`);
+      if (spRes.ok) setSystemPrompt(await spRes.text());
+    } catch { /* backend absent, on continue sans pré-prompt */ }
 
     const count = await countDocs();
     if (count > 0) {
@@ -176,6 +183,7 @@ export default function App() {
         {
           role: 'system',
           content:
+            (systemPrompt ? systemPrompt.trim() + '\n\n' : '') +
             `Tu es un assistant pour techniciens support informatique chez FinCorp Solutions.\n` +
             `Les documents ci-dessous sont les procédures internes pertinentes. Utilise-les pour répondre.\n` +
             `Si un document est partiellement pertinent, exploite les informations disponibles pour aider le technicien.\n` +

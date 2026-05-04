@@ -6,9 +6,24 @@ const path = require('path');
 const app = express();
 const PORT = 3001;
 const CORPUS_DIR = path.join(__dirname, '..', 'corpus');
+const SYSTEM_PROMPT_PATH = path.join(__dirname, '..', 'system-prompt.md');
 
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
+
+// GET /system-prompt — retourne le contenu de system-prompt.md (vide si absent)
+app.get('/system-prompt', (req, res) => {
+  try {
+    if (!fs.existsSync(SYSTEM_PROMPT_PATH)) {
+      return res.type('text/plain').send('');
+    }
+    const content = fs.readFileSync(SYSTEM_PROMPT_PATH, 'utf-8');
+    res.type('text/plain').send(content);
+  } catch (err) {
+    console.error('Erreur /system-prompt:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // GET /corpus/list — liste tous les fichiers .md et .json du corpus
 app.get('/corpus/list', (req, res) => {
