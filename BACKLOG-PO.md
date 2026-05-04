@@ -30,23 +30,44 @@ Stories enfants : US-003, US-004.
 
 ---
 
-### US-005 - Affichage de la question en tête de réponse
+
+---
+
+## Terminé
+
+### ✅ US-005 — Affichage de la question en tête de réponse
 
 **En tant que** technicien de support,
 **Je veux** que la question que je pose apparaisse en tête de la réponse, avec un style qui la distingue clairement,
 **Afin d'** avoir sous les yeux la question à laquelle j'ai obtenu une réponse.
 
+**Critères d'acceptance :**
+
+- [x] La question s'affiche au-dessus de la réponse dès qu'une réponse est produite
+- [x] Style distinct : fond sombre, bordure bleue à gauche, texte en italique
+- [x] La question affichée correspond bien à celle qui a déclenché la réponse visible
+
+**Livré le :** 04/05/2026 — branche `feature/rendu-markdown-reponse` (regroupé avec US-006)
+
 ---
 
-### US-006 - Rendu Markdown dans la zone de réponse
+### ✅ US-006 — Rendu Markdown dans la zone de réponse
 
 **En tant que** technicien de support,
 **Je veux** que les réponses du modèle soient rendues en Markdown (titres, gras, listes, blocs de code…),
 **Afin d'** améliorer la lisibilité et l'expérience UI.
 
----
+**Critères d'acceptance :**
 
-## Terminé
+- [x] Titres H1/H2/H3 stylés avec hiérarchie visuelle claire
+- [x] Gras, italique, code inline rendus correctement
+- [x] Listes à puces et numérotées mises en forme
+- [x] Blocs de code avec fond sombre et coloration distincte
+- [x] Blockquotes stylés avec bordure latérale
+
+**Livré le :** 04/05/2026 — branche `feature/rendu-markdown-reponse` (regroupé avec US-005)
+
+---
 
 ### ✅ US-001 — Afficher le contenu d'un document source
 
