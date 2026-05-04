@@ -28,64 +28,96 @@ interface JsonChunk {
   displayContent: string;
 }
 
-// Découpe un catalogue JSON structuré en chunks sémantiques indexables séparément
+// Découpe un catalogue JSON structuré en chunks sémantiques dénormalisés (chaque chunk est autonome)
 function extractCatalogueChunks(content: string, filePath: string): JsonChunk[] {
-  let data: Record<string, unknown>;
+  type Obj = Record<string, unknown>;
+  let data: Obj;
   try { data = JSON.parse(content); } catch { return []; }
 
   const chunks: JsonChunk[] = [];
   const co = String(data.entreprise ?? 'FinCorp');
 
-  // Laptops — enrichis de synonymes français pour résoudre le saut sémantique FR/EN
-  const mat = data.materiel as Record<string, Array<Record<string, unknown>>> | undefined;
+  // ── Index lookups pour dénormalisation ─────────────────────────────────────
+  const laptopById: Record<string, Obj> = {};
+  const appById: Record<string, Obj> = {};
+  const serviceById: Record<string, Obj> = {};
+
+  const mat = data.materiel as Record<string, Obj[]> | undefined;
+  if (mat) {
+    for (const list of Object.values(mat))
+      for (const lp of list) laptopById[String(lp.id)] = lp;
+  }
+  for (const app of (data.applications_metier as Obj[]) ?? [])
+    appById[String(app.id)] = app;
+  for (const svc of (data.services as Obj[]) ?? [])
+    serviceById[String(svc.id)] = svc;
+
+  // ── Chunks laptops ──────────────────────────────────────────────────────────
   if (mat) {
     const synos: Record<string, string> = {
-      laptop_ordinaire:    'ordinateur laptop portable standard collaborateur poste travail',
-      laptop_developpeur:  'ordinateur laptop portable développeur ingénieur data technique',
-      laptop_luxe:         'ordinateur laptop portable cadre dirigeant direction premium luxe MacBook Surface',
+      laptop_ordinaire:   'ordinateur laptop portable standard collaborateur poste travail',
+      laptop_developpeur: 'ordinateur laptop portable développeur ingénieur data technique',
+      laptop_luxe:        'ordinateur laptop portable cadre dirigeant direction premium luxe MacBook Surface',
     };
     for (const [cat, syno] of Object.entries(synos)) {
       for (const lp of mat[cat] ?? []) {
         const id = String(lp.id);
-        const svcs = ((lp.services_cibles as string[]) ?? []).join(' ');
+        // Noms de services en clair pour l'embedding (pas juste les IDs)
+        const svcNames = ((lp.services_cibles as string[]) ?? [])
+          .map(s => serviceById[s] ? `${s} ${serviceById[s].nom}` : s).join(' ');
         chunks.push({
           id: `${filePath}#${id}`,
           title: `${co} — Matériel : ${lp.modele} (${id})`,
-          embeddingText: `${syno} ${id} ${lp.modele} ${lp.processeur} ${lp.ram} ${lp.stockage} ${lp.os} ${lp.profil} services ${svcs}`,
+          embeddingText: `${syno} ${id} ${lp.modele} ${lp.processeur} ${lp.ram} ${lp.stockage} ${lp.os} ${lp.profil} services ${svcNames}`,
           displayContent: JSON.stringify(lp, null, 2),
         });
       }
     }
   }
 
-  // Applications métier
-  for (const app of (data.applications_metier as Array<Record<string, unknown>>) ?? []) {
+  // ── Chunks applications métier ──────────────────────────────────────────────
+  for (const app of (data.applications_metier as Obj[]) ?? []) {
     const id = String(app.id);
-    const svcs = ((app.services_cibles as string[]) ?? []).join(' ');
+    // Noms de services en clair
+    const svcNames = ((app.services_cibles as string[]) ?? [])
+      .map(s => serviceById[s] ? `${s} ${serviceById[s].nom}` : s).join(' ');
     chunks.push({
       id: `${filePath}#${id}`,
       title: `${co} — Application : ${app.nom} (${id})`,
-      embeddingText: `application logiciel outil ${id} ${app.nom} ${app.editeur} ${app.type} ${app.licences} services ${svcs} support ${app.contact_support}`,
+      embeddingText: `application logiciel outil ${id} ${app.nom} ${app.editeur} ${app.type} ${app.licences} services ${svcNames} support ${app.contact_support}`,
       displayContent: JSON.stringify(app, null, 2),
     });
   }
 
-  // Services / départements
-  for (const svc of (data.services as Array<Record<string, unknown>>) ?? []) {
+  // ── Chunks services (dénormalisés : contient les détails laptops + apps) ────
+  for (const svc of (data.services as Obj[]) ?? []) {
     const id = String(svc.id);
-    const lps  = ((svc.laptops as string[]) ?? []).join(' ');
-    const apps = ((svc.applications_metier as string[]) ?? []).join(' ');
+    // Remplace les IDs par des objets { id, modele, profil }
+    const laptopsDetail = ((svc.laptops as string[]) ?? []).map(lid => {
+      const lp = laptopById[lid];
+      return lp ? { id: lid, modele: lp.modele, profil: lp.profil } : lid;
+    });
+    // Remplace les IDs par des objets { id, nom, type }
+    const appsDetail = ((svc.applications_metier as string[]) ?? []).map(aid => {
+      const a = appById[aid];
+      return a ? { id: aid, nom: a.nom, type: a.type } : aid;
+    });
+    const svcDenorm = { ...svc, laptops: laptopsDetail, applications_metier: appsDetail };
+
+    // Embedding enrichi avec les noms réels
+    const lpNames = laptopsDetail.map(l => typeof l === 'object' ? `${(l as Obj).modele} ${(l as Obj).profil}` : l).join(' ');
+    const appNames = appsDetail.map(a => typeof a === 'object' ? String((a as Obj).nom) : a).join(' ');
     chunks.push({
       id: `${filePath}#service-${id}`,
       title: `${co} — Service ${svc.nom} (${id})`,
-      embeddingText: `service département équipe ${id} ${svc.nom} ${svc.description} ordinateurs laptops ${lps} applications ${apps}`,
-      displayContent: JSON.stringify(svc, null, 2),
+      embeddingText: `service département équipe ${id} ${svc.nom} ${svc.description} ordinateurs laptops ${lpNames} applications logiciels ${appNames}`,
+      displayContent: JSON.stringify(svcDenorm, null, 2),
     });
   }
 
-  // Outils support
+  // ── Chunks outils support ───────────────────────────────────────────────────
   const support = data.support as Record<string, unknown> | undefined;
-  for (const outil of (support?.outils as Array<Record<string, unknown>>) ?? []) {
+  for (const outil of (support?.outils as Obj[]) ?? []) {
     const id = String(outil.id);
     chunks.push({
       id: `${filePath}#${id}`,
