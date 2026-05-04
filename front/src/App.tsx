@@ -194,6 +194,7 @@ export default function App() {
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyDepth, setHistoryDepth] = useState('0');
+  const [copied, setCopied] = useState(false);
 
 
   const abortRef = useRef<AbortController | null>(null);
@@ -428,6 +429,14 @@ export default function App() {
     abortRef.current?.abort();
   }
 
+  function handleCopy() {
+    const text = `Q : ${askedQuestion}\n\nR : ${answer}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -605,7 +614,14 @@ export default function App() {
             {askedQuestion && (
               <div className="asked-question">{askedQuestion}</div>
             )}
-            <div className="answer-label">Réponse{isAsking && <span className="cursor-blink"> ▊</span>} :</div>
+            <div className="answer-label">
+              <span>Réponse{isAsking && <span className="cursor-blink"> ▊</span>} :</span>
+              {answer && !isAsking && (
+                <button className="btn-copy" onClick={handleCopy}>
+                  {copied ? '✓ Copié' : 'Copier'}
+                </button>
+              )}
+            </div>
             <div className="answer-content" ref={answerRef}>
               {answer
                 ? <ReactMarkdown>{answer}</ReactMarkdown>
