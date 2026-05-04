@@ -41,6 +41,18 @@ const HISTORY_OPTIONS = [
 ];
 
 export default function App() {
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = (localStorage.getItem('theme') as 'dark' | 'light') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    return saved;
+  });
+
+  function toggleTheme(t: 'dark' | 'light') {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t);
+    setTheme(t);
+  }
+
   const [appStatus, setAppStatus] = useState<AppStatus>('init');
   const [statusMsg, setStatusMsg] = useState('Initialisation...');
   const [selectedModel, setSelectedModel] = useState('llama-3.3-70b-versatile');
@@ -469,9 +481,11 @@ export default function App() {
         <AdminModal
           systemPrompt={systemPrompt}
           needsReindex={needsReindex}
+          theme={theme}
           onReindex={() => { runIndexing(); setShowAdmin(false); }}
           onSave={handleAdminSave}
           onSaveSystemPrompt={handleSaveSystemPrompt}
+          onToggleTheme={toggleTheme}
           onClose={() => setShowAdmin(false)}
         />
       )}
