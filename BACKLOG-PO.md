@@ -10,6 +10,27 @@
 
 ## Terminé
 
+### ✅ BUG-001 — Le RAG ne répondait pas aux questions portant sur le catalogue JSON
+
+**Symptôme :**
+L'application répondait correctement aux questions basées sur les fiches `.md` mais était incapable d'exploiter `catalogue-it.json`. Les questions sur le matériel informatique ou les applications métier produisaient des réponses génériques sans aucune donnée du catalogue.
+
+**Causes identifiées :**
+1. **Indexation monolithique** — le JSON était traité comme un seul document (un vecteur unique moyennant toute la sémantique du fichier), ce qui diluait le signal et rendait le matching impossible pour des questions précises.
+2. **Modèle d'embedding non adapté** — `all-MiniLM-L6-v2` est principalement anglophone. Il produisait des scores aberrants en français (le chunk "Trading" matchait mieux que "Marketing" pour une question sur le marketing).
+3. **Fichier parasite** — `catalogue-it.bak.json` (ancienne version incomplète) était indexé en parallèle et prenait les slots TOP_K au détriment du bon fichier.
+
+**Corrections apportées :**
+- Chunking JSON : `catalogue-it.json` est maintenant découpé en ~65 chunks sémantiques indépendants (un par laptop, application, service, outil support)
+- Dénormalisation : les chunks de services embarquent les détails complets des laptops et applications associés (noms, modèles, types — pas seulement des IDs)
+- Enrichissement sémantique : les textes d'embedding des laptops incluent des synonymes français ("ordinateur laptop portable…") pour améliorer le matching
+- Remplacement du modèle d'embedding par `paraphrase-multilingual-MiniLM-L12-v2` (50+ langues)
+- Suppression de `catalogue-it.bak.json` et du modèle Mixtral décommissionné chez Groq
+
+**Livré le :** 05/05/2026 — branche `feature/json-chunking`
+
+---
+
 ### ✅ US-011 — Édition d'une fiche corpus depuis la modale
 
 **En tant que** administrateur,
