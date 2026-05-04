@@ -21,6 +21,29 @@ const GROQ_MODELS = [
 
 type AppStatus = 'init' | 'loading-model' | 'indexing' | 'ready' | 'error';
 
+// Aplatit un objet JSON en texte naturel pour l'embedding (clé valeur, sans symboles structurels)
+function flattenJson(obj: unknown): string {
+  if (obj === null || obj === undefined) return '';
+  if (typeof obj === 'string') return obj;
+  if (typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
+  if (Array.isArray(obj)) return obj.map(flattenJson).filter(Boolean).join(' ');
+  if (typeof obj === 'object') {
+    return Object.entries(obj as Record<string, unknown>)
+      .map(([k, v]) => `${k} ${flattenJson(v)}`)
+      .filter(Boolean)
+      .join(' ');
+  }
+  return '';
+}
+
+// Retourne le texte à embeder selon le type de fichier
+function toEmbeddingText(content: string, filePath: string): string {
+  if (filePath.endsWith('.json')) {
+    try { return flattenJson(JSON.parse(content)).slice(0, 2000); } catch { /* JSON invalide */ }
+  }
+  return content.slice(0, 2000);
+}
+
 interface Source {
   path: string;
   title: string;
@@ -143,7 +166,7 @@ export default function App() {
         setStatusMsg(`Indexation : ${done}/${files.length} fichiers — ${file.title}`);
         const contentRes = await fetch(`${BACKEND}/corpus/file?path=${encodeURIComponent(file.path)}`);
         const content = await contentRes.text();
-        const embedding = await embed(content.slice(0, 2000));
+        const embedding = await embed(toEmbeddingText(content, file.path));
         const doc: DocRecord = {
           id: file.path,
           path: file.path,
@@ -200,7 +223,10 @@ export default function App() {
 
       // 3. Contexte
       const contextBlocks = scored
-        .map((r, i) => `--- Document ${i + 1} : ${r.doc.title} ---\n${r.doc.content.slice(0, 1500)}`)
+        .map((r, i) => {
+          const label = r.doc.path.endsWith('.json') ? 'DONNÉES STRUCTURÉES' : 'PROCÉDURE';
+          return `--- [${label}] Document ${i + 1} : ${r.doc.title} ---\n${r.doc.content.slice(0, 1500)}`;
+        })
         .join('\n\n');
 
       // 4. Historique + messages Groq (format chat)
