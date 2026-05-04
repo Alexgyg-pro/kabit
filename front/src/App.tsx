@@ -50,6 +50,7 @@ export default function App() {
   const [showSystemPrompt, setShowSystemPrompt] = useState(false);
 
   const [question, setQuestion] = useState('');
+  const [askedQuestion, setAskedQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [sources, setSources] = useState<Source[]>([]);
   const [isAsking, setIsAsking] = useState(false);
@@ -150,6 +151,7 @@ export default function App() {
     }
 
     setIsAsking(true);
+    setAskedQuestion(question);
     setAnswer('');
     setSources([]);
 
@@ -391,9 +393,15 @@ export default function App() {
         {/* Réponse */}
         {(answer || isAsking) && (
           <div className="answer-area">
+            {askedQuestion && (
+              <div className="asked-question">{askedQuestion}</div>
+            )}
             <div className="answer-label">Réponse{isAsking && <span className="cursor-blink"> ▊</span>} :</div>
             <div className="answer-content" ref={answerRef}>
-              {answer || <span className="thinking">Recherche dans le corpus...</span>}
+              {answer
+                ? <ReactMarkdown>{answer}</ReactMarkdown>
+                : <span className="thinking">Recherche dans le corpus...</span>
+              }
             </div>
 
             {sources.length > 0 && (
