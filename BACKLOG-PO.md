@@ -4,53 +4,45 @@
 
 ## À faire
 
-### US-003 - Création de page admin
+### ÉPIQUE — Page admin
+
+Regrouper dans une page dédiée les configurations de l'application et l'administration du corpus, afin d'améliorer l'expérience UI et de centraliser les outils de gestion.
+
+Stories enfants : US-003, US-004.
+
+---
+
+### US-003 - Création de la page admin
 
 **En tant que** technicien de support,
-**Je veux** une page admin sur lesquels vont s'ajouter certaines configurations et administration du corpus.
-**Afin de** améliorer l'expérience UI et alimenter le corpus.
+**Je veux** une page admin dédiée qui regroupe les outils de configuration et d'administration du corpus,
+**Afin de** disposer d'un espace séparé de l'interface principale, plus clair et extensible.
+
+---
 
 ### US-004 - Thème clair ou sombre au choix
 
-**En tant que** technicien de support,
-**Je veux** pouvoir choisir dans la page admin entre un thème sombre (celui existant) et un clair.
-**Afin de** rendre l'expérience UI confortable au technicien selon ses goûts.
-
-### US-005 - Persistence de la question
+> Dépend de US-003 (la page admin doit exister pour accueillir ce paramètre).
 
 **En tant que** technicien de support,
-**Je veux** que la question que je pose soit en ête de la réponse, avec un style qui permet de bien la distinguer de la réponse
-**Afin de** d'avoir sous les yeux la question à laquelle j'ai obtenu une réponse.
+**Je veux** pouvoir choisir dans la page admin entre un thème sombre (celui existant) et un clair,
+**Afin de** rendre l'expérience UI confortable selon mes préférences.
 
-### US-006 - Style dans la réponse
+---
 
-**En tant que** technicien de support,
-**Je veux** que les styles soient pris en compte dans les réponses
-**Afin de** d'améliorer l'expérience UI du technicien.
-
-### US-002 - Pré-prompt métier
+### US-005 - Affichage de la question en tête de réponse
 
 **En tant que** technicien de support,
-**Je veux** que l'assistant connaisse mon contexte de travail dès le départ
-**Afin de** recevoir des réponses directement adaptées à la résolution d'incidents,
-sans avoir à me présenter à chaque conversation.
+**Je veux** que la question que je pose apparaisse en tête de la réponse, avec un style qui la distingue clairement,
+**Afin d'** avoir sous les yeux la question à laquelle j'ai obtenu une réponse.
 
-**Critères d'acceptance :**
+---
 
-1. Fichier de configuration
-   Un fichier system-prompt.md existe à la racine du projet et contient les instructions destinées au modèle.
-2. Injection automatique
-   Le contenu de system-prompt.md est envoyé à chaque appel Groq en tant que message system, avant tout message de
-   l'utilisateur.
-3. Transparence pour l'utilisateur
-   Le technicien ne voit pas le contenu du pré-prompt dans l'interface — il est injecté silencieusement.
-4. Dégradation gracieuse
-   Si le fichier system-prompt.md est absent, l'application continue de fonctionner normalement, sans erreur.
-5. Prise en compte sans redémarrage du frontend
-   Toute modification du fichier est prise en compte au prochain envoi de message, sans avoir à relancer le frontend.
-6. Non versionné si sensible
-   Si le pré-prompt contient des informations internes (nom de l'entreprise, contraintes métier), le fichier peut être
-   exclu du dépôt via .gitignore. Un fichier system-prompt.example.md est alors fourni comme modèle.
+### US-006 - Rendu Markdown dans la zone de réponse
+
+**En tant que** technicien de support,
+**Je veux** que les réponses du modèle soient rendues en Markdown (titres, gras, listes, blocs de code…),
+**Afin d'** améliorer la lisibilité et l'expérience UI.
 
 ---
 
@@ -58,8 +50,8 @@ sans avoir à me présenter à chaque conversation.
 
 ### ✅ US-001 — Afficher le contenu d'un document source
 
-**En tant que** technicien,  
-**Je veux** cliquer sur une source affichée sous la réponse  
+**En tant que** technicien,
+**Je veux** cliquer sur une source affichée sous la réponse
 **Afin de** lire le document original et vérifier les étapes de la procédure.
 
 **Critères d'acceptance :**
@@ -70,3 +62,23 @@ sans avoir à me présenter à chaque conversation.
 - [x] Les scores de similarité restent visibles sur la liste des sources
 
 **Livré le :** 01/05/2026 — branche `feature/affichage-document-source` + `feature/rendu-markdown-modal`
+
+---
+
+### ✅ US-002 — Pré-prompt métier
+
+**En tant que** technicien de support,
+**Je veux** que l'assistant connaisse mon contexte de travail dès le départ
+**Afin de** recevoir des réponses directement adaptées à la résolution d'incidents,
+sans avoir à me présenter à chaque conversation.
+
+**Critères d'acceptance :**
+
+- [x] Un fichier `system-prompt.md` existe à la racine du projet et contient les instructions destinées au modèle
+- [x] Le contenu est envoyé à chaque appel Groq en tant que message `system`, avant tout message de l'utilisateur
+- [x] Le technicien ne voit pas le contenu du pré-prompt dans l'interface — il est injecté silencieusement
+- [x] Si le fichier est absent, l'application continue de fonctionner normalement, sans erreur
+- [x] Toute modification du fichier est prise en compte au prochain rechargement de page, sans redémarrer le frontend
+- [x] Un badge "Pré-prompt actif" cliquable dans la barre de statut permet de visualiser le contenu chargé
+
+**Livré le :** 04/05/2026 — branche `develop`
