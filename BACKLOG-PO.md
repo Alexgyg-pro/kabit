@@ -4,41 +4,73 @@
 
 ## À faire
 
-### ÉPIQUE — Page admin
-
-Regrouper dans une page dédiée les configurations de l'application et l'administration du corpus, afin d'améliorer l'expérience UI et de centraliser les outils de gestion.
-
-Stories enfants : US-003, US-004.
-
----
-
-### US-004 - Thème clair ou sombre au choix
-
-> Dépend de US-003 (la page admin doit exister pour accueillir ce paramètre).
-
-**En tant que** technicien de support,
-**Je veux** pouvoir choisir dans la page admin entre un thème sombre (celui existant) et un clair,
-**Afin de** rendre l'expérience UI confortable selon mes préférences.
+*(vide)*
 
 ---
 
 ## Terminé
 
-### US-004 - Ajout de pré-prompt éditable
+### ✅ ÉPIQUE — Page admin
 
-**En tant que** technicien de support,
-**Je veux** rédiger mon propre pré-prompt,
-**Afin de** de personnaliser les réponses que je veux obtenir.
+Regrouper dans une page dédiée les configurations de l'application et l'administration du corpus, afin d'améliorer l'expérience UI et de centraliser les outils de gestion.
 
-note : system-prompt.md n'était sans doute pas modifiable, il s'agirait d'un prompt se situant entre system-prompt.md et la question posée. Le fichier pourrait se trouver avec les fichiers .md du corpus.
+Stories enfants : US-003, US-004 (thème), US-004 (pré-prompt éditable).
+
+**Livré le :** 04/05/2026
 
 ---
 
-### US-003 - Création de la page admin
+### ✅ US-003 — Création de la page admin
 
 **En tant que** technicien de support,
 **Je veux** une page admin dédiée qui regroupe les outils de configuration et d'administration du corpus,
 **Afin de** disposer d'un espace séparé de l'interface principale, plus clair et extensible.
+
+**Critères d'acceptance :**
+
+- [x] Bouton ⚙ dans le header ouvre la modale d'administration
+- [x] La modale contient une section Corpus (ajout de procédure + réindexer)
+- [x] La modale contient une section Pré-prompt
+- [x] La modale contient une section Préférences
+- [x] Fermeture par croix, clic en dehors, ou bouton Fermer
+
+**Livré le :** 04/05/2026 — branche `feature/page-admin-modale`
+
+---
+
+### ✅ US-004 — Thème clair ou sombre au choix
+
+**En tant que** technicien de support,
+**Je veux** pouvoir choisir dans la page admin entre un thème sombre (celui existant) et un clair,
+**Afin de** rendre l'expérience UI confortable selon mes préférences.
+
+**Critères d'acceptance :**
+
+- [x] Deux boutons 🌙 Sombre / ☀️ Clair dans la section Préférences de la modale admin
+- [x] Le changement de thème est instantané sur toute l'interface
+- [x] Le choix est persisté entre les sessions (localStorage)
+- [x] Les couleurs de code, textes et fonds sont lisibles dans les deux thèmes
+
+**Livré le :** 04/05/2026 — branche `feature/theme-clair`
+
+---
+
+### ✅ US-004 — Pré-prompt éditable depuis l'interface
+
+**En tant que** technicien de support,
+**Je veux** rédiger mon propre pré-prompt depuis l'interface,
+**Afin de** personnaliser les instructions envoyées au modèle sans modifier de fichier manuellement.
+
+**Note :** Le pré-prompt éditable ici modifie directement `system-prompt.md` (instructions de contexte métier). Il se situe en tête de chaque appel, avant les documents RAG et la question.
+
+**Critères d'acceptance :**
+
+- [x] Textarea éditable dans la section Pré-prompt de la modale admin
+- [x] Bouton "Sauvegarder" écrit le contenu dans `system-prompt.md` via le backend
+- [x] Confirmation visuelle après sauvegarde
+- [x] Le nouveau pré-prompt est pris en compte dès la question suivante
+
+**Livré le :** 04/05/2026 — branche `feature/edition-preprompt`
 
 ---
 
@@ -76,23 +108,6 @@ note : system-prompt.md n'était sans doute pas modifiable, il s'agirait d'un pr
 
 ---
 
-### ✅ US-001 — Afficher le contenu d'un document source
-
-**En tant que** technicien,
-**Je veux** cliquer sur une source affichée sous la réponse
-**Afin de** lire le document original et vérifier les étapes de la procédure.
-
-**Critères d'acceptance :**
-
-- [x] Clic sur une source ouvre une modale
-- [x] Le contenu est rendu en markdown (titres, gras, italique, tableaux, blocs de code)
-- [x] Fermeture par croix ou clic en dehors
-- [x] Les scores de similarité restent visibles sur la liste des sources
-
-**Livré le :** 01/05/2026 — branche `feature/affichage-document-source` + `feature/rendu-markdown-modal`
-
----
-
 ### ✅ US-002 — Pré-prompt métier
 
 **En tant que** technicien de support,
@@ -110,3 +125,20 @@ sans avoir à me présenter à chaque conversation.
 - [x] Un badge "Pré-prompt actif" cliquable dans la barre de statut permet de visualiser le contenu chargé
 
 **Livré le :** 04/05/2026 — branche `develop`
+
+---
+
+### ✅ US-001 — Afficher le contenu d'un document source
+
+**En tant que** technicien,
+**Je veux** cliquer sur une source affichée sous la réponse
+**Afin de** lire le document original et vérifier les étapes de la procédure.
+
+**Critères d'acceptance :**
+
+- [x] Clic sur une source ouvre une modale
+- [x] Le contenu est rendu en markdown (titres, gras, italique, tableaux, blocs de code)
+- [x] Fermeture par croix ou clic en dehors
+- [x] Les scores de similarité restent visibles sur la liste des sources
+
+**Livré le :** 01/05/2026 — branche `feature/affichage-document-source` + `feature/rendu-markdown-modal`
