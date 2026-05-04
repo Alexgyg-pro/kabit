@@ -12,14 +12,6 @@ Stories enfants : US-003, US-004.
 
 ---
 
-### US-003 - Création de la page admin
-
-**En tant que** technicien de support,
-**Je veux** une page admin dédiée qui regroupe les outils de configuration et d'administration du corpus,
-**Afin de** disposer d'un espace séparé de l'interface principale, plus clair et extensible.
-
----
-
 ### US-004 - Thème clair ou sombre au choix
 
 > Dépend de US-003 (la page admin doit exister pour accueillir ce paramètre).
@@ -30,10 +22,25 @@ Stories enfants : US-003, US-004.
 
 ---
 
+## Terminé
+
+### US-004 - Ajout de pré-prompt éditable
+
+**En tant que** technicien de support,
+**Je veux** rédiger mon propre pré-prompt,
+**Afin de** de personnaliser les réponses que je veux obtenir.
+
+note : system-prompt.md n'était sans doute pas modifiable, il s'agirait d'un prompt se situant entre system-prompt.md et la question posée. Le fichier pourrait se trouver avec les fichiers .md du corpus.
 
 ---
 
-## Terminé
+### US-003 - Création de la page admin
+
+**En tant que** technicien de support,
+**Je veux** une page admin dédiée qui regroupe les outils de configuration et d'administration du corpus,
+**Afin de** disposer d'un espace séparé de l'interface principale, plus clair et extensible.
+
+---
 
 ### ✅ US-005 — Affichage de la question en tête de réponse
 
