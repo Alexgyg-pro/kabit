@@ -4,7 +4,51 @@
 
 ## À faire
 
-*(vide)*
+### US-012 — Bouton copier la question-réponse
+
+**En tant qu'** utilisateur de l'application,
+**Je veux** copier ma question et la réponse dans le presse-papier,
+**Afin de** pouvoir coller ce texte dans une autre application.
+
+**Critères d'acceptance :**
+
+- [ ] Un bouton "Copier" est visible sous la réponse dès qu'elle est affichée
+- [ ] Le contenu copié contient la question suivie de la réponse (texte brut, sans mise en forme Markdown)
+- [ ] Un feedback visuel confirme la copie (ex. : le bouton passe à "Copié ✓" quelques secondes)
+- [ ] Le bouton est absent tant qu'aucune réponse n'a été produite
+
+---
+
+### US-013 — Édition du catalogue
+
+**En tant qu'** administrateur,
+**Je veux** pouvoir éditer le catalogue depuis l'interface,
+**Afin de** pouvoir tenir compte des évolutions dans l'entreprise.
+
+**Critères d'acceptance :**
+
+- [ ] En mode Administrateur, un accès à l'édition du catalogue est disponible dans la modale admin
+- [ ] Le contenu du fichier `catalogue-it.json` est affiché dans un textarea éditable
+- [ ] Le JSON est validé syntaxiquement avant sauvegarde — une erreur bloque l'enregistrement et affiche un message explicite
+- [ ] La sauvegarde écrit le fichier via le backend et déclenche une réindexation
+- [ ] Un message de confirmation est affiché après sauvegarde
+
+---
+
+### US-014 — Liste de fiches
+
+**En tant qu'** administrateur,
+**Je veux** lister les fiches `.md` disponibles dans l'UI administration,
+**Afin de** pouvoir en sélectionner une à éditer directement, sans dépendre des résultats d'une recherche.
+
+**Note :** actuellement, la seule façon d'accéder à une fiche pour la modifier est qu'elle apparaisse comme source d'une réponse. Avec une centaine de fiches, c'est impraticable.
+
+**Critères d'acceptance :**
+
+- [ ] La modale admin affiche la liste de toutes les fiches `.md` du corpus
+- [ ] Chaque fiche est cliquable et ouvre la modale d'édition existante (US-011)
+- [ ] La liste est scrollable et affiche le titre de chaque fiche
+- [ ] La liste est actualisée après l'ajout d'une nouvelle fiche
 
 ---
 
@@ -16,11 +60,13 @@
 L'application répondait correctement aux questions basées sur les fiches `.md` mais était incapable d'exploiter `catalogue-it.json`. Les questions sur le matériel informatique ou les applications métier produisaient des réponses génériques sans aucune donnée du catalogue.
 
 **Causes identifiées :**
+
 1. **Indexation monolithique** — le JSON était traité comme un seul document (un vecteur unique moyennant toute la sémantique du fichier), ce qui diluait le signal et rendait le matching impossible pour des questions précises.
 2. **Modèle d'embedding non adapté** — `all-MiniLM-L6-v2` est principalement anglophone. Il produisait des scores aberrants en français (le chunk "Trading" matchait mieux que "Marketing" pour une question sur le marketing).
 3. **Fichier parasite** — `catalogue-it.bak.json` (ancienne version incomplète) était indexé en parallèle et prenait les slots TOP_K au détriment du bon fichier.
 
 **Corrections apportées :**
+
 - Chunking JSON : `catalogue-it.json` est maintenant découpé en ~65 chunks sémantiques indépendants (un par laptop, application, service, outil support)
 - Dénormalisation : les chunks de services embarquent les détails complets des laptops et applications associés (noms, modèles, types — pas seulement des IDs)
 - Enrichissement sémantique : les textes d'embedding des laptops incluent des synonymes français ("ordinateur laptop portable…") pour améliorer le matching
