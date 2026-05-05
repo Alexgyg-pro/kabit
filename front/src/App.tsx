@@ -354,7 +354,7 @@ export default function App() {
           // JSON : contenu brut intégral — le LLM lit nativement la structure
           // MD  : tronqué à 1500 chars (texte narratif, potentiellement long)
           const body = isJson ? r.doc.content : r.doc.content.slice(0, 1500);
-          return `--- [${label}] Document ${i + 1} : ${r.doc.title} ---\n${body}`;
+          return `--- [${label}] ${r.doc.title} ---\n${body}`;
         })
         .join('\n\n');
 
