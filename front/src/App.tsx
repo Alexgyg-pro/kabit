@@ -485,7 +485,7 @@ export default function App() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-    runIndexing();
+    await runIndexing();
   }
 
   async function handleOpenCorpusDoc(path: string, title: string): Promise<void> {
