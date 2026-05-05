@@ -6,8 +6,13 @@
 
 ### ✅ BUG-003 — Les réponses évoquent souvent Document 1
 
-**Symptôme** : Les réponses évoquesnt souvent un _Document 1_ qui ressemble à un nom de variable ou quelque chose comme ça. C'est assez disgracieux.
-**Cause possible** : Cela pourrait faire référence au catalogue-it.json. Si c'est le cas, il faudra que la réponse fasse référence au "catalogue".
+**Symptôme** : Les réponses évoquaient souvent un _Document 1_ qui ressemble à un nom de variable. Disgracieux en démo.
+
+**Cause** : Les blocs de contexte envoyés au LLM étaient étiquetés `Document 1 :`, `Document 2 :`, etc. Le LLM répétait ce qu'on lui avait écrit.
+
+**Correction** : Suppression du numéro dans l'en-tête de chaque bloc de contexte — le LLM ne dispose plus que du titre du document.
+
+**Livré le :** 05/05/2026 — branche `feature/bug-003-document-1`
 
 ---
 
