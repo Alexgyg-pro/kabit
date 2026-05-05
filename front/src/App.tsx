@@ -9,8 +9,8 @@ const BACKEND = 'http://localhost:3001';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const GROQ_API_KEY: string | undefined = (import.meta as any).env?.VITE_GROQ_API_KEY;
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
-const SIMILARITY_THRESHOLD = 0.35;
-const TOP_K = 3;
+const SIMILARITY_THRESHOLD = 0.25;
+const TOP_K = 5;
 
 const GROQ_MODELS = [
   { id: 'llama-3.1-8b-instant',    label: 'Llama 3.1 8B (rapide)' },
