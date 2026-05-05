@@ -21,15 +21,20 @@ const GROQ_MODELS = [
 
 type AppStatus = 'init' | 'loading-model' | 'indexing' | 'ready' | 'error';
 
-// Extrait le texte d'embedding d'une fiche .md : titre frontmatter + corps sans YAML
+// Construit le texte d'embedding d'une fiche .md :
+// métadonnées frontmatter converties en texte naturel + corps de la procédure
 function mdEmbeddingText(content: string): string {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!match) return content.slice(0, 2000);
   const frontmatter = match[1];
   const body = match[2];
-  const titleMatch = frontmatter.match(/^title:\s*(.+)$/m);
-  const title = titleMatch ? titleMatch[1].trim() : '';
-  return (title ? title + '\n' : '') + body.slice(0, 2000);
+  const get = (key: string) => {
+    const m = frontmatter.match(new RegExp(`^${key}:\\s*(.+)$`, 'm'));
+    return m ? m[1].trim() : '';
+  };
+  const header = [get('title'), get('catégorie'), get('service'), get('équipes'), get('commentaire')]
+    .filter(Boolean).join(' — ');
+  return (header ? header + '\n' : '') + body.slice(0, 2000);
 }
 
 interface JsonChunk {
