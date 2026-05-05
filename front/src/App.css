@@ -794,6 +794,47 @@
 }
 .btn-admin-close:hover { background: #4b5563; }
 
+/* ── Liste fiches corpus (US-014) ────────────────────────────────────────── */
+.corpus-file-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.corpus-file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.corpus-file-item:last-child { border-bottom: none; }
+.corpus-file-item:hover { background: var(--border); }
+
+.corpus-file-icon { flex-shrink: 0; font-size: 0.9rem; }
+
+.corpus-file-title {
+  flex: 1;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.corpus-file-path {
+  flex-shrink: 0;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
 /* ── Admin (ancien panneau — styles conservés pour admin-input/textarea/msg) */
 .admin-panel {
   background: var(--bg-surface);

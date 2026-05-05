@@ -477,6 +477,16 @@ export default function App() {
     return data;
   }
 
+  async function handleOpenCorpusDoc(path: string, title: string): Promise<void> {
+    const res = await fetch(`${BACKEND}/corpus/file?path=${encodeURIComponent(path)}`);
+    if (!res.ok) throw new Error(`Impossible de charger ${path}`);
+    const content = await res.text();
+    setSelectedDoc({ id: path, path, title, score: 0, content });
+    setIsEditingDoc(true);
+    setEditDocContent(content);
+    setEditDocMsg('');
+  }
+
   function openDoc(doc: Source) {
     setSelectedDoc(doc);
     setIsEditingDoc(false);
@@ -711,7 +721,7 @@ export default function App() {
               </div>
             </div>
             <div className="modal-meta">
-              {selectedDoc.path} &nbsp;·&nbsp; similarité : {selectedDoc.score.toFixed(2)}
+              {selectedDoc.path}{selectedDoc.score > 0 && <>&nbsp;·&nbsp; similarité : {selectedDoc.score.toFixed(2)}</>}
             </div>
             {isEditingDoc ? (
               <div className="modal-edit-body">
@@ -740,9 +750,11 @@ export default function App() {
         <AdminModal
           systemPrompt={systemPrompt}
           needsReindex={needsReindex}
+          backend={BACKEND}
           onReindex={() => { runIndexing(); setShowAdmin(false); }}
           onSave={handleAdminSave}
           onSaveSystemPrompt={handleSaveSystemPrompt}
+          onOpenDoc={handleOpenCorpusDoc}
           onClose={() => setShowAdmin(false)}
         />
       )}

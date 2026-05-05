@@ -1,20 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface AdminModalProps {
   systemPrompt: string;
   needsReindex: boolean;
+  backend: string;
   onReindex: () => void;
   onSave: (title: string, content: string) => Promise<{ path: string }>;
   onSaveSystemPrompt: (content: string) => Promise<void>;
+  onOpenDoc: (path: string, title: string) => Promise<void>;
   onClose: () => void;
 }
 
 export default function AdminModal({
   systemPrompt,
   needsReindex,
+  backend,
   onReindex,
   onSave,
   onSaveSystemPrompt,
+  onOpenDoc,
   onClose,
 }: AdminModalProps) {
   const [title, setTitle] = useState('');
@@ -23,6 +27,19 @@ export default function AdminModal({
 
   const [editablePrompt, setEditablePrompt] = useState(systemPrompt);
   const [promptMsg, setPromptMsg] = useState('');
+
+  const [mdFiles, setMdFiles] = useState<{ path: string; title: string }[]>([]);
+
+  async function fetchMdFiles() {
+    try {
+      const res = await fetch(`${backend}/corpus/list`);
+      if (!res.ok) return;
+      const files: { path: string; title: string }[] = await res.json();
+      setMdFiles(files.filter(f => f.path.endsWith('.md')).sort((a, b) => a.title.localeCompare(b.title)));
+    } catch { /* backend absent */ }
+  }
+
+  useEffect(() => { fetchMdFiles(); }, []);
 
   async function handleSaveCorpus() {
     if (!title.trim() || !content.trim()) {
@@ -34,6 +51,7 @@ export default function AdminModal({
       setCorpusMsg(`✅ Fichier créé : ${data.path}`);
       setTitle('');
       setContent('');
+      fetchMdFiles();
     } catch (e) {
       setCorpusMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
     }
@@ -96,6 +114,28 @@ export default function AdminModal({
                 {corpusMsg && <span className="admin-msg">{corpusMsg}</span>}
               </div>
             </div>
+          </section>
+
+          {/* ── Section Fiches du corpus ─────────────────────────────── */}
+          <section className="admin-section">
+            <h2 className="admin-section-title">Fiches du corpus ({mdFiles.length})</h2>
+            {mdFiles.length === 0 ? (
+              <p className="admin-section-desc">Aucune fiche .md dans le corpus.</p>
+            ) : (
+              <ul className="corpus-file-list">
+                {mdFiles.map((file) => (
+                  <li
+                    key={file.path}
+                    className="corpus-file-item"
+                    onClick={() => { onOpenDoc(file.path, file.title); onClose(); }}
+                  >
+                    <span className="corpus-file-icon">📄</span>
+                    <span className="corpus-file-title">{file.title}</span>
+                    <span className="corpus-file-path">{file.path}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           {/* ── Section Pré-prompt ───────────────────────────────────── */}
