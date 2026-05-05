@@ -82,6 +82,24 @@
 
 ## Terminé
 
+### ✅ BUG-002 — Les fiches .md n'étaient plus retrouvées après changement de modèle d'embedding
+
+**Symptôme :**
+Après le passage au modèle multilingue `paraphrase-multilingual-MiniLM-L12-v2`, les questions procédurales ("Outlook ne démarre pas", "À quoi sert Teams ?") ne remontaient plus les fiches `.md` correspondantes. Les réponses provenaient du pré-entraînement du LLM, pas du corpus.
+
+**Causes identifiées :**
+1. **Frontmatter YAML brut** — les fiches `.md` commencent par un bloc YAML (`---\ntitle: ...\ncatégorie: ...\n---`) qui occupait une grande partie des 2000 chars d'embedding, diluant le signal sémantique utile.
+2. **Seuil unique inadapté** — le seuil de similarité unique (0.35 puis 0.25) ne tenait pas compte de la différence structurelle entre chunks JSON (courts, scores élevés) et fiches `.md` (longues, scores plus bas). Les chunks JSON saturaient le TOP_K.
+
+**Corrections apportées :**
+- Stripping du frontmatter YAML avant embedding : les métadonnées (`title`, `catégorie`, `service`, `équipes`, `commentaire`) sont converties en texte naturel dense placé en tête du corps de la fiche
+- Seuils distincts : JSON à 0.35 (filtre strict, chunks courts), `.md` à 0.20 (filtre permissif, documents longs)
+- TOP_K porté de 3 à 5 pour améliorer la diversité des sources retournées
+
+**Livré le :** 05/05/2026 — branche `develop`
+
+---
+
 ### ✅ BUG-001 — Le RAG ne répondait pas aux questions portant sur le catalogue JSON
 
 **Symptôme :**
