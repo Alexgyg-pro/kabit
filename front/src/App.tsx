@@ -679,7 +679,7 @@ export default function App() {
             <div className="modal-header">
               <span className="modal-title">📄 {selectedDoc.title}</span>
               <div className="modal-header-actions">
-                {role === 'admin' && !isEditingDoc && (
+                {role === 'admin' && !isEditingDoc && !selectedDoc.path.endsWith('.json') && (
                   <button
                     className="btn-doc-edit"
                     onClick={() => { setIsEditingDoc(true); setEditDocContent(selectedDoc.content); }}
