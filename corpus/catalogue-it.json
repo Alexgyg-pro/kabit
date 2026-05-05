@@ -3,20 +3,89 @@
   "secteur": "Services financiers & gestion d'actifs",
 
   "services": [
-    { "id": "IT",   "nom": "Informatique",          "description": "Infrastructure, support, cybersécurité, développement interne" },
-    { "id": "MKT",  "nom": "Marketing",              "description": "Communication, campagnes, création graphique, événements" },
-    { "id": "SF",   "nom": "Stratégie Financière",   "description": "Analyse financière, reporting, contrôle de gestion" },
-    { "id": "RH",   "nom": "Ressources Humaines",    "description": "Recrutement, paie, formation, gestion des talents" },
-    { "id": "JUR",  "nom": "Juridique & Conformité", "description": "Contrats, réglementation, conformité MiFID II / RGPD" },
-    { "id": "TRD",  "nom": "Trading",                "description": "Salle des marchés, flux temps réel, exécution d'ordres" },
-    { "id": "GA",   "nom": "Gestion d'Actifs",       "description": "Portefeuilles, allocation, back-office investissements" },
-    { "id": "RC",   "nom": "Relation Client",        "description": "CRM, onboarding clients, suivi patrimonial" },
-    { "id": "DG",   "nom": "Direction Générale",     "description": "Comité exécutif, présidence, secrétariat de direction" }
+    {
+      "id": "IT",
+      "nom": "Informatique",
+      "description": "Infrastructure, support, cybersécurité, développement interne",
+      "laptops": ["LPT-STD-001", "LPT-DEV-001", "LPT-DEV-002", "LPT-DEV-003"],
+      "applications_metier": ["APP-001", "APP-002", "APP-009", "APP-011", "APP-012", "APP-013", "APP-014"]
+    },
+    {
+      "id": "MKT",
+      "nom": "Marketing",
+      "description": "Communication, campagnes, création graphique, événements",
+      "laptops": ["LPT-STD-001", "LPT-STD-002", "LPT-LUX-002"],
+      "applications_metier": ["APP-004", "APP-005", "APP-008", "APP-010", "APP-015"]
+    },
+    {
+      "id": "SF",
+      "nom": "Stratégie Financière",
+      "description": "Analyse financière, reporting, contrôle de gestion",
+      "laptops": ["LPT-DEV-002", "LPT-DEV-003", "LPT-LUX-001"],
+      "applications_metier": ["APP-001", "APP-002", "APP-003", "APP-010", "APP-016"]
+    },
+    {
+      "id": "RH",
+      "nom": "Ressources Humaines",
+      "description": "Recrutement, paie, formation, gestion des talents",
+      "laptops": ["LPT-STD-001", "LPT-STD-002", "LPT-LUX-002"],
+      "applications_metier": ["APP-003", "APP-005", "APP-007", "APP-017", "APP-018"]
+    },
+    {
+      "id": "JUR",
+      "nom": "Juridique & Conformité",
+      "description": "Contrats, réglementation, conformité MiFID II / RGPD",
+      "laptops": ["LPT-STD-002", "LPT-LUX-002"],
+      "applications_metier": ["APP-005", "APP-007", "APP-019", "APP-020"]
+    },
+    {
+      "id": "TRD",
+      "nom": "Trading",
+      "description": "Salle des marchés, flux temps réel, exécution d'ordres",
+      "laptops": ["LPT-DEV-003"],
+      "applications_metier": ["APP-001", "APP-002", "APP-021", "APP-022"]
+    },
+    {
+      "id": "GA",
+      "nom": "Gestion d'Actifs",
+      "description": "Portefeuilles, allocation, back-office investissements",
+      "laptops": ["LPT-DEV-003"],
+      "applications_metier": ["APP-001", "APP-023", "APP-024"]
+    },
+    {
+      "id": "RC",
+      "nom": "Relation Client",
+      "description": "CRM, onboarding clients, suivi patrimonial",
+      "laptops": ["LPT-STD-001", "LPT-STD-002"],
+      "applications_metier": ["APP-004", "APP-007", "APP-010", "APP-025"]
+    },
+    {
+      "id": "DG",
+      "nom": "Direction Générale",
+      "description": "Comité exécutif, présidence, secrétariat de direction",
+      "laptops": ["LPT-LUX-001", "LPT-LUX-002"],
+      "applications_metier": ["APP-003", "APP-005", "APP-010", "APP-026"]
+    },
+    {
+      "id": "OPS",
+      "nom": "Opérations & Conformité",
+      "description": "Règlement-livraison, réconciliation, contrôle des risques opérationnels",
+      "laptops": ["LPT-STD-003", "LPT-DEV-001"],
+      "applications_metier": ["APP-001", "APP-019", "APP-020", "APP-027"]
+    },
+    {
+      "id": "PMO",
+      "nom": "Bureau de Projets (PMO)",
+      "description": "Gestion de portefeuille projets, planification, reporting d'avancement",
+      "laptops": ["LPT-STD-003", "LPT-STD-004"],
+      "applications_metier": ["APP-005", "APP-012", "APP-028", "APP-029"]
+    }
   ],
 
   "materiel": {
     "laptop_ordinaire": [
       {
+        "id": "LPT-STD-001",
         "modele": "Lenovo ThinkPad E16 Gen 2",
         "processeur": "Intel Core i5-1335U",
         "ram": "16 Go",
@@ -27,6 +96,7 @@
         "services_cibles": ["MKT", "RH", "RC"]
       },
       {
+        "id": "LPT-STD-002",
         "modele": "ASUS ExpertBook B1 B1502",
         "processeur": "Intel Core i5-1235U",
         "ram": "16 Go",
@@ -35,10 +105,33 @@
         "os": "Windows 11 Pro",
         "profil": "Collaborateur standard",
         "services_cibles": ["MKT", "RH", "RC", "JUR"]
+      },
+      {
+        "id": "LPT-STD-003",
+        "modele": "HP EliteBook 840 G10",
+        "processeur": "Intel Core i5-1345U",
+        "ram": "16 Go",
+        "stockage": "512 Go SSD NVMe",
+        "ecran": "14\" FHD IPS",
+        "os": "Windows 11 Pro",
+        "profil": "Collaborateur standard — mobilité fréquente",
+        "services_cibles": ["OPS", "PMO", "RH"]
+      },
+      {
+        "id": "LPT-STD-004",
+        "modele": "Dell Latitude 5540",
+        "processeur": "Intel Core i5-1345U",
+        "ram": "16 Go",
+        "stockage": "512 Go SSD",
+        "ecran": "15.6\" FHD IPS",
+        "os": "Windows 11 Pro",
+        "profil": "Collaborateur standard — usage sédentaire",
+        "services_cibles": ["PMO", "JUR", "RC"]
       }
     ],
     "laptop_developpeur": [
       {
+        "id": "LPT-DEV-001",
         "modele": "Lenovo ThinkPad X1 Carbon Gen 12",
         "processeur": "Intel Core Ultra 7 165U",
         "ram": "32 Go",
@@ -46,9 +139,10 @@
         "ecran": "14\" 2.8K OLED",
         "os": "Windows 11 Pro / Ubuntu 24.04 dual-boot",
         "profil": "Développeur & Data Engineer",
-        "services_cibles": ["IT"]
+        "services_cibles": ["IT", "OPS"]
       },
       {
+        "id": "LPT-DEV-002",
         "modele": "Framework Laptop 16 (AMD)",
         "processeur": "AMD Ryzen 9 7940HX",
         "ram": "64 Go",
@@ -59,6 +153,7 @@
         "services_cibles": ["IT", "SF"]
       },
       {
+        "id": "LPT-DEV-003",
         "modele": "ASUS ProArt Studiobook 16 OLED",
         "processeur": "Intel Core i9-13980HX",
         "ram": "64 Go",
@@ -67,10 +162,33 @@
         "os": "Windows 11 Pro",
         "profil": "Développeur / Analyste quantitatif",
         "services_cibles": ["IT", "TRD", "GA"]
+      },
+      {
+        "id": "LPT-DEV-004",
+        "modele": "Dell XPS 15 9530",
+        "processeur": "Intel Core i7-13700H",
+        "ram": "32 Go",
+        "stockage": "1 To SSD NVMe",
+        "ecran": "15.6\" FHD+ OLED",
+        "os": "Windows 11 Pro / WSL2 Ubuntu",
+        "profil": "Développeur full-stack",
+        "services_cibles": ["IT"]
+      },
+      {
+        "id": "LPT-DEV-005",
+        "modele": "System76 Lemur Pro",
+        "processeur": "Intel Core i7-1365U",
+        "ram": "48 Go",
+        "stockage": "1 To SSD NVMe",
+        "ecran": "14\" FHD IPS",
+        "os": "Pop!_OS 22.04 LTS",
+        "profil": "Ingénieur DevOps / SRE",
+        "services_cibles": ["IT"]
       }
     ],
     "laptop_luxe": [
       {
+        "id": "LPT-LUX-001",
         "modele": "Apple MacBook Pro 16\" M3 Pro",
         "processeur": "Apple M3 Pro (12 cœurs)",
         "ram": "36 Go RAM unifiée",
@@ -81,6 +199,7 @@
         "services_cibles": ["DG", "SF"]
       },
       {
+        "id": "LPT-LUX-002",
         "modele": "Microsoft Surface Laptop 6 15\"",
         "processeur": "Intel Core Ultra 7 165H",
         "ram": "64 Go",
@@ -89,12 +208,35 @@
         "os": "Windows 11 Pro",
         "profil": "Directeur de département",
         "services_cibles": ["DG", "RH", "MKT", "JUR"]
+      },
+      {
+        "id": "LPT-LUX-003",
+        "modele": "Apple MacBook Pro 14\" M4 Pro",
+        "processeur": "Apple M4 Pro (14 cœurs)",
+        "ram": "48 Go RAM unifiée",
+        "stockage": "1 To SSD",
+        "ecran": "14.2\" Liquid Retina XDR",
+        "os": "macOS Sequoia",
+        "profil": "Directeur technique / CTO",
+        "services_cibles": ["DG", "IT"]
+      },
+      {
+        "id": "LPT-LUX-004",
+        "modele": "Lenovo ThinkPad X1 Titanium Yoga",
+        "processeur": "Intel Core Ultra 7 155U",
+        "ram": "32 Go",
+        "stockage": "1 To SSD NVMe",
+        "ecran": "13.5\" QHD IPS tactile 2-en-1",
+        "os": "Windows 11 Pro",
+        "profil": "Directeur de projet / VP",
+        "services_cibles": ["DG", "PMO"]
       }
     ]
   },
 
   "applications_metier": [
     {
+      "id": "APP-001",
       "nom": "Bloomberg Terminal",
       "editeur": "Bloomberg LP",
       "type": "Données financières temps réel",
@@ -103,6 +245,7 @@
       "contact_support": "Bloomberg Anywhere Help Desk +33 1 53 65 5000"
     },
     {
+      "id": "APP-002",
       "nom": "Refinitiv Eikon (LSEG)",
       "editeur": "London Stock Exchange Group",
       "type": "Données de marché & actualités financières",
@@ -111,6 +254,7 @@
       "contact_support": "Refinitiv Support Portal"
     },
     {
+      "id": "APP-003",
       "nom": "SAP S/4HANA Finance",
       "editeur": "SAP",
       "type": "ERP Finance & Comptabilité",
@@ -119,6 +263,7 @@
       "contact_support": "SAP Launchpad / ticket interne SI"
     },
     {
+      "id": "APP-004",
       "nom": "Salesforce Financial Services Cloud",
       "editeur": "Salesforce",
       "type": "CRM & gestion de la relation client",
@@ -127,6 +272,7 @@
       "contact_support": "Salesforce Help & Training"
     },
     {
+      "id": "APP-005",
       "nom": "Microsoft 365 (Teams, Outlook, SharePoint, OneDrive)",
       "editeur": "Microsoft",
       "type": "Suite bureautique & collaboration",
@@ -135,6 +281,7 @@
       "contact_support": "Boutique IT interne"
     },
     {
+      "id": "APP-006",
       "nom": "Adobe Creative Cloud",
       "editeur": "Adobe",
       "type": "Création graphique & édition PDF",
@@ -143,6 +290,7 @@
       "contact_support": "Adobe Admin Console"
     },
     {
+      "id": "APP-007",
       "nom": "DocuSign",
       "editeur": "DocuSign",
       "type": "Signature électronique",
@@ -151,6 +299,7 @@
       "contact_support": "DocuSign Support Portal"
     },
     {
+      "id": "APP-008",
       "nom": "Cisco AnyConnect Secure Mobility",
       "editeur": "Cisco",
       "type": "Client VPN entreprise",
@@ -159,6 +308,7 @@
       "contact_support": "Boutique IT interne"
     },
     {
+      "id": "APP-009",
       "nom": "CyberArk Privileged Access Manager",
       "editeur": "CyberArk",
       "type": "Gestion des accès privilégiés (PAM)",
@@ -167,6 +317,7 @@
       "contact_support": "Équipe Sécurité IT"
     },
     {
+      "id": "APP-010",
       "nom": "Power BI",
       "editeur": "Microsoft",
       "type": "Business Intelligence & reporting",
@@ -175,6 +326,7 @@
       "contact_support": "Boutique IT interne"
     },
     {
+      "id": "APP-011",
       "nom": "GitHub Enterprise",
       "editeur": "GitHub (Microsoft)",
       "type": "Gestion de code source & CI/CD",
@@ -183,12 +335,268 @@
       "contact_support": "GitHub Support"
     },
     {
+      "id": "APP-012",
       "nom": "Confluence & Jira",
       "editeur": "Atlassian",
       "type": "Documentation & gestion de projets IT",
       "licences": "Standard — équipe IT + chefs de projet",
-      "services_cibles": ["IT"],
+      "services_cibles": ["IT", "PMO"],
       "contact_support": "Atlassian Support"
+    },
+    {
+      "id": "APP-013",
+      "nom": "Zabbix",
+      "editeur": "Zabbix LLC",
+      "type": "Supervision réseau & infrastructure",
+      "licences": "Open source — usage interne",
+      "services_cibles": ["IT"],
+      "contact_support": "Équipe infrastructure IT"
+    },
+    {
+      "id": "APP-014",
+      "nom": "Splunk Enterprise",
+      "editeur": "Splunk Inc.",
+      "type": "SIEM & analyse de logs de sécurité",
+      "licences": "Volume — 50 Go/jour indexés",
+      "services_cibles": ["IT"],
+      "contact_support": "Splunk Support Portal"
+    },
+    {
+      "id": "APP-015",
+      "nom": "HubSpot Marketing Hub",
+      "editeur": "HubSpot",
+      "type": "Automatisation marketing & emailing",
+      "licences": "Professional — 10 utilisateurs",
+      "services_cibles": ["MKT"],
+      "contact_support": "HubSpot Support"
+    },
+    {
+      "id": "APP-016",
+      "nom": "Anaplan",
+      "editeur": "Anaplan",
+      "type": "Planification financière & modélisation",
+      "licences": "Nominatives — 15 licences",
+      "services_cibles": ["SF", "DG"],
+      "contact_support": "Anaplan Support Portal"
+    },
+    {
+      "id": "APP-017",
+      "nom": "Workday HCM",
+      "editeur": "Workday",
+      "type": "Gestion des ressources humaines & paie",
+      "licences": "Nominatives — tous collaborateurs RH + managers",
+      "services_cibles": ["RH"],
+      "contact_support": "Workday Community Support"
+    },
+    {
+      "id": "APP-018",
+      "nom": "Cornerstone OnDemand",
+      "editeur": "Cornerstone",
+      "type": "LMS — gestion des formations & compétences",
+      "licences": "Tous collaborateurs",
+      "services_cibles": ["RH"],
+      "contact_support": "Cornerstone Support"
+    },
+    {
+      "id": "APP-019",
+      "nom": "Wolters Kluwer OneSumX",
+      "editeur": "Wolters Kluwer",
+      "type": "Conformité réglementaire & reporting prudentiel",
+      "licences": "Nominatives — 10 licences",
+      "services_cibles": ["JUR", "OPS"],
+      "contact_support": "Wolters Kluwer Support Portal"
+    },
+    {
+      "id": "APP-020",
+      "nom": "iManage Work",
+      "editeur": "iManage",
+      "type": "Gestion documentaire juridique & contractuelle",
+      "licences": "Nominatives — 25 licences",
+      "services_cibles": ["JUR", "OPS"],
+      "contact_support": "iManage Support"
+    },
+    {
+      "id": "APP-021",
+      "nom": "FIS Kondor+",
+      "editeur": "FIS Global",
+      "type": "Front-to-back gestion des transactions de marché",
+      "licences": "Nominatives — 30 licences",
+      "services_cibles": ["TRD"],
+      "contact_support": "FIS Client Portal"
+    },
+    {
+      "id": "APP-022",
+      "nom": "ION Trading Fidessa",
+      "editeur": "ION Group",
+      "type": "Exécution d'ordres & connectivité marchés",
+      "licences": "Nominatives — 20 licences",
+      "services_cibles": ["TRD"],
+      "contact_support": "ION Support Desk"
+    },
+    {
+      "id": "APP-023",
+      "nom": "SimCorp Dimension",
+      "editeur": "SimCorp",
+      "type": "Système de gestion de portefeuilles (OMS/PMS)",
+      "licences": "Nominatives — 35 licences",
+      "services_cibles": ["GA"],
+      "contact_support": "SimCorp Client Services"
+    },
+    {
+      "id": "APP-024",
+      "nom": "Murex MX.3",
+      "editeur": "Murex",
+      "type": "Gestion des risques & valorisation des actifs",
+      "licences": "Nominatives — 15 licences",
+      "services_cibles": ["GA"],
+      "contact_support": "Murex Support"
+    },
+    {
+      "id": "APP-025",
+      "nom": "Efront (BlackRock)",
+      "editeur": "BlackRock",
+      "type": "Gestion du cycle de vie client & reporting patrimonial",
+      "licences": "Nominatives — 20 licences",
+      "services_cibles": ["RC"],
+      "contact_support": "BlackRock Aladdin Support"
+    },
+    {
+      "id": "APP-026",
+      "nom": "BoardVantage (Nasdaq)",
+      "editeur": "Nasdaq",
+      "type": "Portail comité de direction & gouvernance",
+      "licences": "Nominatives — 12 licences",
+      "services_cibles": ["DG"],
+      "contact_support": "Nasdaq BoardVantage Support"
+    },
+    {
+      "id": "APP-027",
+      "nom": "Broadridge Reconciliation",
+      "editeur": "Broadridge Financial Solutions",
+      "type": "Réconciliation back-office & règlement-livraison",
+      "licences": "Nominatives — 18 licences",
+      "services_cibles": ["OPS"],
+      "contact_support": "Broadridge Client Service Center"
+    },
+    {
+      "id": "APP-028",
+      "nom": "Microsoft Project",
+      "editeur": "Microsoft",
+      "type": "Planification & suivi de projets",
+      "licences": "Plan 3 — 20 chefs de projet",
+      "services_cibles": ["PMO"],
+      "contact_support": "Boutique IT interne"
+    },
+    {
+      "id": "APP-029",
+      "nom": "Planview Portfolios",
+      "editeur": "Planview",
+      "type": "Gestion de portefeuille projets & ressources",
+      "licences": "Nominatives — 10 licences PMO",
+      "services_cibles": ["PMO"],
+      "contact_support": "Planview Support Portal"
     }
-  ]
+  ],
+
+  "support": {
+    "materiel": ["LPT-STD-002" ],
+    "outils": [
+      {
+        "id": "SUP-OTL-001",
+        "nom": "Portail ITSM — ServiceNow",
+        "type": "Application Intranet",
+        "description": "Portail principal d'ouverture de tickets : incidents, demandes de service, demandes d'accès, changements. Accessible depuis le navigateur ou l'app mobile.",
+        "url_intranet": "https://fincorp.service-now.com",
+        "acces": "Tous collaborateurs — authentification SSO"
+      },
+      {
+        "id": "SUP-OTL-002",
+        "nom": "Console d'administration Active Directory (RSAT)",
+        "type": "Console d'administration",
+        "description": "Gestion des comptes utilisateurs, groupes de sécurité, réinitialisation des mots de passe, déverrouillage de comptes, délégation d'OU.",
+        "url_intranet": "Outil local — accès via jump server IT",
+        "acces": "Équipe IT — comptes à privilèges CyberArk requis"
+      },
+      {
+        "id": "SUP-OTL-003",
+        "nom": "Console Azure Entra ID (ex-Azure AD)",
+        "type": "Console d'administration cloud",
+        "description": "Gestion des identités cloud, groupes Microsoft 365, licences, politiques d'accès conditionnel, MFA, enrôlement Intune.",
+        "url_intranet": "https://entra.microsoft.com",
+        "acces": "Équipe IT — rôle Global Admin / User Admin"
+      },
+      {
+        "id": "SUP-OTL-004",
+        "nom": "Microsoft Intune — Centre d'administration",
+        "type": "Console MDM/EMM",
+        "description": "Déploiement de configurations, applications, mises à jour sur les terminaux managés (Windows, macOS, iOS, Android). Rapport de conformité des postes.",
+        "url_intranet": "https://intune.microsoft.com",
+        "acces": "Équipe IT — rôle Intune Administrator"
+      },
+      {
+        "id": "SUP-OTL-005",
+        "nom": "Portail de réinitialisation de mot de passe (SSPR)",
+        "type": "Application Intranet",
+        "description": "Permet aux utilisateurs de réinitialiser leur mot de passe ou de déverrouiller leur compte AD sans intervention IT, via authentification MFA.",
+        "url_intranet": "https://resetpass.fincorp.internal",
+        "acces": "Tous collaborateurs — hors réseau interne (accessible depuis extranet)"
+      },
+      {
+        "id": "SUP-OTL-006",
+        "nom": "Base de connaissances IT (KB)",
+        "type": "Application Intranet",
+        "description": "Catalogue d'articles de résolution : procédures d'installation, FAQ, guides de dépannage, tutoriels logiciels. Alimenté par l'équipe support niveau 2.",
+        "url_intranet": "https://kb.fincorp.internal",
+        "acces": "Tous collaborateurs en lecture — IT en écriture"
+      },
+      {
+        "id": "SUP-OTL-007",
+        "nom": "Console de supervision Zabbix",
+        "type": "Console d'administration",
+        "description": "Tableau de bord de supervision infrastructure : état des serveurs, VMs, équipements réseau, alertes actives. Lien direct vers les tickets d'incident.",
+        "url_intranet": "https://monitoring.fincorp.internal",
+        "acces": "Équipe IT infrastructure — lecture seule pour support N2"
+      },
+      {
+        "id": "SUP-OTL-008",
+        "nom": "Tableau de bord Splunk SIEM",
+        "type": "Console d'administration sécurité",
+        "description": "Analyse des événements de sécurité, corrélation d'alertes, investigation d'incidents cyber. Dashboards préconfigurés par l'équipe SOC.",
+        "url_intranet": "https://splunk.fincorp.internal",
+        "acces": "Équipe sécurité IT & SOC — accès restreint"
+      },
+      {
+        "id": "SUP-OTL-009",
+        "nom": "Portail licences logicielles",
+        "type": "Application Intranet",
+        "description": "Consultation et demande d'attribution de licences applicatives (Bloomberg, Adobe, Salesforce, etc.). Workflow de validation managériale intégré.",
+        "url_intranet": "https://licences.fincorp.internal",
+        "acces": "Tous collaborateurs — validation par manager + IT"
+      },
+      {
+        "id": "SUP-OTL-010",
+        "nom": "Console CyberArk PAM",
+        "type": "Console de gestion des accès privilégiés",
+        "description": "Coffre de mots de passe pour comptes à privilèges, enregistrement de sessions administratives, rotation automatique des credentials.",
+        "url_intranet": "https://pam.fincorp.internal",
+        "acces": "Équipe IT uniquement — authentification MFA renforcée"
+      },
+      {
+        "id": "SUP-OTL-011",
+        "nom": "Portail onboarding collaborateur",
+        "type": "Application Intranet",
+        "description": "Checklist d'arrivée pour les nouveaux collaborateurs : commande du matériel, création de compte, attribution des accès applicatifs, remise du badge.",
+        "url_intranet": "https://onboarding.fincorp.internal",
+        "acces": "RH & IT — initié par RH à J-5 avant arrivée"
+      },
+      {
+        "id": "SUP-OTL-012",
+        "nom": "Portail offboarding collaborateur",
+        "type": "Application Intranet",
+        "description": "Procédure de départ : révocation des accès, restitution du matériel, archivage des données, résiliation des licences nominatives.",
+        "url_intranet": "https://offboarding.fincorp.internal",
+        "acces": "RH & IT — initié par manager à J-10 avant départ"
+      }
+    ]
+  }
 }
