@@ -4,7 +4,7 @@
 
 ## À faire
 
-### US-012 — Bouton copier la question-réponse
+### ✅ US-012 — Bouton copier la question-réponse
 
 **En tant qu'** utilisateur de l'application,
 **Je veux** copier ma question et la réponse dans le presse-papier,
@@ -12,10 +12,12 @@
 
 **Critères d'acceptance :**
 
-- [ ] Un bouton "Copier" est visible sous la réponse dès qu'elle est affichée
-- [ ] Le contenu copié contient la question suivie de la réponse (texte brut, sans mise en forme Markdown)
-- [ ] Un feedback visuel confirme la copie (ex. : le bouton passe à "Copié ✓" quelques secondes)
-- [ ] Le bouton est absent tant qu'aucune réponse n'a été produite
+- [x] Un bouton "Copier" est visible sous la réponse dès qu'elle est affichée
+- [x] Le contenu copié contient la question suivie de la réponse (texte brut, sans mise en forme Markdown)
+- [x] Un feedback visuel confirme la copie (ex. : le bouton passe à "Copié ✓" quelques secondes)
+- [x] Le bouton est absent tant qu'aucune réponse n'a été produite
+
+**Livré le :** 05/05/2026 — branche `feature/copier-question-reponse`
 
 ---
 
@@ -51,6 +53,22 @@
 - [ ] Chaque fiche est cliquable et ouvre la modale d'édition existante (US-011)
 - [ ] La liste est scrollable et affiche le titre de chaque fiche
 - [ ] La liste est actualisée après l'ajout d'une nouvelle fiche
+
+### US-016 — Golden dataset — jeu de tests qualité RAG
+
+**En tant que** Product Owner,
+**Je veux** disposer d'un jeu de questions de référence avec les réponses et sources attendues,
+**Afin de** pouvoir mesurer objectivement l'impact de chaque changement technique sur la qualité des réponses.
+
+**Note :** couvre à la fois les questions procédurales (basées sur les fiches `.md`) et les questions sur le catalogue (basées sur `catalogue-it.json`). À définir en collaboration avec les techniciens support pour que les questions reflètent des cas réels.
+
+**Critères d'acceptance :**
+
+- [ ] Un fichier `EVAL.md` liste au minimum 10 questions couvrant les deux types de corpus (.md et .json)
+- [ ] Chaque question indique la source attendue (fichier ou chunk) et les éléments clés de la réponse correcte
+- [ ] Le document est utilisé manuellement pour valider chaque évolution du pipeline RAG avant merge
+
+---
 
 ### US-015 — Formulaires d'édition du catalogue
 
