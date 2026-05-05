@@ -21,6 +21,17 @@ const GROQ_MODELS = [
 
 type AppStatus = 'init' | 'loading-model' | 'indexing' | 'ready' | 'error';
 
+// Extrait le texte d'embedding d'une fiche .md : titre frontmatter + corps sans YAML
+function mdEmbeddingText(content: string): string {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+  if (!match) return content.slice(0, 2000);
+  const frontmatter = match[1];
+  const body = match[2];
+  const titleMatch = frontmatter.match(/^title:\s*(.+)$/m);
+  const title = titleMatch ? titleMatch[1].trim() : '';
+  return (title ? title + '\n' : '') + body.slice(0, 2000);
+}
+
 interface JsonChunk {
   id: string;
   title: string;
@@ -272,7 +283,7 @@ export default function App() {
           }
         } else {
           setStatusMsg(`Indexation — ${file.title}`);
-          const embedding = await embed(content.slice(0, 2000));
+          const embedding = await embed(mdEmbeddingText(content));
           await putDoc({
             id: file.path,
             path: file.path,
