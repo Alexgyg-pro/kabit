@@ -7,6 +7,7 @@ interface AdminModalProps {
   onReindex: () => void;
   onSave: (title: string, content: string) => Promise<{ path: string }>;
   onSaveSystemPrompt: (content: string) => Promise<void>;
+  onSaveJson: (content: string) => Promise<void>;
   onOpenDoc: (path: string, title: string) => Promise<void>;
   onClose: () => void;
 }
@@ -18,6 +19,7 @@ export default function AdminModal({
   onReindex,
   onSave,
   onSaveSystemPrompt,
+  onSaveJson,
   onOpenDoc,
   onClose,
 }: AdminModalProps) {
@@ -30,6 +32,17 @@ export default function AdminModal({
 
   const [mdFiles, setMdFiles] = useState<{ path: string; title: string }[]>([]);
 
+  const [catalogueContent, setCatalogueContent] = useState('');
+  const [catalogueMsg, setCatalogueMsg] = useState('');
+  const [catalogueLoading, setCatalogueLoading] = useState(false);
+
+  async function fetchCatalogue() {
+    try {
+      const res = await fetch(`${backend}/corpus/file?path=catalogue-it.json`);
+      if (res.ok) setCatalogueContent(await res.text());
+    } catch { /* backend absent */ }
+  }
+
   async function fetchMdFiles() {
     try {
       const res = await fetch(`${backend}/corpus/list`);
@@ -39,7 +52,25 @@ export default function AdminModal({
     } catch { /* backend absent */ }
   }
 
-  useEffect(() => { fetchMdFiles(); }, []);
+  useEffect(() => { fetchMdFiles(); fetchCatalogue(); }, []);
+
+  async function handleSaveCatalogue() {
+    try {
+      JSON.parse(catalogueContent);
+    } catch (e) {
+      setCatalogueMsg(`JSON invalide : ${e instanceof Error ? e.message : String(e)}`);
+      return;
+    }
+    setCatalogueLoading(true);
+    try {
+      await onSaveJson(catalogueContent);
+      setCatalogueMsg('✅ Sauvegardé — réindexation en cours...');
+    } catch (e) {
+      setCatalogueMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setCatalogueLoading(false);
+    }
+  }
 
   async function handleSaveCorpus() {
     if (!title.trim() || !content.trim()) {
@@ -136,6 +167,28 @@ export default function AdminModal({
                 ))}
               </ul>
             )}
+          </section>
+
+          {/* ── Section Catalogue IT ────────────────────────────────── */}
+          <section className="admin-section">
+            <h2 className="admin-section-title">Catalogue IT</h2>
+            <p className="admin-section-desc">
+              Édition directe de <code>catalogue-it.json</code>. Le JSON est validé avant sauvegarde — une erreur bloque l'enregistrement.
+            </p>
+            <textarea
+              className="admin-textarea admin-textarea--json"
+              rows={15}
+              value={catalogueContent}
+              onChange={(e) => { setCatalogueContent(e.target.value); setCatalogueMsg(''); }}
+              spellCheck={false}
+              placeholder="Chargement du catalogue..."
+            />
+            <div className="admin-save-row">
+              <button className="btn-save" onClick={handleSaveCatalogue} disabled={catalogueLoading || !catalogueContent}>
+                {catalogueLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+              </button>
+              {catalogueMsg && <span className="admin-msg">{catalogueMsg}</span>}
+            </div>
           </section>
 
           {/* ── Section Pré-prompt ───────────────────────────────────── */}

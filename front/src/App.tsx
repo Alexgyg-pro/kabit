@@ -477,6 +477,17 @@ export default function App() {
     return data;
   }
 
+  async function handleSaveJson(content: string): Promise<void> {
+    const res = await fetch(`${BACKEND}/corpus/file`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: 'catalogue-it.json', content }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    runIndexing();
+  }
+
   async function handleOpenCorpusDoc(path: string, title: string): Promise<void> {
     const res = await fetch(`${BACKEND}/corpus/file?path=${encodeURIComponent(path)}`);
     if (!res.ok) throw new Error(`Impossible de charger ${path}`);
@@ -754,6 +765,7 @@ export default function App() {
           onReindex={() => { runIndexing(); setShowAdmin(false); }}
           onSave={handleAdminSave}
           onSaveSystemPrompt={handleSaveSystemPrompt}
+          onSaveJson={handleSaveJson}
           onOpenDoc={handleOpenCorpusDoc}
           onClose={() => setShowAdmin(false)}
         />
