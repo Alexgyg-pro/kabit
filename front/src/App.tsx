@@ -329,15 +329,13 @@ export default function App() {
 
       // 2. Similarité cosinus avec tous les docs
       const docs = await getAllDocs();
-      const allScored = docs
+      const scored = docs
         .map((doc) => ({ doc, score: cosineSimilarity(qEmbed, doc.embedding) }))
-        .sort((a, b) => b.score - a.score);
-      console.log('DEBUG top 15:', allScored.slice(0, 15).map(r => ({ id: r.doc.id, score: r.score.toFixed(3) })));
-      const scored = allScored
         .filter((r) => {
           const threshold = r.doc.path.endsWith('.json') ? THRESHOLD_JSON : THRESHOLD_MD;
           return r.score >= threshold;
         })
+        .sort((a, b) => b.score - a.score)
         .slice(0, TOP_K);
 
       if (scored.length === 0) {
