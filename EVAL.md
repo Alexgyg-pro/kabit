@@ -212,17 +212,45 @@ Cocher chaque critère. Si une question échoue, investiguer la cause avant de m
 
 ## Tableau de bord
 
-| #   | Question résumée                        | Type   | Dernière validation | Résultat |
-|-----|-----------------------------------------|--------|---------------------|----------|
-| Q01 | Outlook ne démarre pas                  | .md    |                     |          |
-| Q02 | VPN Cisco AnyConnect inaccessible       | .md    |                     |          |
-| Q03 | Teams ne se lance plus                  | .md    |                     |          |
-| Q04 | OneDrive synchronisation bloquée        | .md    |                     |          |
-| Q05 | Réinitialisation mot de passe AD        | .md    |                     |          |
-| Q06 | Écran bleu BSOD                         | .md    |                     |          |
-| Q07 | Laptop collaborateur standard           | .json  |                     |          |
-| Q08 | Laptop cadre dirigeant (C-Level)        | .json  |                     |          |
-| Q09 | Applications du service Trading         | .json  |                     |          |
-| Q10 | CRM de FinCorp                          | .json  |                     |          |
-| Q11 | Portail SSPR (mot de passe libre-service) | .json |                    |          |
-| Q12 | Supervision réseau (Zabbix)             | .json  |                     |          |
+| #   | Question résumée                          | Type  | Dernière validation | Résultat |
+|-----|-------------------------------------------|-------|---------------------|----------|
+| Q01 | Outlook ne démarre pas                    | .md   | 05/05/2026          | ✅        |
+| Q02 | VPN Cisco AnyConnect inaccessible         | .md   | 05/05/2026          | ✅        |
+| Q03 | Teams ne se lance plus                    | .md   | 05/05/2026          | ❌        |
+| Q04 | OneDrive synchronisation bloquée          | .md   | 05/05/2026          | ⚠️        |
+| Q05 | Réinitialisation mot de passe AD          | .md   | 05/05/2026          | ✅        |
+| Q06 | Écran bleu BSOD                           | .md   | 05/05/2026          | ❌        |
+| Q07 | Laptop collaborateur standard             | .json | 05/05/2026          | ✅        |
+| Q08 | Laptop cadre dirigeant (C-Level)          | .json | 05/05/2026          | ✅        |
+| Q09 | Applications du service Trading           | .json | 05/05/2026          | ✅        |
+| Q10 | CRM de FinCorp                            | .json | 05/05/2026          | ✅        |
+| Q11 | Portail SSPR (mot de passe libre-service) | .json | 05/05/2026          | ✅        |
+| Q12 | Supervision réseau (Zabbix)               | .json | 05/05/2026          | ✅        |
+
+**Score : 9/12** (75 %) — dont 6/6 catalogue ✅ et 3/6 fiches .md ✅
+
+---
+
+## Observations — test du 05/05/2026
+
+### Q03 — Teams ne se lance plus ❌
+- Question exacte `"Teams se lance mais la fenêtre n'apparaît jamais."` → aucune réponse, aucune source.
+- Avec `"... Que faire ?"` ajouté → mauvaises sources (`teams-acces-canal`, `teams-statut-presence`), réponse générée par le LLM sans la procédure correcte.
+- **Diagnostic probable :** la formulation ne matche pas le titre ni le corps de `teams-ne-demarre-pas.md`. La fiche parle de Teams qui "se ferme immédiatement" ou "ne démarre pas" — pas de "fenêtre qui n'apparaît pas".
+- **Action :** reformuler la question de test OU enrichir la fiche avec ce symptôme.
+
+### Q04 — OneDrive synchronisation bloquée ⚠️
+- Question exacte → aucune réponse, aucune source.
+- Avec `"... Que faire ?"` → réponse correcte mais source retournée : `LPT-DEV-005` (laptop JSON), pas `onedrive-synchronisation-bloquee.md`. La réponse vient du pré-entraînement du LLM, pas du corpus.
+- **Diagnostic probable :** "croix rouge" et "synchronisation bloquée" ne matchent pas suffisamment le contenu de la fiche (score sous le seuil THRESHOLD_MD = 0.20).
+- **Action :** enrichir le frontmatter de la fiche (commentaire, équipes) ou ajouter des synonymes dans le corps.
+
+### Q06 — Écran bleu BSOD ❌
+- Aucune réponse, aucune source quelle que soit la formulation testée.
+- **Diagnostic probable :** "écran bleu" et "BSOD" sont peut-être absents ou rares dans la fiche `ecran-bleu-bsod-windows.md`.
+- **Action :** lire la fiche et vérifier que ces termes y figurent bien. Ajouter un synonyme dans le frontmatter si nécessaire.
+
+### Observations générales
+- **Catalogue JSON : 6/6** — tous les chunks sont bien retrouvés. Le chunking dénormalisé et le modèle multilingue fonctionnent bien.
+- **Fiches .md : 3/6** — les échecs sont liés à des questions dont la formulation s'écarte du vocabulaire utilisé dans la fiche. La sensibilité au phrasé est le principal axe d'amélioration.
+- **Sensibilité au phrasé :** ajouter "Que faire ?" ou reformuler en incluant un verbe d'action améliore nettement les résultats (voir Q04 bis). À documenter pour les futurs tests.
