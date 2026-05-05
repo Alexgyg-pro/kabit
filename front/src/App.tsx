@@ -9,7 +9,8 @@ const BACKEND = 'http://localhost:3001';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const GROQ_API_KEY: string | undefined = (import.meta as any).env?.VITE_GROQ_API_KEY;
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
-const SIMILARITY_THRESHOLD = 0.25;
+const THRESHOLD_JSON = 0.35;
+const THRESHOLD_MD = 0.20;
 const TOP_K = 5;
 
 const GROQ_MODELS = [
@@ -314,7 +315,10 @@ export default function App() {
       const docs = await getAllDocs();
       const scored = docs
         .map((doc) => ({ doc, score: cosineSimilarity(qEmbed, doc.embedding) }))
-        .filter((r) => r.score >= SIMILARITY_THRESHOLD)
+        .filter((r) => {
+          const threshold = r.doc.path.endsWith('.json') ? THRESHOLD_JSON : THRESHOLD_MD;
+          return r.score >= threshold;
+        })
         .sort((a, b) => b.score - a.score)
         .slice(0, TOP_K);
 
