@@ -6,7 +6,7 @@
 
 ---
 
-### US-013 — Édition du catalogue
+### ✅ US-013 — Édition du catalogue
 
 **En tant qu'** administrateur,
 **Je veux** pouvoir éditer le catalogue depuis l'interface,
@@ -14,13 +14,15 @@
 
 **Critères d'acceptance :**
 
-- [ ] En mode Administrateur, un accès à l'édition du catalogue est disponible dans la modale admin
-- [ ] Le contenu du fichier `catalogue-it.json` est affiché dans un textarea éditable
-- [ ] Le JSON est validé syntaxiquement avant sauvegarde — une erreur bloque l'enregistrement et affiche un message explicite
-- [ ] La sauvegarde écrit le fichier via le backend et déclenche une réindexation
-- [ ] Un message de confirmation est affiché après sauvegarde
+- [x] En mode Administrateur, un accès à l'édition du catalogue est disponible dans la modale admin
+- [x] Le contenu du fichier `catalogue-it.json` est affiché dans un textarea éditable
+- [x] Le JSON est validé syntaxiquement avant sauvegarde — une erreur bloque l'enregistrement et affiche un message explicite
+- [x] La sauvegarde écrit le fichier via le backend et déclenche une réindexation
+- [x] Un message de confirmation est affiché après sauvegarde
 
 **Note :** cette US couvre l'édition JSON brut. L'évolution vers des formulaires structurés (un formulaire par laptop, application, service) est tracée en US-015.
+
+**Livré le :** 05/05/2026 — branche `feature/edition-catalogue`
 
 ---
 
