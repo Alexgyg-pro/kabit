@@ -6,6 +6,40 @@
 
 ---
 
+### US-016 — Golden dataset — jeu de tests qualité RAG
+
+**En tant que** Product Owner,
+**Je veux** disposer d'un jeu de questions de référence avec les réponses et sources attendues,
+**Afin de** pouvoir mesurer objectivement l'impact de chaque changement technique sur la qualité des réponses.
+
+**Note :** couvre à la fois les questions procédurales (basées sur les fiches `.md`) et les questions sur le catalogue (basées sur `catalogue-it.json`). À définir en collaboration avec les techniciens support pour que les questions reflètent des cas réels.
+
+**Critères d'acceptance :**
+
+- [ ] Un fichier `EVAL.md` liste au minimum 10 questions couvrant les deux types de corpus (.md et .json)
+- [ ] Chaque question indique la source attendue (fichier ou chunk) et les éléments clés de la réponse correcte
+- [ ] Le document est utilisé manuellement pour valider chaque évolution du pipeline RAG avant merge
+
+---
+
+### US-015 — Formulaires d'édition du catalogue
+
+**En tant qu'** administrateur,
+**Je veux** éditer le catalogue via des formulaires structurés (un formulaire par laptop, application, service),
+**Afin de** modifier les données sans risque d'erreur de syntaxe JSON et avec une expérience plus guidée.
+
+**Note :** évolution de US-013 (textarea JSON brut). À affiner avant développement.
+
+---
+
+### US-016 — Corpus supplémentaire
+
+**En tant que** Product Owner,
+**Je veux** quelques fichiers de corpus supplémentaires, des .md, portant sur OneDrive et les dossiers partagés,
+**Afin de** afin de couvrir un domaine qui ne l'est pas.
+
+## Terminé
+
 ### ✅ US-013 — Édition du catalogue
 
 **En tant qu'** administrateur,
@@ -42,34 +76,6 @@
 - [x] La liste est actualisée après l'ajout d'une nouvelle fiche
 
 **Livré le :** 05/05/2026 — branche `feature/liste-fiches-admin`
-
-### US-016 — Golden dataset — jeu de tests qualité RAG
-
-**En tant que** Product Owner,
-**Je veux** disposer d'un jeu de questions de référence avec les réponses et sources attendues,
-**Afin de** pouvoir mesurer objectivement l'impact de chaque changement technique sur la qualité des réponses.
-
-**Note :** couvre à la fois les questions procédurales (basées sur les fiches `.md`) et les questions sur le catalogue (basées sur `catalogue-it.json`). À définir en collaboration avec les techniciens support pour que les questions reflètent des cas réels.
-
-**Critères d'acceptance :**
-
-- [ ] Un fichier `EVAL.md` liste au minimum 10 questions couvrant les deux types de corpus (.md et .json)
-- [ ] Chaque question indique la source attendue (fichier ou chunk) et les éléments clés de la réponse correcte
-- [ ] Le document est utilisé manuellement pour valider chaque évolution du pipeline RAG avant merge
-
----
-
-### US-015 — Formulaires d'édition du catalogue
-
-**En tant qu'** administrateur,
-**Je veux** éditer le catalogue via des formulaires structurés (un formulaire par laptop, application, service),
-**Afin de** modifier les données sans risque d'erreur de syntaxe JSON et avec une expérience plus guidée.
-
-**Note :** évolution de US-013 (textarea JSON brut). À affiner avant développement.
-
----
-
-## Terminé
 
 ### ✅ US-012 — Bouton copier la question-réponse
 
