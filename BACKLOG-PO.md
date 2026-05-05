@@ -4,9 +4,14 @@
 
 ## À faire
 
+### ✅ BUG-003 — Les réponses évoquent souvent Document 1
+
+**Symptôme** : Les réponses évoquesnt souvent un _Document 1_ qui ressemble à un nom de variable ou quelque chose comme ça. C'est assez disgracieux.
+**Cause possible** : Cela pourrait faire référence au catalogue-it.json. Si c'est le cas, il faudra que la réponse fasse référence au "catalogue".
+
 ---
 
-### US-016 — Golden dataset — jeu de tests qualité RAG
+### ✅ US-016 — Golden dataset — jeu de tests qualité RAG
 
 **En tant que** Product Owner,
 **Je veux** disposer d'un jeu de questions de référence avec les réponses et sources attendues,
@@ -16,9 +21,12 @@
 
 **Critères d'acceptance :**
 
-- [ ] Un fichier `EVAL.md` liste au minimum 10 questions couvrant les deux types de corpus (.md et .json)
-- [ ] Chaque question indique la source attendue (fichier ou chunk) et les éléments clés de la réponse correcte
-- [ ] Le document est utilisé manuellement pour valider chaque évolution du pipeline RAG avant merge
+- [x] Un fichier `EVAL.md` liste au minimum 10 questions couvrant les deux types de corpus (.md et .json)
+- [x] Chaque question indique la source attendue (fichier ou chunk) et les éléments clés de la réponse correcte
+- [x] Le document est utilisé manuellement pour valider chaque évolution du pipeline RAG avant merge
+
+**Livré le :** 05/05/2026 — branche `feature/golden-dataset`
+**Baseline :** 9/12 (75 %) — 6/6 catalogue ✅, 3/6 fiches .md ✅. Échecs tracés dans `EVAL.md`.
 
 ---
 
@@ -32,7 +40,7 @@
 
 ---
 
-### US-016 — Corpus supplémentaire
+### US-017 — Corpus supplémentaire
 
 **En tant que** Product Owner,
 **Je veux** quelques fichiers de corpus supplémentaires, des .md, portant sur OneDrive et les dossiers partagés,
