@@ -8,7 +8,8 @@ const PORT = 3001;
 const CORPUS_DIR = path.join(__dirname, '..', 'corpus');
 const SYSTEM_PROMPT_PATH = path.join(__dirname, '..', 'system-prompt.md');
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+// dev : frontend Vite sur 5173 — prod : même origine (frontend servi par ce serveur)
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:3001'] }));
 app.use(express.json());
 
 // GET /system-prompt — retourne le contenu de system-prompt.md (vide si absent)
@@ -127,6 +128,14 @@ app.post('/corpus/add', (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Servir le build React en mode production (si front/dist/ existe)
+const DIST_DIR = path.join(__dirname, '..', 'front', 'dist');
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+  app.get('*', (_req, res) => res.sendFile(path.join(DIST_DIR, 'index.html')));
+  console.log(`🌐 Frontend servi depuis ${DIST_DIR}`);
+}
 
 app.listen(PORT, () => {
   console.log(`✅ Backend CAGPT démarré sur http://localhost:${PORT}`);
