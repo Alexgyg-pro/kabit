@@ -62,9 +62,10 @@ export default function AdminModal({
       return;
     }
     setCatalogueLoading(true);
+    setCatalogueMsg('Enregistrement et réindexation en cours...');
     try {
       await onSaveJson(catalogueContent);
-      setCatalogueMsg('✅ Sauvegardé et réindexé');
+      setCatalogueMsg('✅ Réindexation terminée.');
     } catch (e) {
       setCatalogueMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
     } finally {
