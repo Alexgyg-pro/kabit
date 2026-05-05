@@ -4,21 +4,6 @@
 
 ## À faire
 
-### ✅ US-012 — Bouton copier la question-réponse
-
-**En tant qu'** utilisateur de l'application,
-**Je veux** copier ma question et la réponse dans le presse-papier,
-**Afin de** pouvoir coller ce texte dans une autre application.
-
-**Critères d'acceptance :**
-
-- [x] Un bouton "Copier" est visible sous la réponse dès qu'elle est affichée
-- [x] Le contenu copié contient la question suivie de la réponse (texte brut, sans mise en forme Markdown)
-- [x] Un feedback visuel confirme la copie (ex. : le bouton passe à "Copié ✓" quelques secondes)
-- [x] Le bouton est absent tant qu'aucune réponse n'a été produite
-
-**Livré le :** 05/05/2026 — branche `feature/copier-question-reponse`
-
 ---
 
 ### US-013 — Édition du catalogue
@@ -39,7 +24,7 @@
 
 ---
 
-### US-014 — Liste de fiches
+### ✅ US-014 — Liste de fiches
 
 **En tant qu'** administrateur,
 **Je veux** lister les fiches `.md` disponibles dans l'UI administration,
@@ -49,10 +34,12 @@
 
 **Critères d'acceptance :**
 
-- [ ] La modale admin affiche la liste de toutes les fiches `.md` du corpus
-- [ ] Chaque fiche est cliquable et ouvre la modale d'édition existante (US-011)
-- [ ] La liste est scrollable et affiche le titre de chaque fiche
-- [ ] La liste est actualisée après l'ajout d'une nouvelle fiche
+- [x] La modale admin affiche la liste de toutes les fiches `.md` du corpus
+- [x] Chaque fiche est cliquable et ouvre la modale d'édition existante (US-011)
+- [x] La liste est scrollable et affiche le titre de chaque fiche
+- [x] La liste est actualisée après l'ajout d'une nouvelle fiche
+
+**Livré le :** 05/05/2026 — branche `feature/liste-fiches-admin`
 
 ### US-016 — Golden dataset — jeu de tests qualité RAG
 
@@ -82,16 +69,33 @@
 
 ## Terminé
 
+### ✅ US-012 — Bouton copier la question-réponse
+
+**En tant qu'** utilisateur de l'application,
+**Je veux** copier ma question et la réponse dans le presse-papier,
+**Afin de** pouvoir coller ce texte dans une autre application.
+
+**Critères d'acceptance :**
+
+- [x] Un bouton "Copier" est visible sous la réponse dès qu'elle est affichée
+- [x] Le contenu copié contient la question suivie de la réponse (texte brut, sans mise en forme Markdown)
+- [x] Un feedback visuel confirme la copie (ex. : le bouton passe à "Copié ✓" quelques secondes)
+- [x] Le bouton est absent tant qu'aucune réponse n'a été produite
+
+**Livré le :** 05/05/2026 — branche `feature/copier-question-reponse`
+
 ### ✅ BUG-002 — Les fiches .md n'étaient plus retrouvées après changement de modèle d'embedding
 
 **Symptôme :**
 Après le passage au modèle multilingue `paraphrase-multilingual-MiniLM-L12-v2`, les questions procédurales ("Outlook ne démarre pas", "À quoi sert Teams ?") ne remontaient plus les fiches `.md` correspondantes. Les réponses provenaient du pré-entraînement du LLM, pas du corpus.
 
 **Causes identifiées :**
+
 1. **Frontmatter YAML brut** — les fiches `.md` commencent par un bloc YAML (`---\ntitle: ...\ncatégorie: ...\n---`) qui occupait une grande partie des 2000 chars d'embedding, diluant le signal sémantique utile.
 2. **Seuil unique inadapté** — le seuil de similarité unique (0.35 puis 0.25) ne tenait pas compte de la différence structurelle entre chunks JSON (courts, scores élevés) et fiches `.md` (longues, scores plus bas). Les chunks JSON saturaient le TOP_K.
 
 **Corrections apportées :**
+
 - Stripping du frontmatter YAML avant embedding : les métadonnées (`title`, `catégorie`, `service`, `équipes`, `commentaire`) sont converties en texte naturel dense placé en tête du corps de la fiche
 - Seuils distincts : JSON à 0.35 (filtre strict, chunks courts), `.md` à 0.20 (filtre permissif, documents longs)
 - TOP_K porté de 3 à 5 pour améliorer la diversité des sources retournées
