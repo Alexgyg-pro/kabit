@@ -4,6 +4,12 @@
 
 ## À faire
 
+**En tant que** administrateur,
+**Je veux** que l'on puisse retrouver le pré-prompt par défaut,
+**Afin de** pouvoir le retrouver si jamais il est effacé.
+
+Note : Le pré-prompt : "Je suis technicien de support informatique et je veux résoudre l'incident d'un utilisateur. Tu m'aides à trouver une solution."
+
 ### US-019 - Révision du UX
 
 **En tant que** administrateur,
@@ -15,6 +21,24 @@
 **En tant que** utilisateur de l'application,
 **Je veux** quelques aménagements sur les couleurs
 **Afin de** afin de mieux voir.
+
+### US-020 — Assistant de diagnostic RAG
+
+**En tant qu'** administrateur,
+**Je veux** pouvoir diagnostiquer un échec du RAG et obtenir des suggestions d'enrichissement de la fiche manquée,
+**Afin d'** améliorer le corpus de façon ciblée, guidée par les vrais cas d'échec.
+
+**Scénario :**
+1. L'utilisateur pose une question de test — le RAG ne trouve pas la bonne fiche
+2. Un bouton "Diagnostiquer" apparaît sous la réponse (visible en mode Admin)
+3. L'utilisateur sélectionne la fiche qui *aurait dû* être trouvée dans la liste du corpus
+4. Le système envoie au LLM : la question + les sources effectivement remontées (avec scores) + le contenu de la fiche manquée
+5. Le LLM identifie le décalage de vocabulaire et propose des enrichissements concrets à ajouter à la fiche
+6. L'utilisateur peut ouvrir la fiche en édition directement depuis le panneau de diagnostic
+
+**Note :** s'appuie sur les cas d'échec documentés dans `EVAL.md` (Q03, Q04, Q06). Complémentaire à US-017.
+
+---
 
 ### US-017 — Corpus supplémentaire
 
