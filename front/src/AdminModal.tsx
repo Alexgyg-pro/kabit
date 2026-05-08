@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import CatalogueModal from './CatalogueModal';
 
 interface AdminModalProps {
   systemPrompt: string;
@@ -33,8 +34,7 @@ export default function AdminModal({
   const [mdFiles, setMdFiles] = useState<{ path: string; title: string }[]>([]);
 
   const [catalogueContent, setCatalogueContent] = useState('');
-  const [catalogueMsg, setCatalogueMsg] = useState('');
-  const [catalogueLoading, setCatalogueLoading] = useState(false);
+  const [showCatalogue, setShowCatalogue] = useState(false);
 
   async function fetchCatalogue() {
     try {
@@ -53,25 +53,6 @@ export default function AdminModal({
   }
 
   useEffect(() => { fetchMdFiles(); fetchCatalogue(); }, []);
-
-  async function handleSaveCatalogue() {
-    try {
-      JSON.parse(catalogueContent);
-    } catch (e) {
-      setCatalogueMsg(`JSON invalide : ${e instanceof Error ? e.message : String(e)}`);
-      return;
-    }
-    setCatalogueLoading(true);
-    setCatalogueMsg('Enregistrement et réindexation en cours...');
-    try {
-      await onSaveJson(catalogueContent);
-      setCatalogueMsg('✅ Réindexation terminée.');
-    } catch (e) {
-      setCatalogueMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setCatalogueLoading(false);
-    }
-  }
 
   async function handleSaveCorpus() {
     if (!title.trim() || !content.trim()) {
@@ -174,22 +155,25 @@ export default function AdminModal({
           <section className="admin-section">
             <h2 className="admin-section-title">Catalogue IT</h2>
             <p className="admin-section-desc">
-              Édition directe de <code>catalogue-it.json</code>. Le JSON est validé avant sauvegarde — une erreur bloque l'enregistrement.
+              Éditeur structuré de <code>catalogue-it.json</code> — CRUD par onglets (services, matériel, applications, outils).
             </p>
-            <textarea
-              className="admin-textarea admin-textarea--json"
-              rows={15}
-              value={catalogueContent}
-              onChange={(e) => { setCatalogueContent(e.target.value); setCatalogueMsg(''); }}
-              spellCheck={false}
-              placeholder="Chargement du catalogue..."
-            />
-            <div className="admin-save-row">
-              <button className="btn-save" onClick={handleSaveCatalogue} disabled={catalogueLoading || !catalogueContent}>
-                {catalogueLoading ? 'Sauvegarde...' : 'Sauvegarder'}
-              </button>
-              {catalogueMsg && <span className="admin-msg">{catalogueMsg}</span>}
-            </div>
+            <button
+              className="btn-cat-open"
+              onClick={() => setShowCatalogue(true)}
+              disabled={!catalogueContent}
+            >
+              {catalogueContent ? '📋 Ouvrir l\'éditeur du catalogue' : 'Chargement...'}
+            </button>
+            {showCatalogue && catalogueContent && (
+              <CatalogueModal
+                initialContent={catalogueContent}
+                onSave={async (json) => {
+                  await onSaveJson(json);
+                  setCatalogueContent(json);
+                }}
+                onClose={() => setShowCatalogue(false)}
+              />
+            )}
           </section>
 
           {/* ── Section Pré-prompt ───────────────────────────────────── */}
