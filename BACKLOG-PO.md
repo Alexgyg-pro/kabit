@@ -4,15 +4,17 @@
 
 ## À faire
 
-### US-015 — Formulaires d'édition du catalogue
+### US-019 - Révision du UX
 
-**En tant qu'** administrateur,
-**Je veux** éditer le catalogue via des formulaires structurés (un formulaire par laptop, application, service),
-**Afin de** modifier les données sans risque d'erreur de syntaxe JSON et avec une expérience plus guidée.
+**En tant que** administrateur,
+**Je veux** quelques aménagements dans la navigation
+**Afin de** afin d'avoir un UX plus fluide.
 
-**Note :** évolution de US-013 (textarea JSON brut). À affiner avant développement.
+### US-018 - Révision du UX
 
----
+**En tant que** utilisateur de l'application,
+**Je veux** quelques aménagements sur les couleurs
+**Afin de** afin de mieux voir.
 
 ### US-017 — Corpus supplémentaire
 
@@ -21,6 +23,18 @@
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### US-015 — Formulaires d'édition du catalogue
+
+**En tant qu'** administrateur,
+**Je veux** éditer le catalogue via des formulaires structurés (un formulaire par laptop, application, service),
+**Afin de** modifier les données sans risque d'erreur de syntaxe JSON et avec une expérience plus guidée.
+
+**Note :** évolution de US-013 (textarea JSON brut). À affiner avant développement.
+**Livré le :** 08/05/2026 — branche `feature/catalogue-crud`
+
+---
+
 
 ### ✅ BUG-003 — Les réponses évoquent souvent Document 1
 
