@@ -4,6 +4,24 @@
 
 ## À faire
 
+### US-015 — Formulaires d'édition du catalogue
+
+**En tant qu'** administrateur,
+**Je veux** éditer le catalogue via des formulaires structurés (un formulaire par laptop, application, service),
+**Afin de** modifier les données sans risque d'erreur de syntaxe JSON et avec une expérience plus guidée.
+
+**Note :** évolution de US-013 (textarea JSON brut). À affiner avant développement.
+
+---
+
+### US-017 — Corpus supplémentaire
+
+**En tant que** Product Owner,
+**Je veux** quelques fichiers de corpus supplémentaires, des .md, portant sur OneDrive et les dossiers partagés,
+**Afin de** afin de couvrir un domaine qui ne l'est pas.
+
+## Terminé
+
 ### ✅ BUG-003 — Les réponses évoquent souvent Document 1
 
 **Symptôme** : Les réponses évoquaient souvent un _Document 1_ qui ressemble à un nom de variable. Disgracieux en démo.
@@ -34,24 +52,6 @@
 **Baseline :** 9/12 (75 %) — 6/6 catalogue ✅, 3/6 fiches .md ✅. Échecs tracés dans `EVAL.md`.
 
 ---
-
-### US-015 — Formulaires d'édition du catalogue
-
-**En tant qu'** administrateur,
-**Je veux** éditer le catalogue via des formulaires structurés (un formulaire par laptop, application, service),
-**Afin de** modifier les données sans risque d'erreur de syntaxe JSON et avec une expérience plus guidée.
-
-**Note :** évolution de US-013 (textarea JSON brut). À affiner avant développement.
-
----
-
-### US-017 — Corpus supplémentaire
-
-**En tant que** Product Owner,
-**Je veux** quelques fichiers de corpus supplémentaires, des .md, portant sur OneDrive et les dossiers partagés,
-**Afin de** afin de couvrir un domaine qui ne l'est pas.
-
-## Terminé
 
 ### ✅ US-013 — Édition du catalogue
 
