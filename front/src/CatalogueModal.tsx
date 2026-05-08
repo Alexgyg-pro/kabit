@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import DualList from './DualList';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -71,48 +72,13 @@ const emptyLaptop   = (): Laptop       => ({ id: '', modele: '', processeur: '',
 const emptyApp      = (): Application  => ({ id: '', nom: '', editeur: '', type: '', licences: '', services_cibles: [], contact_support: '' });
 const emptyOutil    = (): OutilSupport => ({ id: '', nom: '', type: '', description: '', url_intranet: '', acces: '' });
 
-function toggleArr(arr: string[], val: string): string[] {
-  return arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val];
-}
-
-// ── Micro-composants ──────────────────────────────────────────────────────────
+// ── Micro-composant champ de formulaire ───────────────────────────────────────
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="cat-field">
       <label className="cat-field-label">{label}</label>
       {children}
-    </div>
-  );
-}
-
-function CheckboxList({
-  options,
-  selected,
-  onChange,
-}: {
-  options: { value: string; label: string }[];
-  selected: string[];
-  onChange: (next: string[]) => void;
-}) {
-  return (
-    <div className="cat-checkbox-list">
-      {options.length === 0 && (
-        <span className="cat-checkbox-empty">Aucune option disponible</span>
-      )}
-      {options.map(opt => (
-        <label key={opt.value} className="cat-checkbox-item">
-          <input
-            type="checkbox"
-            checked={selected.includes(opt.value)}
-            onChange={() => onChange(toggleArr(selected, opt.value))}
-          />
-          <span className="cat-checkbox-id">{opt.value}</span>
-          {opt.label !== opt.value && (
-            <span className="cat-checkbox-label"> — {opt.label}</span>
-          )}
-        </label>
-      ))}
     </div>
   );
 }
@@ -145,11 +111,11 @@ function ServiceForm({
           placeholder="Infrastructure, support, cybersécurité..." />
       </Field>
       <Field label="Laptops attribués">
-        <CheckboxList options={allLaptopIds} selected={data.laptops}
+        <DualList all={allLaptopIds} selected={data.laptops}
           onChange={v => onChange({ ...data, laptops: v })} />
       </Field>
       <Field label="Applications métier">
-        <CheckboxList options={allAppIds} selected={data.applications_metier}
+        <DualList all={allAppIds} selected={data.applications_metier}
           onChange={v => onChange({ ...data, applications_metier: v })} />
       </Field>
       <div className="cat-form-actions">
@@ -212,7 +178,7 @@ function LaptopForm({
           placeholder="Collaborateur standard" />
       </Field>
       <Field label="Services cibles">
-        <CheckboxList options={allServiceIds} selected={data.services_cibles}
+        <DualList all={allServiceIds} selected={data.services_cibles}
           onChange={v => onChange({ ...data, services_cibles: v })} />
       </Field>
       <div className="cat-form-actions">
@@ -258,7 +224,7 @@ function AppForm({
           placeholder="Nominatives — 45 licences actives" />
       </Field>
       <Field label="Services cibles">
-        <CheckboxList options={allServiceIds} selected={data.services_cibles}
+        <DualList all={allServiceIds} selected={data.services_cibles}
           onChange={v => onChange({ ...data, services_cibles: v })} />
       </Field>
       <Field label="Contact support">
@@ -339,28 +305,25 @@ export default function CatalogueModal({ initialContent, onSave, onClose }: Prop
   const [saving, setSaving]         = useState(false);
   const [saveMsg, setSaveMsg]       = useState('');
 
-  // États d'édition (un jeu par type d'entité — null = rien, -1 = ajout)
-  const [editSvcIdx, setEditSvcIdx]     = useState<number | null>(null);
-  const [editSvcData, setEditSvcData]   = useState<Service | null>(null);
-
-  const [editLptIdx, setEditLptIdx]     = useState<number | null>(null);
-  const [editLptData, setEditLptData]   = useState<Laptop | null>(null);
-
-  const [editAppIdx, setEditAppIdx]     = useState<number | null>(null);
-  const [editAppData, setEditAppData]   = useState<Application | null>(null);
-
-  const [editOutilIdx, setEditOutilIdx] = useState<number | null>(null);
+  // États d'édition (null = rien ouvert, -1 = ajout en cours)
+  const [editSvcIdx, setEditSvcIdx]       = useState<number | null>(null);
+  const [editSvcData, setEditSvcData]     = useState<Service | null>(null);
+  const [editLptIdx, setEditLptIdx]       = useState<number | null>(null);
+  const [editLptData, setEditLptData]     = useState<Laptop | null>(null);
+  const [editAppIdx, setEditAppIdx]       = useState<number | null>(null);
+  const [editAppData, setEditAppData]     = useState<Application | null>(null);
+  const [editOutilIdx, setEditOutilIdx]   = useState<number | null>(null);
   const [editOutilData, setEditOutilData] = useState<OutilSupport | null>(null);
 
-  // Listes dérivées pour les checkboxes
+  // Listes dérivées pour les DualList
   const allLaptopIds = [
     ...data.materiel.laptop_ordinaire,
     ...data.materiel.laptop_developpeur,
     ...data.materiel.laptop_luxe,
   ].map(l => ({ value: l.id, label: l.modele }));
 
-  const allAppIds      = data.applications_metier.map(a => ({ value: a.id, label: a.nom }));
-  const allServiceIds  = data.services.map(s => ({ value: s.id, label: s.nom }));
+  const allAppIds     = data.applications_metier.map(a => ({ value: a.id, label: a.nom }));
+  const allServiceIds = data.services.map(s => ({ value: s.id, label: s.nom }));
 
   const matKey: Record<MatSubTab, keyof CatalogueData['materiel']> = {
     ordinaire:   'laptop_ordinaire',
@@ -385,13 +348,11 @@ export default function CatalogueModal({ initialContent, onSave, onClose }: Prop
 
   // ── CRUD Services ─────────────────────────────────────────────────────────
   const cancelSvc = () => { setEditSvcIdx(null); setEditSvcData(null); };
-
   function startEditSvc(idx: number) {
     const s = data.services[idx];
     setEditSvcIdx(idx);
     setEditSvcData({ ...s, laptops: [...s.laptops], applications_metier: [...s.applications_metier] });
   }
-
   function validateSvc() {
     if (!editSvcData?.id.trim() || !editSvcData.nom.trim()) return;
     if (editSvcIdx === -1) {
@@ -401,7 +362,6 @@ export default function CatalogueModal({ initialContent, onSave, onClose }: Prop
     }
     cancelSvc();
   }
-
   function deleteSvc(idx: number) {
     setData(d => ({ ...d, services: d.services.filter((_, i) => i !== idx) }));
     if (editSvcIdx === idx) cancelSvc();
@@ -409,13 +369,11 @@ export default function CatalogueModal({ initialContent, onSave, onClose }: Prop
 
   // ── CRUD Laptops ──────────────────────────────────────────────────────────
   const cancelLpt = () => { setEditLptIdx(null); setEditLptData(null); };
-
   function startEditLpt(idx: number) {
     const l = currentLaptops[idx];
     setEditLptIdx(idx);
     setEditLptData({ ...l, services_cibles: [...l.services_cibles] });
   }
-
   function validateLpt() {
     if (!editLptData?.id.trim() || !editLptData.modele.trim()) return;
     const key = matKey[matSubTab];
@@ -429,7 +387,6 @@ export default function CatalogueModal({ initialContent, onSave, onClose }: Prop
     }
     cancelLpt();
   }
-
   function deleteLpt(idx: number) {
     const key = matKey[matSubTab];
     setData(d => ({ ...d, materiel: { ...d.materiel, [key]: d.materiel[key].filter((_, i) => i !== idx) } }));
@@ -438,13 +395,11 @@ export default function CatalogueModal({ initialContent, onSave, onClose }: Prop
 
   // ── CRUD Applications ─────────────────────────────────────────────────────
   const cancelApp = () => { setEditAppIdx(null); setEditAppData(null); };
-
   function startEditApp(idx: number) {
     const a = data.applications_metier[idx];
     setEditAppIdx(idx);
     setEditAppData({ ...a, services_cibles: [...a.services_cibles] });
   }
-
   function validateApp() {
     if (!editAppData?.id.trim() || !editAppData.nom.trim()) return;
     if (editAppIdx === -1) {
@@ -457,20 +412,17 @@ export default function CatalogueModal({ initialContent, onSave, onClose }: Prop
     }
     cancelApp();
   }
-
   function deleteApp(idx: number) {
     setData(d => ({ ...d, applications_metier: d.applications_metier.filter((_, i) => i !== idx) }));
     if (editAppIdx === idx) cancelApp();
   }
 
-  // ── CRUD Outils support ───────────────────────────────────────────────────
+  // ── CRUD Outils ───────────────────────────────────────────────────────────
   const cancelOutil = () => { setEditOutilIdx(null); setEditOutilData(null); };
-
   function startEditOutil(idx: number) {
     setEditOutilIdx(idx);
     setEditOutilData({ ...data.support.outils[idx] });
   }
-
   function validateOutil() {
     if (!editOutilData?.id.trim() || !editOutilData.nom.trim()) return;
     if (editOutilIdx === -1) {
@@ -483,7 +435,6 @@ export default function CatalogueModal({ initialContent, onSave, onClose }: Prop
     }
     cancelOutil();
   }
-
   function deleteOutil(idx: number) {
     setData(d => ({ ...d, support: { ...d.support, outils: d.support.outils.filter((_, i) => i !== idx) } }));
     if (editOutilIdx === idx) cancelOutil();
@@ -514,11 +465,9 @@ export default function CatalogueModal({ initialContent, onSave, onClose }: Prop
 
         <div className="cat-tabs">
           {tabs.map(t => (
-            <button
-              key={t.key}
+            <button key={t.key}
               className={`cat-tab ${activeTab === t.key ? 'cat-tab--active' : ''}`}
-              onClick={() => setActiveTab(t.key)}
-            >
+              onClick={() => setActiveTab(t.key)}>
               {t.label}
             </button>
           ))}
