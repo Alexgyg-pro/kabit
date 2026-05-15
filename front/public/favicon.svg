@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- fond arrondi -->
+  <rect width="32" height="32" rx="7" fill="#0f1b2d"/>
+  <!-- bulle de dialogue -->
+  <path d="M5 7 Q5 4 8 4 H24 Q27 4 27 7 V18 Q27 21 24 21 H17 L13 27 L13 21 H8 Q5 21 5 18 Z" fill="#2563eb"/>
+  <!-- éclair -->
+  <polygon points="18,7 13,17 16.5,17 15,24 20,14 16.5,14" fill="white"/>
+</svg>
