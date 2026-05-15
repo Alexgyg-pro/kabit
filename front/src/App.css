@@ -95,7 +95,7 @@
 .badge-green  { background: #14532d; color: var(--code-block-text); border: 1px solid #16a34a; }
 .badge-red    { background: #450a0a; color: #fca5a5; border: 1px solid #dc2626; }
 .badge-yellow { background: #422006; color: var(--code-text); border: 1px solid #ca8a04; }
-.badge-grey   { background: #1f2937; color: #9ca3af; border: 1px solid var(--border-subtle); }
+.badge-grey   { background: #162035; color: #9ca3af; border: 1px solid var(--border-subtle); }
 .badge--clickable { cursor: pointer; }
 .badge--clickable:hover { filter: brightness(1.2); }
 
