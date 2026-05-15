@@ -4,6 +4,52 @@
 
 ## À faire
 
+### US-026 — Matrice d'escalade
+
+**En tant que** technicien de support,
+**Je veux** pouvoir consulter rapidement à qui escalader un incident que je ne sais pas résoudre,
+**Afin de** ne pas perdre de temps à chercher le bon interlocuteur.
+
+**Scénario :**
+Un technicien pose une question du type "à qui j'escalade un problème réseau ?" ou "qui contacter pour un incident Intune ?" — le RAG répond avec le bon contact, l'équipe et le canal à utiliser.
+
+**Implémentation suggérée :**
+- Nouveau fichier `corpus/matrice-escalade.json` structuré par domaine (réseau, sécurité, Active Directory, matériel, applicatif métier…)
+- Chaque entrée contient : domaine, exemples d'incidents, équipe cible, contact, canal (ticket / Teams / téléphone), délai de prise en charge
+- Chunké et indexé comme `catalogue-it.json`
+- Éditable depuis l'interface admin (nouveau tab dans l'éditeur catalogue, ou éditeur dédié)
+
+**Note :** dans un vrai service support, savoir à qui escalader est souvent aussi difficile que de résoudre l'incident lui-même.
+
+---
+
+### US-027 — Niveau du technicien configurable
+
+**En tant qu'** administrateur,
+**Je veux** configurer le niveau du technicien qui utilise l'assistant (N1, N2, Boutique IT…),
+**Afin que** les conseils d'escalade soient adaptés à son niveau réel et ne lui suggèrent pas de contacter sa propre équipe.
+
+**Scénario :** un technicien Boutique IT se voit actuellement conseiller "escalader à la Boutique IT" — ce qui n'a aucun sens.
+
+**Implémentation suggérée :**
+- Champ de configuration dans la modale admin (liste déroulante : N1 / N2 / Boutique IT / autre)
+- Le niveau est injecté automatiquement dans le prompt système
+- Persisté en localStorage
+
+---
+
+### US-025 — Chunking des fiches .md par section
+
+**En tant qu'** administrateur,
+**Je veux** que chaque section `##` d'une fiche `.md` soit indexée comme un chunk indépendant,
+**Afin de** que le contenu des fiches longues soit entièrement accessible au RAG, et non tronqué.
+
+**Contexte technique :** le modèle d'embedding a une fenêtre de 128 tokens (~500 chars). Les fiches longues sont actuellement tronquées dès le premier tiers — les sections "Méthode 2", "Cas particulier", "Quand escalader" sont invisibles au RAG.
+
+**Note :** s'inspire de l'approche déjà en place pour le catalogue JSON (~65 chunks).
+
+---
+
 ### US-019 - Révision du UX
 
 **En tant que** administrateur,

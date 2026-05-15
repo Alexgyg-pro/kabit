@@ -101,9 +101,17 @@ Windows recrée un dossier `GroupPolicy` propre au redémarrage.
 
 ---
 
-## Cas particulier — Accès microphone/caméra bloqué par GPO
+## Cas particulier — Webcam ou microphone grisé dans les Paramètres Windows
 
-Si les applications signalent un accès refusé au microphone ou à la caméra (souvent lié à une GPO trop restrictive) :
+**Symptômes typiques de ce cas :**
+- La webcam ou le microphone est grisé dans Paramètres → Confidentialité → Caméra / Microphone
+- L'interrupteur est désactivé et impossible à activer
+- Les applications (Teams, Zoom, navigateur) signalent un accès refusé à la caméra ou au micro
+- Le message "Cette fonctionnalité est gérée par votre organisation" apparaît
+
+**Cause probable :** une GPO (stratégie de groupe) trop restrictive bloque l'accès via la clé de registre `AppPrivacy`.
+
+**Résolution :**
 
 1. Ouvrir `regedit.exe` en tant qu'administrateur
 2. Naviguer vers : `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy`
@@ -111,7 +119,9 @@ Si les applications signalent un accès refusé au microphone ou à la caméra (
 4. Modifier la valeur DWORD sur **`1`** (autoriser)
 5. Redémarrer le poste
 
-> Si la clé est gérée par GPO, elle sera réécrite au prochain `gpupdate`. Contacter l'équipe réseau pour modifier la GPO à la source.
+Si la clé est absente, la restriction vient d'ailleurs (MDM, Intune) — escalader à l'équipe réseau.
+
+> Si la clé revient à sa valeur restrictive après redémarrage, c'est qu'une GPO active la réécrit. Contacter l'équipe réseau pour modifier la GPO à la source.
 
 ## Quand escalader
 - La réparation WMI échoue et `winmgmt /verifyrepository` reste en erreur → escalader à la Boutique IT
