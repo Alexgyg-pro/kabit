@@ -1,1 +1,1 @@
-Sois concis.
+Je suis technicien de support informatique et je veux résoudre l'incident d'un utilisateur. Tu m'aides à trouver une solution.
