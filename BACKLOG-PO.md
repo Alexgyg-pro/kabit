@@ -4,25 +4,6 @@
 
 ## À faire
 
-### US-026 — Matrice d'escalade
-
-**En tant que** technicien de support,
-**Je veux** pouvoir consulter rapidement à qui escalader un incident que je ne sais pas résoudre,
-**Afin de** ne pas perdre de temps à chercher le bon interlocuteur.
-
-**Scénario :**
-Un technicien pose une question du type "à qui j'escalade un problème réseau ?" ou "qui contacter pour un incident Intune ?" — le RAG répond avec le bon contact, l'équipe et le canal à utiliser.
-
-**Implémentation suggérée :**
-- Nouveau fichier `corpus/matrice-escalade.json` structuré par domaine (réseau, sécurité, Active Directory, matériel, applicatif métier…)
-- Chaque entrée contient : domaine, exemples d'incidents, équipe cible, contact, canal (ticket / Teams / téléphone), délai de prise en charge
-- Chunké et indexé comme `catalogue-it.json`
-- Éditable depuis l'interface admin (nouveau tab dans l'éditeur catalogue, ou éditeur dédié)
-
-**Note :** dans un vrai service support, savoir à qui escalader est souvent aussi difficile que de résoudre l'incident lui-même.
-
----
-
 ### US-027 — Niveau du technicien configurable
 
 **En tant qu'** administrateur,
@@ -76,6 +57,16 @@ Un technicien pose une question du type "à qui j'escalade un problème réseau 
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-026 — Matrice d'escalade
+
+**En tant que** technicien de support,
+**Je veux** pouvoir consulter rapidement à qui escalader un incident que je ne sais pas résoudre,
+**Afin de** ne pas perdre de temps à chercher le bon interlocuteur.
+
+**Livré le :** 15/05/2026 — `corpus/escalade.md`
+
+---
 
 ### ✅ US-025 — Chunking des fiches .md par section
 
