@@ -4,6 +4,60 @@
 
 ## À faire
 
+### US-021 - Créer une icône
+
+**En tant que** utilisateur,
+**Je veux** une écône pour représenter l'application notamment dans les onglets du navigateur
+**Afin d'** que ça ait l'air plus professionnel.
+
+### US-021 - Ajout au corpus
+
+**En tant que** administrateur,
+**Je veux** une fiche dédiée à la réfonte du profil windows
+**Afin d'** avoir une fiche sur un sujet courant.
+
+Note : Dans mes notes personnelles, j'ai cette procédure :
+La procédure consiste à :
+
+1. Se connecter en tant qu’admin et travailler sur PowerShell.
+2. Repérer dans la base de registres le profil à refondre.
+   Get-ChildItem -Path "hklm:\Software\Microsoft\Windows NT\CurrentVersion\ProfileList" | Get-ItemProperty -Name ProfileImagePath | Select ProfileImagePath,PSChildName
+3. Renommer le dossier utilisateur du profil de sorte à pouvoir le récupérer si besoin. Ça permettra aussi de récupérer des données pour le nouveau profil. Exemple avec un compte moisan_c :
+   move C:\Users\moisan_c C:\Users\moisan_c.old
+4. Supprimer le profil de la base de registres.
+   Remove-Item -Path "hklm:\Software\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-2997242644-1048803884-2836527085-13092" –Recurse
+5. Redémarrer et laisser l’utilisateur se connecter.
+
+Si d'autres procédures semblent pertinentes (notamment de faire ça manuellement plutôt que par des instructions PowerShell) ne pas hésiter à les ajouter.
+
+### US-022 - Ajout au corpus
+
+**En tant que** administrateur,
+**Je veux** une fiche dédiée à la réparation du WMI
+**Afin d'** avoir une fiche sur un sujet courant.
+
+Notes : dans mes notes personnelles j'ai ceci :
+
+1. Ouvrir un invite de commande en tant qu'administrateur, puis exécuter les commandes suivantes :
+2. cd c:\windows\System32\wbem
+3. for /f %s in ('dir /b /s \*.dll') do regsvr32 /s %s
+4. net stop /y winmgmt
+5. for /f %s in ('dir /b \*.mof') do mofcomp %s
+6. net start winmgmt
+7. Renommer le dossier "C:\windows\System32\GroupPolicy" en "GroupPolicy.old" (Attention il s'agit d'un fichier caché)
+8. Ouvrir un invite de commande en tant qu'administrateur, puis exécuter la commande suivante:
+9. gpupdate /force
+10. Redémarrer le poste.
+
+Si d'autres procédures semblent pertinentes (notamment de faire ça manuellement plutôt que par des instructions PowerShell) ne pas hésiter à les ajouter.
+Il y aurait cette possibilité-là aussi :
+Ouvrir la base de registre en admin
+HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy
+Rechercher LetAppsAccessMicrophone ou LetAppsAccessCamera
+Modifier la Valeur sur 1
+
+### US-020 - Sauvegarde d'un pré-prompt par défaut
+
 **En tant que** administrateur,
 **Je veux** que l'on puisse retrouver le pré-prompt par défaut,
 **Afin de** pouvoir le retrouver si jamais il est effacé.
@@ -29,9 +83,10 @@ Note : Le pré-prompt : "Je suis technicien de support informatique et je veux r
 **Afin d'** améliorer le corpus de façon ciblée, guidée par les vrais cas d'échec.
 
 **Scénario :**
+
 1. L'utilisateur pose une question de test — le RAG ne trouve pas la bonne fiche
 2. Un bouton "Diagnostiquer" apparaît sous la réponse (visible en mode Admin)
-3. L'utilisateur sélectionne la fiche qui *aurait dû* être trouvée dans la liste du corpus
+3. L'utilisateur sélectionne la fiche qui _aurait dû_ être trouvée dans la liste du corpus
 4. Le système envoie au LLM : la question + les sources effectivement remontées (avec scores) + le contenu de la fiche manquée
 5. Le LLM identifie le décalage de vocabulaire et propose des enrichissements concrets à ajouter à la fiche
 6. L'utilisateur peut ouvrir la fiche en édition directement depuis le panneau de diagnostic
