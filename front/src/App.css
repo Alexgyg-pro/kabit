@@ -930,6 +930,19 @@
 }
 .btn-restore-default:hover { border-color: var(--accent); color: var(--accent); }
 
+.admin-select {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 0.9rem;
+  width: 100%;
+  max-width: 320px;
+  cursor: pointer;
+}
+.admin-select:focus { outline: none; border-color: var(--accent); }
+
 .admin-msg {
   font-size: 0.85rem;
   color: var(--code-block-text);

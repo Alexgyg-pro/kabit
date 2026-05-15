@@ -19,6 +19,23 @@ const GROQ_MODELS = [
   { id: 'gemma2-9b-it',            label: 'Gemma 2 9B' },
 ];
 
+const TECH_LEVELS = [
+  { id: 'none',      label: 'Non spécifié' },
+  { id: 'desk',      label: 'Service Desk (N1)' },
+  { id: 'boutique',  label: 'Boutique IT (N1)' },
+  { id: 'proximite', label: 'Proximité (N1)' },
+  { id: 'n2',        label: 'N2 — Poste de Travail' },
+  { id: 'autre',     label: 'Autre équipe' },
+];
+
+const TECH_LEVEL_HINTS: Record<string, string> = {
+  desk:     "Tu t'adresses à un technicien du Service Desk (N1). S'il ne peut pas résoudre, suggère-lui d'escalader à la Boutique IT, pas de rappeler le Service Desk.",
+  boutique:  "Tu t'adresses à un technicien de la Boutique IT (N1). Ne lui suggère jamais d'escalader à la Boutique IT — c'est son propre niveau. Oriente-le vers le N2 ou les équipes spécialisées si le problème dépasse ses compétences.",
+  proximite: "Tu t'adresses à un technicien de Proximité (N1). Ne lui suggère pas d'escalader à la Proximité — c'est son propre niveau. Oriente-le vers le N2 ou les équipes spécialisées si nécessaire.",
+  n2:        "Tu t'adresses à un technicien N2 Poste de Travail. Ne lui suggère pas d'escalader au N2 — c'est son propre niveau.",
+  autre:    "Tu t'adresses à un technicien de support informatique.",
+};
+
 type AppStatus = 'init' | 'loading-model' | 'indexing' | 'ready' | 'error';
 
 interface MdChunk {
@@ -237,6 +254,15 @@ export default function App() {
   const [editDocContent, setEditDocContent] = useState('');
   const [editDocMsg, setEditDocMsg] = useState('');
 
+  const [techLevel, setTechLevel] = useState<string>(
+    () => localStorage.getItem('techLevel') ?? 'none'
+  );
+
+  function handleTechLevelChange(level: string) {
+    localStorage.setItem('techLevel', level);
+    setTechLevel(level);
+  }
+
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyDepth, setHistoryDepth] = useState('0');
   const [copied, setCopied] = useState(false);
@@ -392,11 +418,14 @@ export default function App() {
 
       // 4. Historique + messages Groq (format chat)
       const depth = parseInt(historyDepth);
+      const levelHint = TECH_LEVEL_HINTS[techLevel] ?? '';
+
       const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
         {
           role: 'system',
           content:
             (systemPrompt ? systemPrompt.trim() + '\n\n' : '') +
+            (levelHint ? levelHint + '\n\n' : '') +
             `Tu es un assistant pour techniciens support informatique chez FinCorp Solutions.\n` +
             `Les documents ci-dessous sont les procédures internes pertinentes. Utilise-les pour répondre.\n` +
             `Si un document est partiellement pertinent, exploite les informations disponibles pour aider le technicien.\n` +
@@ -794,6 +823,9 @@ export default function App() {
           systemPrompt={systemPrompt}
           needsReindex={needsReindex}
           backend={BACKEND}
+          techLevel={techLevel}
+          techLevels={TECH_LEVELS}
+          onTechLevelChange={handleTechLevelChange}
           onReindex={() => { runIndexing(); setShowAdmin(false); }}
           onSave={handleAdminSave}
           onSaveSystemPrompt={handleSaveSystemPrompt}
