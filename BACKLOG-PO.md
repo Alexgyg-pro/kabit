@@ -4,21 +4,6 @@
 
 ## À faire
 
-### US-027 — Niveau du technicien configurable
-
-**En tant qu'** administrateur,
-**Je veux** configurer le niveau du technicien qui utilise l'assistant (N1, N2, Boutique IT…),
-**Afin que** les conseils d'escalade soient adaptés à son niveau réel et ne lui suggèrent pas de contacter sa propre équipe.
-
-**Scénario :** un technicien Boutique IT se voit actuellement conseiller "escalader à la Boutique IT" — ce qui n'a aucun sens.
-
-**Implémentation suggérée :**
-- Champ de configuration dans la modale admin (liste déroulante : N1 / N2 / Boutique IT / autre)
-- Le niveau est injecté automatiquement dans le prompt système
-- Persisté en localStorage
-
----
-
 ### US-019 - Révision du UX
 
 **En tant que** administrateur,
@@ -57,6 +42,16 @@
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-027 — Niveau du technicien configurable
+
+**En tant qu'** administrateur,
+**Je veux** configurer le niveau du technicien qui utilise l'assistant,
+**Afin que** les conseils d'escalade soient adaptés à son niveau réel.
+
+**Livré le :** 15/05/2026 — branche `feature/niveau-technicien`
+
+---
 
 ### ✅ US-026 — Matrice d'escalade
 
