@@ -4,13 +4,13 @@
 
 ## À faire
 
-### US-021 - Créer une icône
+### US-022 - Créer une icône
 
 **En tant que** utilisateur,
 **Je veux** une écône pour représenter l'application notamment dans les onglets du navigateur
 **Afin d'** que ça ait l'air plus professionnel.
 
-### US-021 - Ajout au corpus
+### US-023 - Ajout au corpus
 
 **En tant que** administrateur,
 **Je veux** une fiche dédiée à la réfonte du profil windows
@@ -30,7 +30,7 @@ La procédure consiste à :
 
 Si d'autres procédures semblent pertinentes (notamment de faire ça manuellement plutôt que par des instructions PowerShell) ne pas hésiter à les ajouter.
 
-### US-022 - Ajout au corpus
+### US-024 - Ajout au corpus
 
 **En tant que** administrateur,
 **Je veux** une fiche dédiée à la réparation du WMI
@@ -56,7 +56,7 @@ HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy
 Rechercher LetAppsAccessMicrophone ou LetAppsAccessCamera
 Modifier la Valeur sur 1
 
-### US-020 - Sauvegarde d'un pré-prompt par défaut
+### US-021 - Sauvegarde d'un pré-prompt par défaut
 
 **En tant que** administrateur,
 **Je veux** que l'on puisse retrouver le pré-prompt par défaut,
