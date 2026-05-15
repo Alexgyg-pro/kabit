@@ -79,6 +79,17 @@ export default function AdminModal({
     }
   }
 
+  async function handleRestoreDefault() {
+    try {
+      const res = await fetch(`${backend}/system-prompt/default`);
+      if (!res.ok) throw new Error('Fichier défaut introuvable');
+      setEditablePrompt(await res.text());
+      setPromptMsg('Pré-prompt par défaut restauré — cliquez sur Sauvegarder pour appliquer');
+    } catch (e) {
+      setPromptMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card admin-modal-card" onClick={(e) => e.stopPropagation()}>
@@ -191,6 +202,7 @@ export default function AdminModal({
             />
             <div className="admin-save-row">
               <button className="btn-save" onClick={handleSavePrompt}>Sauvegarder</button>
+              <button className="btn-restore-default" onClick={handleRestoreDefault}>Restaurer le défaut</button>
               {promptMsg && <span className="admin-msg">{promptMsg}</span>}
             </div>
           </section>

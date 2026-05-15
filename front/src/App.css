@@ -919,6 +919,17 @@
 }
 .btn-save:hover { background: #22c55e; }
 
+.btn-restore-default {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.btn-restore-default:hover { border-color: var(--accent); color: var(--accent); }
+
 .admin-msg {
   font-size: 0.85rem;
   color: var(--code-block-text);
