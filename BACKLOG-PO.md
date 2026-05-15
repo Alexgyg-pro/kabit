@@ -4,12 +4,6 @@
 
 ## À faire
 
-### US-022 - Créer une icône
-
-**En tant que** utilisateur,
-**Je veux** une écône pour représenter l'application notamment dans les onglets du navigateur
-**Afin d'** que ça ait l'air plus professionnel.
-
 ### US-023 - Ajout au corpus
 
 **En tant que** administrateur,
@@ -102,6 +96,16 @@ Note : Le pré-prompt : "Je suis technicien de support informatique et je veux r
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-022 - Créer une icône
+
+**En tant que** utilisateur,
+**Je veux** une icône pour représenter l'application notamment dans les onglets du navigateur
+**Afin d'** que ça ait l'air plus professionnel.
+
+**Livré le :** 15/05/2026 — branche `feature/favicon`
+
+---
 
 ### US-015 — Formulaires d'édition du catalogue
 
