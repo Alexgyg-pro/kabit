@@ -50,14 +50,6 @@ HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy
 Rechercher LetAppsAccessMicrophone ou LetAppsAccessCamera
 Modifier la Valeur sur 1
 
-### US-021 - Sauvegarde d'un pré-prompt par défaut
-
-**En tant que** administrateur,
-**Je veux** que l'on puisse retrouver le pré-prompt par défaut,
-**Afin de** pouvoir le retrouver si jamais il est effacé.
-
-Note : Le pré-prompt : "Je suis technicien de support informatique et je veux résoudre l'incident d'un utilisateur. Tu m'aides à trouver une solution."
-
 ### US-019 - Révision du UX
 
 **En tant que** administrateur,
@@ -96,6 +88,16 @@ Note : Le pré-prompt : "Je suis technicien de support informatique et je veux r
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-021 - Sauvegarde d'un pré-prompt par défaut
+
+**En tant que** administrateur,
+**Je veux** que l'on puisse retrouver le pré-prompt par défaut,
+**Afin de** pouvoir le retrouver si jamais il est effacé.
+
+**Livré le :** 15/05/2026 — branche `feature/default-prompt`
+
+---
 
 ### ✅ US-022 - Créer une icône
 
