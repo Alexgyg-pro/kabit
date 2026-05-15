@@ -7,6 +7,7 @@ const app = express();
 const PORT = 3001;
 const CORPUS_DIR = path.join(__dirname, '..', 'corpus');
 const SYSTEM_PROMPT_PATH = path.join(__dirname, '..', 'system-prompt.md');
+const SYSTEM_PROMPT_DEFAULT_PATH = path.join(__dirname, '..', 'system-prompt.default.md');
 
 // dev : frontend Vite sur 5173 — prod : même origine (frontend servi par ce serveur)
 app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:3001'] }));
@@ -22,6 +23,20 @@ app.get('/system-prompt', (req, res) => {
     res.type('text/plain').send(content);
   } catch (err) {
     console.error('Erreur GET /system-prompt:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /system-prompt/default — retourne le pré-prompt par défaut (lecture seule)
+app.get('/system-prompt/default', (req, res) => {
+  try {
+    if (!fs.existsSync(SYSTEM_PROMPT_DEFAULT_PATH)) {
+      return res.status(404).json({ error: 'Fichier system-prompt.default.md introuvable' });
+    }
+    const content = fs.readFileSync(SYSTEM_PROMPT_DEFAULT_PATH, 'utf-8');
+    res.type('text/plain').send(content);
+  } catch (err) {
+    console.error('Erreur GET /system-prompt/default:', err);
     res.status(500).json({ error: err.message });
   }
 });

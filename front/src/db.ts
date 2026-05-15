@@ -4,7 +4,8 @@ export interface DocRecord {
   id: string;
   path: string;
   title: string;
-  content: string;
+  content: string;     // fichier entier — pour affichage et édition
+  chunkText?: string;  // texte du chunk — envoyé au LLM (absent = utiliser content)
   embedding: number[];
   timestamp: number;
 }

@@ -5,6 +5,9 @@ interface AdminModalProps {
   systemPrompt: string;
   needsReindex: boolean;
   backend: string;
+  techLevel: string;
+  techLevels: { id: string; label: string }[];
+  onTechLevelChange: (level: string) => void;
   onReindex: () => void;
   onSave: (title: string, content: string) => Promise<{ path: string }>;
   onSaveSystemPrompt: (content: string) => Promise<void>;
@@ -17,6 +20,9 @@ export default function AdminModal({
   systemPrompt,
   needsReindex,
   backend,
+  techLevel,
+  techLevels,
+  onTechLevelChange,
   onReindex,
   onSave,
   onSaveSystemPrompt,
@@ -74,6 +80,17 @@ export default function AdminModal({
     try {
       await onSaveSystemPrompt(editablePrompt);
       setPromptMsg('✅ Pré-prompt sauvegardé');
+    } catch (e) {
+      setPromptMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  async function handleRestoreDefault() {
+    try {
+      const res = await fetch(`${backend}/system-prompt/default`);
+      if (!res.ok) throw new Error('Fichier défaut introuvable');
+      setEditablePrompt(await res.text());
+      setPromptMsg('Pré-prompt par défaut restauré — cliquez sur Sauvegarder pour appliquer');
     } catch (e) {
       setPromptMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
     }
@@ -176,6 +193,23 @@ export default function AdminModal({
             )}
           </section>
 
+          {/* ── Section Profil technicien ────────────────────────────── */}
+          <section className="admin-section">
+            <h2 className="admin-section-title">Profil technicien</h2>
+            <p className="admin-section-desc">
+              Indique ton niveau de support pour que l'assistant adapte ses conseils d'escalade.
+            </p>
+            <select
+              className="admin-select"
+              value={techLevel}
+              onChange={(e) => onTechLevelChange(e.target.value)}
+            >
+              {techLevels.map(l => (
+                <option key={l.id} value={l.id}>{l.label}</option>
+              ))}
+            </select>
+          </section>
+
           {/* ── Section Pré-prompt ───────────────────────────────────── */}
           <section className="admin-section">
             <h2 className="admin-section-title">Pré-prompt</h2>
@@ -191,6 +225,7 @@ export default function AdminModal({
             />
             <div className="admin-save-row">
               <button className="btn-save" onClick={handleSavePrompt}>Sauvegarder</button>
+              <button className="btn-restore-default" onClick={handleRestoreDefault}>Restaurer le défaut</button>
               {promptMsg && <span className="admin-msg">{promptMsg}</span>}
             </div>
           </section>

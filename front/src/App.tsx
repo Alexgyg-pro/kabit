@@ -19,22 +19,67 @@ const GROQ_MODELS = [
   { id: 'gemma2-9b-it',            label: 'Gemma 2 9B' },
 ];
 
+const TECH_LEVELS = [
+  { id: 'none',      label: 'Non spécifié' },
+  { id: 'desk',      label: 'Service Desk (N1)' },
+  { id: 'boutique',  label: 'Boutique IT (N1)' },
+  { id: 'proximite', label: 'Proximité (N1)' },
+  { id: 'n2',        label: 'N2 — Poste de Travail' },
+  { id: 'autre',     label: 'Autre équipe' },
+];
+
+const TECH_LEVEL_HINTS: Record<string, string> = {
+  desk:     "Tu t'adresses à un technicien du Service Desk (N1). S'il ne peut pas résoudre, suggère-lui d'escalader à la Boutique IT, pas de rappeler le Service Desk.",
+  boutique:  "Tu t'adresses à un technicien de la Boutique IT (N1). Ne lui suggère jamais d'escalader à la Boutique IT — c'est son propre niveau. Oriente-le vers le N2 ou les équipes spécialisées si le problème dépasse ses compétences.",
+  proximite: "Tu t'adresses à un technicien de Proximité (N1). Ne lui suggère pas d'escalader à la Proximité — c'est son propre niveau. Oriente-le vers le N2 ou les équipes spécialisées si nécessaire.",
+  n2:        "Tu t'adresses à un technicien N2 Poste de Travail. Ne lui suggère pas d'escalader au N2 — c'est son propre niveau.",
+  autre:    "Tu t'adresses à un technicien de support informatique.",
+};
+
 type AppStatus = 'init' | 'loading-model' | 'indexing' | 'ready' | 'error';
 
-// Construit le texte d'embedding d'une fiche .md :
-// métadonnées frontmatter converties en texte naturel + corps de la procédure
-function mdEmbeddingText(content: string): string {
+interface MdChunk {
+  id: string;
+  title: string;
+  embeddingText: string;
+  chunkText: string;
+}
+
+// Découpe une fiche .md en chunks par section ## (une section = un vecteur)
+function mdChunks(content: string, filePath: string, fileTitle: string): MdChunk[] {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-  if (!match) return content.slice(0, 2000);
-  const frontmatter = match[1];
-  const body = match[2];
+  const frontmatter = match ? match[1] : '';
+  const body = match ? match[2] : content;
+
   const get = (key: string) => {
     const m = frontmatter.match(new RegExp(`^${key}:\\s*(.+)$`, 'm'));
     return m ? m[1].trim() : '';
   };
-  const header = [get('title'), get('catégorie'), get('service'), get('équipes'), get('commentaire')]
+  const header = [get('title') || fileTitle, get('catégorie'), get('service'), get('équipes'), get('commentaire')]
     .filter(Boolean).join(' — ');
-  return (header ? header + '\n' : '') + body.slice(0, 2000);
+
+  // Séparer avant chaque ## (le ## reste en tête de chaque segment)
+  const parts = body.split(/(?=^## )/m).filter(s => s.trim());
+
+  if (parts.length <= 1) {
+    return [{
+      id: `${filePath}#0`,
+      title: fileTitle,
+      embeddingText: (header + '\n' + body).slice(0, 500),
+      chunkText: body.slice(0, 1500),
+    }];
+  }
+
+  return parts.map((part, i) => {
+    const h2 = part.match(/^## (.+)/m);
+    const sectionTitle = h2 ? h2[1].trim() : null;
+    return {
+      id: `${filePath}#${i}`,
+      title: sectionTitle ? `${fileTitle} — ${sectionTitle}` : fileTitle,
+      embeddingText: (header + '\n' + part).slice(0, 500),
+      chunkText: part.slice(0, 1500),
+    };
+  });
 }
 
 interface JsonChunk {
@@ -209,6 +254,15 @@ export default function App() {
   const [editDocContent, setEditDocContent] = useState('');
   const [editDocMsg, setEditDocMsg] = useState('');
 
+  const [techLevel, setTechLevel] = useState<string>(
+    () => localStorage.getItem('techLevel') ?? 'none'
+  );
+
+  function handleTechLevelChange(level: string) {
+    localStorage.setItem('techLevel', level);
+    setTechLevel(level);
+  }
+
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyDepth, setHistoryDepth] = useState('0');
   const [copied, setCopied] = useState(false);
@@ -287,18 +341,22 @@ export default function App() {
             setDocCount(totalDocs);
           }
         } else {
-          setStatusMsg(`Indexation — ${file.title}`);
-          const embedding = await embed(mdEmbeddingText(content));
-          await putDoc({
-            id: file.path,
-            path: file.path,
-            title: file.title,
-            content,
-            embedding,
-            timestamp: Date.now(),
-          });
-          totalDocs++;
-          setDocCount(totalDocs);
+          const chunks = mdChunks(content, file.path, file.title);
+          for (const chunk of chunks) {
+            setStatusMsg(`Indexation — ${chunk.title}`);
+            const embedding = await embed(chunk.embeddingText);
+            await putDoc({
+              id: chunk.id,
+              path: file.path,
+              title: chunk.title,
+              content,
+              chunkText: chunk.chunkText,
+              embedding,
+              timestamp: Date.now(),
+            });
+            totalDocs++;
+            setDocCount(totalDocs);
+          }
         }
       }
       setStatusMsg(`Cache prêt — ${totalDocs} documents indexés`);
@@ -353,18 +411,21 @@ export default function App() {
           const label = isJson ? 'DONNÉES STRUCTURÉES' : 'PROCÉDURE';
           // JSON : contenu brut intégral — le LLM lit nativement la structure
           // MD  : tronqué à 1500 chars (texte narratif, potentiellement long)
-          const body = isJson ? r.doc.content : r.doc.content.slice(0, 1500);
+          const body = isJson ? r.doc.content : (r.doc.chunkText ?? r.doc.content).slice(0, 1500);
           return `--- [${label}] ${r.doc.title} ---\n${body}`;
         })
         .join('\n\n');
 
       // 4. Historique + messages Groq (format chat)
       const depth = parseInt(historyDepth);
+      const levelHint = TECH_LEVEL_HINTS[techLevel] ?? '';
+
       const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
         {
           role: 'system',
           content:
             (systemPrompt ? systemPrompt.trim() + '\n\n' : '') +
+            (levelHint ? levelHint + '\n\n' : '') +
             `Tu es un assistant pour techniciens support informatique chez FinCorp Solutions.\n` +
             `Les documents ci-dessous sont les procédures internes pertinentes. Utilise-les pour répondre.\n` +
             `Si un document est partiellement pertinent, exploite les informations disponibles pour aider le technicien.\n` +
@@ -762,6 +823,9 @@ export default function App() {
           systemPrompt={systemPrompt}
           needsReindex={needsReindex}
           backend={BACKEND}
+          techLevel={techLevel}
+          techLevels={TECH_LEVELS}
+          onTechLevelChange={handleTechLevelChange}
           onReindex={() => { runIndexing(); setShowAdmin(false); }}
           onSave={handleAdminSave}
           onSaveSystemPrompt={handleSaveSystemPrompt}

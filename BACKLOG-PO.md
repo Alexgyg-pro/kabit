@@ -10,11 +10,24 @@
 **Je veux** quelques aménagements dans la navigation
 **Afin de** afin d'avoir un UX plus fluide.
 
-### US-018 - Révision du UX
+### US-020 — Assistant de diagnostic RAG
 
-**En tant que** utilisateur de l'application,
-**Je veux** quelques aménagements sur les couleurs
-**Afin de** afin de mieux voir.
+**En tant qu'** administrateur,
+**Je veux** pouvoir diagnostiquer un échec du RAG et obtenir des suggestions d'enrichissement de la fiche manquée,
+**Afin d'** améliorer le corpus de façon ciblée, guidée par les vrais cas d'échec.
+
+**Scénario :**
+
+1. L'utilisateur pose une question de test — le RAG ne trouve pas la bonne fiche
+2. Un bouton "Diagnostiquer" apparaît sous la réponse (visible en mode Admin)
+3. L'utilisateur sélectionne la fiche qui _aurait dû_ être trouvée dans la liste du corpus
+4. Le système envoie au LLM : la question + les sources effectivement remontées (avec scores) + le contenu de la fiche manquée
+5. Le LLM identifie le décalage de vocabulaire et propose des enrichissements concrets à ajouter à la fiche
+6. L'utilisateur peut ouvrir la fiche en édition directement depuis le panneau de diagnostic
+
+**Note :** s'appuie sur les cas d'échec documentés dans `EVAL.md` (Q03, Q04, Q06). Complémentaire à US-017.
+
+---
 
 ### US-017 — Corpus supplémentaire
 
@@ -23,6 +36,86 @@
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-018 - Révision du UX — couleurs
+
+**En tant que** utilisateur de l'application,
+**Je veux** quelques aménagements sur les couleurs
+**Afin de** afin de mieux voir.
+
+**Livré le :** 15/05/2026 — branche `feature/ux-couleurs`
+
+---
+
+### ✅ US-027 — Niveau du technicien configurable
+
+**En tant qu'** administrateur,
+**Je veux** configurer le niveau du technicien qui utilise l'assistant,
+**Afin que** les conseils d'escalade soient adaptés à son niveau réel.
+
+**Livré le :** 15/05/2026 — branche `feature/niveau-technicien`
+
+---
+
+### ✅ US-026 — Matrice d'escalade
+
+**En tant que** technicien de support,
+**Je veux** pouvoir consulter rapidement à qui escalader un incident que je ne sais pas résoudre,
+**Afin de** ne pas perdre de temps à chercher le bon interlocuteur.
+
+**Livré le :** 15/05/2026 — `corpus/escalade.md`
+
+---
+
+### ✅ US-025 — Chunking des fiches .md par section
+
+**En tant qu'** administrateur,
+**Je veux** que chaque section `##` d'une fiche `.md` soit indexée comme un chunk indépendant,
+**Afin de** que le contenu des fiches longues soit entièrement accessible au RAG, et non tronqué.
+
+**Livré le :** 15/05/2026 — branche `feature/md-chunking`
+
+---
+
+### ✅ US-024 - Ajout au corpus — réparation WMI
+
+**En tant que** administrateur,
+**Je veux** une fiche dédiée à la réparation du WMI
+**Afin d'** avoir une fiche sur un sujet courant.
+
+**Livré le :** 15/05/2026 — `corpus/wmi-reparation.md`
+
+---
+
+### ✅ US-023 - Ajout au corpus — réfonte profil Windows
+
+**En tant que** administrateur,
+**Je veux** une fiche dédiée à la réfonte du profil windows
+**Afin d'** avoir une fiche sur un sujet courant.
+
+**Livré le :** 15/05/2026 — `corpus/profil-windows-refonte.md`
+
+---
+
+### ✅ US-021 - Sauvegarde d'un pré-prompt par défaut
+
+**En tant que** administrateur,
+**Je veux** que l'on puisse retrouver le pré-prompt par défaut,
+**Afin de** pouvoir le retrouver si jamais il est effacé.
+
+**Livré le :** 15/05/2026 — branche `feature/default-prompt`
+
+---
+
+### ✅ US-022 - Créer une icône
+
+**En tant que** utilisateur,
+**Je veux** une icône pour représenter l'application notamment dans les onglets du navigateur
+**Afin d'** que ça ait l'air plus professionnel.
+
+**Livré le :** 15/05/2026 — branche `feature/favicon`
+
+---
 
 ### US-015 — Formulaires d'édition du catalogue
 
