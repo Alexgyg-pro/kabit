@@ -38,18 +38,6 @@ Un technicien pose une question du type "à qui j'escalade un problème réseau 
 
 ---
 
-### US-025 — Chunking des fiches .md par section
-
-**En tant qu'** administrateur,
-**Je veux** que chaque section `##` d'une fiche `.md` soit indexée comme un chunk indépendant,
-**Afin de** que le contenu des fiches longues soit entièrement accessible au RAG, et non tronqué.
-
-**Contexte technique :** le modèle d'embedding a une fenêtre de 128 tokens (~500 chars). Les fiches longues sont actuellement tronquées dès le premier tiers — les sections "Méthode 2", "Cas particulier", "Quand escalader" sont invisibles au RAG.
-
-**Note :** s'inspire de l'approche déjà en place pour le catalogue JSON (~65 chunks).
-
----
-
 ### US-019 - Révision du UX
 
 **En tant que** administrateur,
@@ -88,6 +76,16 @@ Un technicien pose une question du type "à qui j'escalade un problème réseau 
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-025 — Chunking des fiches .md par section
+
+**En tant qu'** administrateur,
+**Je veux** que chaque section `##` d'une fiche `.md` soit indexée comme un chunk indépendant,
+**Afin de** que le contenu des fiches longues soit entièrement accessible au RAG, et non tronqué.
+
+**Livré le :** 15/05/2026 — branche `feature/md-chunking`
+
+---
 
 ### ✅ US-024 - Ajout au corpus — réparation WMI
 
