@@ -4,32 +4,6 @@
 
 ## À faire
 
-### US-024 - Ajout au corpus
-
-**En tant que** administrateur,
-**Je veux** une fiche dédiée à la réparation du WMI
-**Afin d'** avoir une fiche sur un sujet courant.
-
-Notes : dans mes notes personnelles j'ai ceci :
-
-1. Ouvrir un invite de commande en tant qu'administrateur, puis exécuter les commandes suivantes :
-2. cd c:\windows\System32\wbem
-3. for /f %s in ('dir /b /s \*.dll') do regsvr32 /s %s
-4. net stop /y winmgmt
-5. for /f %s in ('dir /b \*.mof') do mofcomp %s
-6. net start winmgmt
-7. Renommer le dossier "C:\windows\System32\GroupPolicy" en "GroupPolicy.old" (Attention il s'agit d'un fichier caché)
-8. Ouvrir un invite de commande en tant qu'administrateur, puis exécuter la commande suivante:
-9. gpupdate /force
-10. Redémarrer le poste.
-
-Si d'autres procédures semblent pertinentes (notamment de faire ça manuellement plutôt que par des instructions PowerShell) ne pas hésiter à les ajouter.
-Il y aurait cette possibilité-là aussi :
-Ouvrir la base de registre en admin
-HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy
-Rechercher LetAppsAccessMicrophone ou LetAppsAccessCamera
-Modifier la Valeur sur 1
-
 ### US-019 - Révision du UX
 
 **En tant que** administrateur,
@@ -68,6 +42,16 @@ Modifier la Valeur sur 1
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-024 - Ajout au corpus — réparation WMI
+
+**En tant que** administrateur,
+**Je veux** une fiche dédiée à la réparation du WMI
+**Afin d'** avoir une fiche sur un sujet courant.
+
+**Livré le :** 15/05/2026 — `corpus/wmi-reparation.md`
+
+---
 
 ### ✅ US-023 - Ajout au corpus — réfonte profil Windows
 
