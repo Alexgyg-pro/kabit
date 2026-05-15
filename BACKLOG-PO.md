@@ -10,12 +10,6 @@
 **Je veux** quelques aménagements dans la navigation
 **Afin de** afin d'avoir un UX plus fluide.
 
-### US-018 - Révision du UX
-
-**En tant que** utilisateur de l'application,
-**Je veux** quelques aménagements sur les couleurs
-**Afin de** afin de mieux voir.
-
 ### US-020 — Assistant de diagnostic RAG
 
 **En tant qu'** administrateur,
@@ -42,6 +36,16 @@
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-018 - Révision du UX — couleurs
+
+**En tant que** utilisateur de l'application,
+**Je veux** quelques aménagements sur les couleurs
+**Afin de** afin de mieux voir.
+
+**Livré le :** 15/05/2026 — branche `feature/ux-couleurs`
+
+---
 
 ### ✅ US-027 — Niveau du technicien configurable
 
