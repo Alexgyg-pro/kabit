@@ -4,26 +4,6 @@
 
 ## À faire
 
-### US-023 - Ajout au corpus
-
-**En tant que** administrateur,
-**Je veux** une fiche dédiée à la réfonte du profil windows
-**Afin d'** avoir une fiche sur un sujet courant.
-
-Note : Dans mes notes personnelles, j'ai cette procédure :
-La procédure consiste à :
-
-1. Se connecter en tant qu’admin et travailler sur PowerShell.
-2. Repérer dans la base de registres le profil à refondre.
-   Get-ChildItem -Path "hklm:\Software\Microsoft\Windows NT\CurrentVersion\ProfileList" | Get-ItemProperty -Name ProfileImagePath | Select ProfileImagePath,PSChildName
-3. Renommer le dossier utilisateur du profil de sorte à pouvoir le récupérer si besoin. Ça permettra aussi de récupérer des données pour le nouveau profil. Exemple avec un compte moisan_c :
-   move C:\Users\moisan_c C:\Users\moisan_c.old
-4. Supprimer le profil de la base de registres.
-   Remove-Item -Path "hklm:\Software\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-21-2997242644-1048803884-2836527085-13092" –Recurse
-5. Redémarrer et laisser l’utilisateur se connecter.
-
-Si d'autres procédures semblent pertinentes (notamment de faire ça manuellement plutôt que par des instructions PowerShell) ne pas hésiter à les ajouter.
-
 ### US-024 - Ajout au corpus
 
 **En tant que** administrateur,
@@ -88,6 +68,16 @@ Modifier la Valeur sur 1
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-023 - Ajout au corpus — réfonte profil Windows
+
+**En tant que** administrateur,
+**Je veux** une fiche dédiée à la réfonte du profil windows
+**Afin d'** avoir une fiche sur un sujet courant.
+
+**Livré le :** 15/05/2026 — `corpus/profil-windows-refonte.md`
+
+---
 
 ### ✅ US-021 - Sauvegarde d'un pré-prompt par défaut
 
