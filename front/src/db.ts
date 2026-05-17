@@ -10,7 +10,7 @@ export interface DocRecord {
   timestamp: number;
 }
 
-const DB_NAME = 'CAGPT';
+const DB_NAME = 'KABIT';
 const STORE_NAME = 'documents';
 const DB_VERSION = 1;
 

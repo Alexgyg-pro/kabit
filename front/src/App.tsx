@@ -608,7 +608,7 @@ export default function App() {
     <div className="app">
       {/* Header */}
       <header className="header">
-        <h1>CAGPT — Assistant Techniciens Support</h1>
+        <h1>KABIT — Assistant Techniciens Support</h1>
         <div className="header-actions">
           <button
             className={`btn-role-toggle ${role === 'admin' ? 'btn-role-toggle--admin' : ''}`}
