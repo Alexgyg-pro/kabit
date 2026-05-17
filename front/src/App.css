@@ -801,7 +801,11 @@
 }
 .btn-admin-close:hover { background: #4b5563; }
 
-/* ── Liste fiches corpus (US-014) ────────────────────────────────────────── */
+/* ── Liste fiches corpus (US-014, US-028) ───────────────────────────────── */
+.corpus-search {
+  margin-bottom: 8px;
+}
+
 .corpus-file-list {
   list-style: none;
   padding: 0;
