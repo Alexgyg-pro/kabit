@@ -4,6 +4,36 @@
 
 ## À faire
 
+### US-028 - Recherche de fiche
+
+**En tant qu'** administrateur,
+**Je veux** que dans la page admin > Fiches du corpus il y ait une recherche
+**Afin de** afin de retrouver facilement une fiche en particulier.
+
+NOTE : On ne doit pas avoir besoin de jokers pour retrouver une fiche. Quand on tape une lettre, tous les titres qui contennent cette lettre sont listées ; on tape une deuxième lettre, tous les titres qui ont ces deux lettres accolées sont listées. Et ainsi de suite.
+
+### US-029 - changement de nom
+
+**En tant qu'** administrateur,
+**Je veux** partout où il est fait référence à CAGPT ce soit remplacé par KABIT,
+**Afin de** afin de rester cohérent.
+
+NOTE : La référence à GPT était trop évidente et pas nécessairement légalement irréprochable. Cela devient KABIT pour Knowledge Assistant for Boutique IT
+
+NOTE 2 : Il faudra voir avec l'équipe de développement (Claude code) l'opportunité de changer le nom du dossier du projet et du dépôt distant.
+
+### US-030 - Métadonnées dans le formulaire de nouvelles fiches
+
+**En tant qu'** administrateur,
+**Je veux** que dans le formulaire de nouvelle fiches il y ait par défaut les entrées des métadonnées (title, catégorie, service, etc.)
+**Afin de** qu'on n'oublie pas d'ajouter les métadonnées indispensables pour les recherches.
+
+### US-031 - Affichage du catalogue
+
+**En tant que** technicien,
+**Je veux** que quand je clique sur une source issue du catalogue, que l'information soit affichée indentée,
+**Afin de** de le pas l'avoir tout compacté et difficile à lire.
+
 ### US-019 - Révision du UX
 
 **En tant que** administrateur,
