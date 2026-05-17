@@ -14,12 +14,6 @@ NOTE : La référence à GPT était trop évidente et pas nécessairement légal
 
 NOTE 2 : Il faudra voir avec l'équipe de développement (Claude code) l'opportunité de changer le nom du dossier du projet et du dépôt distant.
 
-### US-031 - Affichage du catalogue
-
-**En tant que** technicien,
-**Je veux** que quand je clique sur une source issue du catalogue, que l'information soit affichée indentée,
-**Afin de** de le pas l'avoir tout compacté et difficile à lire.
-
 ### US-019 - Révision du UX
 
 **En tant que** administrateur,
@@ -52,6 +46,16 @@ NOTE 2 : Il faudra voir avec l'équipe de développement (Claude code) l'opportu
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-031 - Affichage du catalogue
+
+**En tant que** technicien,
+**Je veux** que quand je clique sur une source issue du catalogue, que l'information soit affichée indentée,
+**Afin de** de le pas l'avoir tout compacté et difficile à lire.
+
+**Livré le :** 18/05/2026 — branche `feature/affichage-catalogue`
+
+---
 
 ### ✅ US-030 - Métadonnées dans le formulaire de nouvelles fiches
 
