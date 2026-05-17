@@ -808,6 +808,10 @@ export default function App() {
                   {editDocMsg && <span className="admin-msg">{editDocMsg}</span>}
                 </div>
               </div>
+            ) : selectedDoc.path.endsWith('.json') ? (
+              <div className="modal-body">
+                <pre className="catalogue-display">{selectedDoc.content}</pre>
+              </div>
             ) : (
               <div className="modal-body">
                 <ReactMarkdown>{selectedDoc.content}</ReactMarkdown>
