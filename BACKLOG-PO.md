@@ -14,12 +14,6 @@ NOTE : La référence à GPT était trop évidente et pas nécessairement légal
 
 NOTE 2 : Il faudra voir avec l'équipe de développement (Claude code) l'opportunité de changer le nom du dossier du projet et du dépôt distant.
 
-### US-030 - Métadonnées dans le formulaire de nouvelles fiches
-
-**En tant qu'** administrateur,
-**Je veux** que dans le formulaire de nouvelle fiches il y ait par défaut les entrées des métadonnées (title, catégorie, service, etc.)
-**Afin de** qu'on n'oublie pas d'ajouter les métadonnées indispensables pour les recherches.
-
 ### US-031 - Affichage du catalogue
 
 **En tant que** technicien,
@@ -58,6 +52,16 @@ NOTE 2 : Il faudra voir avec l'équipe de développement (Claude code) l'opportu
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-030 - Métadonnées dans le formulaire de nouvelles fiches
+
+**En tant qu'** administrateur,
+**Je veux** que dans le formulaire de nouvelle fiches il y ait par défaut les entrées des métadonnées (title, catégorie, service, etc.)
+**Afin de** qu'on n'oublie pas d'ajouter les métadonnées indispensables pour les recherches.
+
+**Livré le :** 18/05/2026 — branche `feature/metadonnees-nouvelle-fiche`
+
+---
 
 ### ✅ US-028 - Recherche de fiche
 
