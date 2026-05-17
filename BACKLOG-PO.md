@@ -4,14 +4,6 @@
 
 ## À faire
 
-### US-028 - Recherche de fiche
-
-**En tant qu'** administrateur,
-**Je veux** que dans la page admin > Fiches du corpus il y ait une recherche
-**Afin de** afin de retrouver facilement une fiche en particulier.
-
-NOTE : On ne doit pas avoir besoin de jokers pour retrouver une fiche. Quand on tape une lettre, tous les titres qui contennent cette lettre sont listées ; on tape une deuxième lettre, tous les titres qui ont ces deux lettres accolées sont listées. Et ainsi de suite.
-
 ### US-029 - changement de nom
 
 **En tant qu'** administrateur,
@@ -66,6 +58,16 @@ NOTE 2 : Il faudra voir avec l'équipe de développement (Claude code) l'opportu
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-028 - Recherche de fiche
+
+**En tant qu'** administrateur,
+**Je veux** que dans la page admin > Fiches du corpus il y ait une recherche
+**Afin de** afin de retrouver facilement une fiche en particulier.
+
+**Livré le :** 18/05/2026 — branche `feature/recherche-fiche`
+
+---
 
 ### ✅ US-018 - Révision du UX — couleurs
 
