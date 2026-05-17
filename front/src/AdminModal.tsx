@@ -31,6 +31,11 @@ export default function AdminModal({
   onClose,
 }: AdminModalProps) {
   const [title, setTitle] = useState('');
+  const [categorie, setCategorie] = useState('');
+  const [service, setService] = useState('');
+  const [equipes, setEquipes] = useState('');
+  const [statut, setStatut] = useState('Publié');
+  const [commentaire, setCommentaire] = useState('');
   const [content, setContent] = useState('');
   const [corpusMsg, setCorpusMsg] = useState('');
 
@@ -66,10 +71,28 @@ export default function AdminModal({
       setCorpusMsg('Titre et contenu requis');
       return;
     }
+    const today = new Date().toLocaleDateString('fr-FR');
+    const frontmatter = [
+      '---',
+      `title: ${title.trim()}`,
+      categorie.trim() ? `catégorie: ${categorie.trim()}` : 'catégorie: ',
+      service.trim() ? `service: ${service.trim()}` : 'service: ',
+      equipes.trim() ? `équipes: ${equipes.trim()}` : 'équipes: ',
+      `dernière_revision: ${today}`,
+      `statut: ${statut}`,
+      commentaire.trim() ? `commentaire: ${commentaire.trim()}` : null,
+      '---',
+    ].filter(Boolean).join('\n');
+    const fullContent = `${frontmatter}\n\n${content.trim()}`;
     try {
-      const data = await onSave(title, content);
+      const data = await onSave(title, fullContent);
       setCorpusMsg(`✅ Fichier créé : ${data.path}`);
       setTitle('');
+      setCategorie('');
+      setService('');
+      setEquipes('');
+      setStatut('Publié');
+      setCommentaire('');
       setContent('');
       fetchMdFiles();
     } catch (e) {
@@ -128,13 +151,51 @@ export default function AdminModal({
               <label className="admin-label">Ajouter une procédure</label>
               <input
                 type="text"
-                placeholder="Titre de la procédure"
+                placeholder="Titre de la procédure *"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="admin-input"
               />
+              <div className="admin-meta-grid">
+                <input
+                  type="text"
+                  placeholder="Catégorie (ex : Système d'exploitation)"
+                  value={categorie}
+                  onChange={(e) => setCategorie(e.target.value)}
+                  className="admin-input"
+                />
+                <input
+                  type="text"
+                  placeholder="Service (ex : Tous services)"
+                  value={service}
+                  onChange={(e) => setService(e.target.value)}
+                  className="admin-input"
+                />
+                <input
+                  type="text"
+                  placeholder="Équipes (ex : Boutique IT)"
+                  value={equipes}
+                  onChange={(e) => setEquipes(e.target.value)}
+                  className="admin-input"
+                />
+                <select
+                  className="admin-select"
+                  value={statut}
+                  onChange={(e) => setStatut(e.target.value)}
+                >
+                  <option value="Publié">Publié</option>
+                  <option value="Brouillon">Brouillon</option>
+                </select>
+              </div>
+              <input
+                type="text"
+                placeholder="Commentaire (note à l'attention du technicien)"
+                value={commentaire}
+                onChange={(e) => setCommentaire(e.target.value)}
+                className="admin-input"
+              />
               <textarea
-                placeholder="Contenu en markdown..."
+                placeholder="Contenu en markdown... *"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="admin-textarea"
