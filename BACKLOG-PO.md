@@ -4,16 +4,6 @@
 
 ## À faire
 
-### US-029 - changement de nom
-
-**En tant qu'** administrateur,
-**Je veux** partout où il est fait référence à KABIT ce soit remplacé par KABIT,
-**Afin de** afin de rester cohérent.
-
-NOTE : La référence à GPT était trop évidente et pas nécessairement légalement irréprochable. Cela devient KABIT pour Knowledge Assistant for Boutique IT
-
-NOTE 2 : Il faudra voir avec l'équipe de développement (Claude code) l'opportunité de changer le nom du dossier du projet et du dépôt distant.
-
 ### US-019 - Révision du UX
 
 **En tant que** administrateur,
@@ -46,6 +36,16 @@ NOTE 2 : Il faudra voir avec l'équipe de développement (Claude code) l'opportu
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-029 - changement de nom
+
+**En tant qu'** administrateur,
+**Je veux** partout où il est fait référence à CAGPT ce soit remplacé par KABIT,
+**Afin de** afin de rester cohérent.
+
+**Livré le :** 18/05/2026 — branche `feature/renommage-kabit`
+
+---
 
 ### ✅ US-031 - Affichage du catalogue
 
