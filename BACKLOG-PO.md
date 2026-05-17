@@ -29,13 +29,17 @@
 
 ---
 
-### US-017 — Corpus supplémentaire
+## Terminé
+
+### ✅ US-017 — Corpus supplémentaire
 
 **En tant que** Product Owner,
-**Je veux** quelques fichiers de corpus supplémentaires, des .md, portant sur OneNote et les dossiers partagés,
+**Je veux** quelques fichiers de corpus supplémentaires, des .md, portant sur OneNote,
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
-## Terminé
+**Livré le :** 18/05/2026 — `corpus/onenote-remplacement-poste.md`, `corpus/onenote-problemes-courants.md`
+
+---
 
 ### ✅ US-029 - changement de nom
 
