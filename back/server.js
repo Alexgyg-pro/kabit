@@ -153,6 +153,6 @@ if (fs.existsSync(DIST_DIR)) {
 }
 
 app.listen(PORT, () => {
-  console.log(`✅ Backend CAGPT démarré sur http://localhost:${PORT}`);
+  console.log(`✅ Backend KABIT démarré sur http://localhost:${PORT}`);
   console.log(`📂 Corpus : ${CORPUS_DIR}`);
 });

@@ -608,7 +608,7 @@ export default function App() {
     <div className="app">
       {/* Header */}
       <header className="header">
-        <h1>CAGPT — Assistant Techniciens Support</h1>
+        <h1>KABIT — Assistant Techniciens Support</h1>
         <div className="header-actions">
           <button
             className={`btn-role-toggle ${role === 'admin' ? 'btn-role-toggle--admin' : ''}`}
@@ -807,6 +807,10 @@ export default function App() {
                   <button className="btn-doc-cancel" onClick={() => { setIsEditingDoc(false); setEditDocMsg(''); }}>Annuler</button>
                   {editDocMsg && <span className="admin-msg">{editDocMsg}</span>}
                 </div>
+              </div>
+            ) : selectedDoc.path.endsWith('.json') ? (
+              <div className="modal-body">
+                <pre className="catalogue-display">{selectedDoc.content}</pre>
               </div>
             ) : (
               <div className="modal-body">

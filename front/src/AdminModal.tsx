@@ -31,6 +31,11 @@ export default function AdminModal({
   onClose,
 }: AdminModalProps) {
   const [title, setTitle] = useState('');
+  const [categorie, setCategorie] = useState('');
+  const [service, setService] = useState('');
+  const [equipes, setEquipes] = useState('');
+  const [statut, setStatut] = useState('Publié');
+  const [commentaire, setCommentaire] = useState('');
   const [content, setContent] = useState('');
   const [corpusMsg, setCorpusMsg] = useState('');
 
@@ -38,6 +43,7 @@ export default function AdminModal({
   const [promptMsg, setPromptMsg] = useState('');
 
   const [mdFiles, setMdFiles] = useState<{ path: string; title: string }[]>([]);
+  const [search, setSearch] = useState('');
 
   const [catalogueContent, setCatalogueContent] = useState('');
   const [showCatalogue, setShowCatalogue] = useState(false);
@@ -65,10 +71,28 @@ export default function AdminModal({
       setCorpusMsg('Titre et contenu requis');
       return;
     }
+    const today = new Date().toLocaleDateString('fr-FR');
+    const frontmatter = [
+      '---',
+      `title: ${title.trim()}`,
+      categorie.trim() ? `catégorie: ${categorie.trim()}` : 'catégorie: ',
+      service.trim() ? `service: ${service.trim()}` : 'service: ',
+      equipes.trim() ? `équipes: ${equipes.trim()}` : 'équipes: ',
+      `dernière_revision: ${today}`,
+      `statut: ${statut}`,
+      commentaire.trim() ? `commentaire: ${commentaire.trim()}` : null,
+      '---',
+    ].filter(Boolean).join('\n');
+    const fullContent = `${frontmatter}\n\n${content.trim()}`;
     try {
-      const data = await onSave(title, content);
+      const data = await onSave(title, fullContent);
       setCorpusMsg(`✅ Fichier créé : ${data.path}`);
       setTitle('');
+      setCategorie('');
+      setService('');
+      setEquipes('');
+      setStatut('Publié');
+      setCommentaire('');
       setContent('');
       fetchMdFiles();
     } catch (e) {
@@ -127,13 +151,51 @@ export default function AdminModal({
               <label className="admin-label">Ajouter une procédure</label>
               <input
                 type="text"
-                placeholder="Titre de la procédure"
+                placeholder="Titre de la procédure *"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="admin-input"
               />
+              <div className="admin-meta-grid">
+                <input
+                  type="text"
+                  placeholder="Catégorie (ex : Système d'exploitation)"
+                  value={categorie}
+                  onChange={(e) => setCategorie(e.target.value)}
+                  className="admin-input"
+                />
+                <input
+                  type="text"
+                  placeholder="Service (ex : Tous services)"
+                  value={service}
+                  onChange={(e) => setService(e.target.value)}
+                  className="admin-input"
+                />
+                <input
+                  type="text"
+                  placeholder="Équipes (ex : Boutique IT)"
+                  value={equipes}
+                  onChange={(e) => setEquipes(e.target.value)}
+                  className="admin-input"
+                />
+                <select
+                  className="admin-select"
+                  value={statut}
+                  onChange={(e) => setStatut(e.target.value)}
+                >
+                  <option value="Publié">Publié</option>
+                  <option value="Brouillon">Brouillon</option>
+                </select>
+              </div>
+              <input
+                type="text"
+                placeholder="Commentaire (note à l'attention du technicien)"
+                value={commentaire}
+                onChange={(e) => setCommentaire(e.target.value)}
+                className="admin-input"
+              />
               <textarea
-                placeholder="Contenu en markdown..."
+                placeholder="Contenu en markdown... *"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="admin-textarea"
@@ -152,19 +214,30 @@ export default function AdminModal({
             {mdFiles.length === 0 ? (
               <p className="admin-section-desc">Aucune fiche .md dans le corpus.</p>
             ) : (
-              <ul className="corpus-file-list">
-                {mdFiles.map((file) => (
-                  <li
-                    key={file.path}
-                    className="corpus-file-item"
-                    onClick={() => { onOpenDoc(file.path, file.title); onClose(); }}
-                  >
-                    <span className="corpus-file-icon">📄</span>
-                    <span className="corpus-file-title">{file.title}</span>
-                    <span className="corpus-file-path">{file.path}</span>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <input
+                  type="text"
+                  placeholder="Rechercher une fiche..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="admin-input corpus-search"
+                />
+                <ul className="corpus-file-list">
+                  {mdFiles
+                    .filter((f) => f.title.toLowerCase().includes(search.toLowerCase()))
+                    .map((file) => (
+                      <li
+                        key={file.path}
+                        className="corpus-file-item"
+                        onClick={() => { onOpenDoc(file.path, file.title); onClose(); }}
+                      >
+                        <span className="corpus-file-icon">📄</span>
+                        <span className="corpus-file-title">{file.title}</span>
+                        <span className="corpus-file-path">{file.path}</span>
+                      </li>
+                    ))}
+                </ul>
+              </>
             )}
           </section>
 

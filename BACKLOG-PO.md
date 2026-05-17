@@ -1,4 +1,4 @@
-# BACKLOG - CAGPT Product Owner
+# BACKLOG - KABIT Product Owner
 
 <!-- Fichier réservé au Product Owner — à remplir au fil des sprints -->
 
@@ -36,6 +36,46 @@
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
+
+### ✅ US-029 - changement de nom
+
+**En tant qu'** administrateur,
+**Je veux** partout où il est fait référence à CAGPT ce soit remplacé par KABIT,
+**Afin de** afin de rester cohérent.
+
+**Livré le :** 18/05/2026 — branche `feature/renommage-kabit`
+
+---
+
+### ✅ US-031 - Affichage du catalogue
+
+**En tant que** technicien,
+**Je veux** que quand je clique sur une source issue du catalogue, que l'information soit affichée indentée,
+**Afin de** de le pas l'avoir tout compacté et difficile à lire.
+
+**Livré le :** 18/05/2026 — branche `feature/affichage-catalogue`
+
+---
+
+### ✅ US-030 - Métadonnées dans le formulaire de nouvelles fiches
+
+**En tant qu'** administrateur,
+**Je veux** que dans le formulaire de nouvelle fiches il y ait par défaut les entrées des métadonnées (title, catégorie, service, etc.)
+**Afin de** qu'on n'oublie pas d'ajouter les métadonnées indispensables pour les recherches.
+
+**Livré le :** 18/05/2026 — branche `feature/metadonnees-nouvelle-fiche`
+
+---
+
+### ✅ US-028 - Recherche de fiche
+
+**En tant qu'** administrateur,
+**Je veux** que dans la page admin > Fiches du corpus il y ait une recherche
+**Afin de** afin de retrouver facilement une fiche en particulier.
+
+**Livré le :** 18/05/2026 — branche `feature/recherche-fiche`
+
+---
 
 ### ✅ US-018 - Révision du UX — couleurs
 

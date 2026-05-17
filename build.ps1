@@ -1,4 +1,4 @@
-# build.ps1 — Prépare le build de production CAGPT
+# build.ps1 — Prépare le build de production KABIT
 # Prérequis : Node.js installé, front/.env.local présent avec VITE_GROQ_API_KEY
 
 $ErrorActionPreference = 'Stop'

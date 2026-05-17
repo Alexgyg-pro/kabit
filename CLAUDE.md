@@ -1,4 +1,4 @@
-# CLAUDE.md — Règles du projet CAGPT
+# CLAUDE.md — Règles du projet KABIT
 
 ## Langue
 Toujours répondre en français.
