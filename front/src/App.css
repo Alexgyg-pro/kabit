@@ -621,6 +621,20 @@
   margin: 14px 0;
 }
 
+/* ── Affichage catalogue JSON (US-031) ───────────────────────────────────── */
+.catalogue-display {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+  color: var(--code-block-text);
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
 /* ── Modale pré-prompt ───────────────────────────────────────────────────── */
 .system-prompt-content {
   white-space: pre-wrap;
