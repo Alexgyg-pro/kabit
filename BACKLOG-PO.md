@@ -32,7 +32,7 @@
 ### US-017 — Corpus supplémentaire
 
 **En tant que** Product Owner,
-**Je veux** quelques fichiers de corpus supplémentaires, des .md, portant sur OneDrive et les dossiers partagés,
+**Je veux** quelques fichiers de corpus supplémentaires, des .md, portant sur OneNote et les dossiers partagés,
 **Afin de** afin de couvrir un domaine qui ne l'est pas.
 
 ## Terminé
@@ -167,7 +167,6 @@
 **Livré le :** 08/05/2026 — branche `feature/catalogue-crud`
 
 ---
-
 
 ### ✅ BUG-003 — Les réponses évoquent souvent Document 1
 
