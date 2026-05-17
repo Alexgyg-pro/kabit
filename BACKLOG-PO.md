@@ -1,4 +1,4 @@
-# BACKLOG - CAGPT Product Owner
+# BACKLOG - KABIT Product Owner
 
 <!-- Fichier réservé au Product Owner — à remplir au fil des sprints -->
 
@@ -7,7 +7,7 @@
 ### US-029 - changement de nom
 
 **En tant qu'** administrateur,
-**Je veux** partout où il est fait référence à CAGPT ce soit remplacé par KABIT,
+**Je veux** partout où il est fait référence à KABIT ce soit remplacé par KABIT,
 **Afin de** afin de rester cohérent.
 
 NOTE : La référence à GPT était trop évidente et pas nécessairement légalement irréprochable. Cela devient KABIT pour Knowledge Assistant for Boutique IT

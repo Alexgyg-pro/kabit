@@ -1,4 +1,4 @@
-# CAGPT — Assistant RAG pour Techniciens Support
+# KABIT — Assistant RAG pour Techniciens Support
 
 Assistant de support basé sur RAG (Retrieval-Augmented Generation) :
 embeddings 100% navigateur + cache IndexedDB + génération via l'API Groq (LLM cloud).
@@ -93,7 +93,7 @@ Déplier la section **Administration** en bas de la page, remplir le titre et le
 ## Structure du projet
 
 ```
-cagpt/
+kabit/
 ├── front/                  # React/Vite/TypeScript (port 5173)
 │   ├── .env.local          # Clé API Groq — NE PAS COMMITTER
 │   └── src/
