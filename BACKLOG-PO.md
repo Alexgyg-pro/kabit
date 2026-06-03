@@ -4,6 +4,77 @@
 
 ## À faire
 
+### US-035 — Zone hors-embedding dans les fiches : notes destinées au technicien
+
+**En tant que** rédacteur de fiche corpus,
+**Je veux** pouvoir ajouter une section en bas de fiche qui ne soit pas indexée par le RAG,
+**Afin de** glisser des conseils à l'intention du technicien — par exemple comment formuler son prompt pour obtenir une meilleure réponse dans un contexte donné — sans polluer l'embedding.
+
+**Comportement attendu :**
+- Un marqueur spécial (ex. : `<<<NOTE>>>`) délimite la fin du contenu indexé
+- Tout ce qui se trouve **après** ce marqueur est exclu de l'embedding et du chunking
+- Le contenu après le marqueur reste **visible dans la modale de visualisation de la fiche**
+- La section est affichée avec un style distinct dans la modale (ex. : fond légèrement différent, titre "Note technicien")
+
+**Exemple d'usage dans une fiche :**
+```
+[...procédure...]
+
+<<<NOTE>>>
+💡 Pour obtenir une procédure pas-à-pas adaptée au niveau du technicien,
+préférez la formulation : "L'utilisateur a le message X, donne-moi les étapes détaillées."
+```
+
+**Critères d'acceptance :**
+- [ ] Le marqueur est reconnu à l'indexation : le contenu après est exclu de l'embedding
+- [ ] La modale de visualisation affiche la note avec un style distinct
+- [ ] La note n'apparaît pas dans le contexte envoyé au LLM
+- [ ] Le marqueur est documenté dans le formulaire d'édition (placeholder ou tooltip)
+
+---
+
+### US-034 — Indicateur de longueur dans les formulaires de fiche
+
+**En tant qu'** administrateur,
+**Je veux** voir le nombre de caractères de la fiche en cours d'édition ou de création, avec une limite conseillée affichée,
+**Afin de** ne pas dépasser la taille optimale pour le RAG et éviter que la procédure soit tronquée lors du chunking.
+
+**Comportement attendu :**
+- Sous le textarea, afficher un compteur au format `1256 / 2200`
+- Si le contenu dépasse 2200 caractères, le nombre de gauche passe en rouge
+- Présent dans le formulaire de **création** et le formulaire d'**édition** d'une fiche
+
+**Critères d'acceptance :**
+- [ ] Le compteur se met à jour en temps réel à chaque frappe
+- [ ] Le seuil de 2200 caractères déclenche le passage en rouge
+- [ ] Le compteur est visible sans scroller (positionné juste sous le textarea)
+
+---
+
+### 🔴 US-033 — Fiabilité du RAG : procédures non restituées malgré source trouvée (PRIORITAIRE)
+
+**En tant que** technicien de support,
+**Je veux** que l'assistant me fournisse la procédure complète contenue dans la source trouvée,
+**Afin de** pouvoir résoudre l'incident sans escalader vers le N2.
+
+**Problème observé :**
+Le RAG identifie correctement la bonne fiche source (ex : `profil-windows-refonte.md`) mais la réponse du LLM indique que "les détails de la procédure ne sont pas disponibles". Le LLM suggère alors une escalade alors qu'une procédure complète existe.
+
+**Cause probable :**
+Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récupéré contient le diagnostic (symptômes) mais pas le chunk contenant les étapes de la procédure. Le LLM ne dispose donc que d'une partie de la fiche.
+
+**Pistes d'investigation :**
+- Vérifier quels chunks sont effectivement envoyés au LLM pour une question donnée (logs)
+- Envisager d'augmenter le TOP_K pour récupérer plus de chunks d'un même fichier
+- Envisager un chunking différent : regrouper symptômes + première méthode dans un même chunk
+
+**Critères d'acceptance :**
+- [ ] Pour une question dont la fiche source contient une procédure, la réponse inclut les étapes
+- [ ] Testé sur `profil-windows-refonte.md` (question : profil temporaire au démarrage)
+- [ ] Aucune régression sur les questions du golden dataset (`EVAL.md`)
+
+---
+
 ### US-032 - Tableau de bord (à envisager)
 
 **En tant que** administrateur,
