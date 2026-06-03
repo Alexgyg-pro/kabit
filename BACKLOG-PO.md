@@ -4,6 +4,14 @@
 
 ## À faire
 
+### US-032 - Tableau de bord (à envisager)
+
+**En tant que** administrateur,
+**Je veux** pouvoir visualiser des constantes telles que la taille des chucks ou les niveaux de similarité considérés comme suffisants ou d'autres paramètres de l'application,
+**Afin de** afin d'avoir une meilleure comréhension de l'outil et, éventuellement, de pouvoir les ajuster.
+
+**Note :** je suggère un objet JS/TS qui rassemble ces réglages.
+
 ### US-019 - Révision du UX
 
 **En tant que** administrateur,
