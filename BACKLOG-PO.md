@@ -169,7 +169,7 @@ Stories enfants : US-036, US-037, US-038, US-039.
 
 ---
 
-### US-039 — Indexation RAG des KDocs
+### ✅ US-039 — Indexation RAG des KDocs
 
 **En tant qu'** administrateur,
 **Je veux** que le RAG indexe les fichiers de `KDocs/` au même titre que les fiches de la racine `corpus/`,
@@ -191,7 +191,9 @@ Stories enfants : US-036, US-037, US-038, US-039.
 - [x] La sauvegarde écrit bien dans `KDocs/`
 - [x] Aucun fichier de `corpus/` (racine) n'est modifié ou déplacé
 - [x] Une confirmation est affichée après sauvegarde
-- [ ] Le RAG indexe les fichiers de `KDocs/` au même titre que ceux de la racine `corpus/`
+- [x] Le RAG indexe les fichiers de `KDocs/` au même titre que ceux de la racine `corpus/`
+
+**Livré le :** 08/06/2026 — branche `feature/kdocs-rag`
 
 ---
 
