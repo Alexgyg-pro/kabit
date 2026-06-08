@@ -305,11 +305,17 @@ export default function App() {
     setAppStatus('indexing');
     setNeedsReindex(false);
     try {
-      const listRes = await fetch(`${BACKEND}/corpus/list`);
+      const [listRes, kdocsRes] = await Promise.all([
+        fetch(`${BACKEND}/corpus/list`),
+        fetch(`${BACKEND}/kdocs/list`),
+      ]);
       if (!listRes.ok) throw new Error('Backend inaccessible');
-      const files: { path: string; title: string }[] = await listRes.json();
 
-      if (files.length === 0) {
+      const corpusFiles: { path: string; title: string }[] = await listRes.json();
+      const kdocsFiles: { path: string; title: string }[]  = kdocsRes.ok ? await kdocsRes.json() : [];
+      const allFiles = [...corpusFiles, ...kdocsFiles];
+
+      if (allFiles.length === 0) {
         setStatusMsg('Corpus vide — ajoutez des procédures via l\'admin');
         setAppStatus('ready');
         return;
@@ -318,8 +324,12 @@ export default function App() {
       await clearDocs();
       let totalDocs = 0;
 
-      for (const file of files) {
-        const contentRes = await fetch(`${BACKEND}/corpus/file?path=${encodeURIComponent(file.path)}`);
+      for (const file of allFiles) {
+        const isKDoc = file.path.startsWith('KDocs/');
+        const fetchUrl = isKDoc
+          ? `${BACKEND}/kdocs/file?path=${encodeURIComponent(file.path)}`
+          : `${BACKEND}/corpus/file?path=${encodeURIComponent(file.path)}`;
+        const contentRes = await fetch(fetchUrl);
         const content = await contentRes.text();
 
         if (file.path.endsWith('.json')) {
@@ -746,7 +756,7 @@ export default function App() {
           content={selectedDoc.content}
           meta={`${selectedDoc.path}${selectedDoc.score > 0 ? ` · similarité : ${selectedDoc.score.toFixed(2)}` : ''}`}
           isJson={selectedDoc.path.endsWith('.json')}
-          onSave={role === 'admin' && !selectedDoc.path.endsWith('.json')
+          onSave={role === 'admin' && !selectedDoc.path.endsWith('.json') && !selectedDoc.path.startsWith('KDocs/')
             ? async (content) => {
                 const res = await fetch(`${BACKEND}/corpus/file`, {
                   method: 'PUT',
