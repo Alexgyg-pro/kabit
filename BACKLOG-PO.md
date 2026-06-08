@@ -67,7 +67,7 @@ Stories enfants : US-036, US-037, US-038, US-039.
 
 ---
 
-### US-036 — Infrastructure : dossiers KBOffs/KDocs et references.json
+### ✅ US-036 — Infrastructure : dossiers KBOffs/KDocs et references.json
 
 **En tant qu'** administrateur,
 **Je veux** que les dossiers `KBOffs/` et `KDocs/` existent dans `corpus/` et qu'un fichier `references.json` soit disponible,
@@ -76,13 +76,15 @@ Stories enfants : US-036, US-037, US-038, US-039.
 **Critères d'acceptance :**
 - [x] `corpus/KBOffs/` créé
 - [x] `corpus/KDocs/` créé
-- [x] `corpus/references.json` initialisé avec `{ "references": [] }`
+- [x] `corpus/references.json` initialisé avec `{ "kboffs": [], "kdocs": [] }`
+- [x] IDs séquentiels générés automatiquement (`KB00001`, `KDOC00001`, …)
+- [x] Endpoints backend : `GET/POST/DELETE /kdocs/references`, `GET /kdocs/files`
 
-**Livré :** branche `feature/KDocs` — en cours
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
 
 ---
 
-### US-037 — Interface de gestion des sources (liste, filtres, statuts)
+### ✅ US-037 — Interface de gestion des sources (liste, filtres, statuts)
 
 **En tant qu'** administrateur,
 **Je veux** une fenêtre dédiée accessible depuis la modale d'administration, qui affiche les fichiers présents dans `KBOffs/` et `KDocs/`, avec des filtres et la possibilité d'éditer leur statut dans `references.json`,
@@ -90,20 +92,23 @@ Stories enfants : US-036, US-037, US-038, US-039.
 
 **Détail :**
 - Accessible depuis `AdminModal` via un bouton "Sources"
-- La modale Sources affiche trois vues filtrables :
-  - **Tous les fichiers de KDocs** (`KDocs/`)
-  - **Tous les KB de KBOffs** (`KBOffs/`)
-  - **KB de KBOffs répertoriées dans references.json**
-- Double-clic sur un fichier → formulaire de statut
-- Statuts possibles : `selected` (KB retenue pour traitement) / `passed` (KDoc généré et validé)
-- Possibilité de retirer un fichier de `references.json` (revient à l'état non référencé)
-- `references.json` enregistre un horodatage (`passedAt`) lors du passage en statut `passed`
+- Filtre à deux niveaux :
+  - **Niveau 1 — sélecteur de dossier** : `KBOffs (N)` / `KDocs (N)`
+  - **Niveau 2 — chips de statut** :
+    - KBOffs : Toutes / Non répertoriées / `selected` / `out` / `duplicate` / `done`
+    - KDocs : Tous / `testing` / `passed` / `rejected`
+- Clic simple sur un fichier → formulaire de statut (ligne surlignée)
+- Champ titre optionnel + radios statut par dossier
+- Possibilité de retirer un fichier de `references.json`
+- `updatedAt` horodaté automatiquement à chaque enregistrement
 
 **Critères d'acceptance :**
-- [ ] Les trois filtres fonctionnent et affichent les bons fichiers
-- [ ] Le formulaire de statut se déclenche au double-clic
-- [ ] L'enregistrement et le retrait depuis `references.json` fonctionnent
-- [ ] `passedAt` est renseigné automatiquement au passage en `passed`
+- [x] Les filtres dossier + statut fonctionnent et affichent les bons fichiers
+- [x] Le formulaire de statut se déclenche au clic simple, ligne en surbrillance
+- [x] L'enregistrement et le retrait depuis `references.json` fonctionnent
+- [x] `updatedAt` est renseigné automatiquement à chaque modification
+
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
 
 ---
 
