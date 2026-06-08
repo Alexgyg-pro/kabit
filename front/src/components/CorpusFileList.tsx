@@ -11,6 +11,7 @@ interface Props {
   onDoubleClick?: (path: string, title: string) => void;
   renderBadge?: (path: string) => React.ReactNode;
   emptyMessage?: string;
+  selectedPath?: string;
 }
 
 export default function CorpusFileList({
@@ -19,6 +20,7 @@ export default function CorpusFileList({
   onDoubleClick,
   renderBadge,
   emptyMessage = 'Aucun fichier disponible.',
+  selectedPath,
 }: Props) {
   const [search, setSearch] = useState('');
 
@@ -43,7 +45,7 @@ export default function CorpusFileList({
         {filtered.map((file) => (
           <li
             key={file.path}
-            className="corpus-file-item"
+            className={`corpus-file-item${file.path === selectedPath ? ' corpus-file-item--selected' : ''}`}
             onClick={() => onSelect?.(file.path, file.title)}
             onDoubleClick={() => onDoubleClick?.(file.path, file.title)}
           >

@@ -841,6 +841,8 @@
 }
 .corpus-file-item:last-child { border-bottom: none; }
 .corpus-file-item:hover { background: var(--border); }
+.corpus-file-item--selected { background: var(--accent-soft, rgba(99,102,241,0.15)); }
+.corpus-file-item--selected:hover { background: var(--accent-soft, rgba(99,102,241,0.2)); }
 
 .corpus-file-icon { flex-shrink: 0; font-size: 0.9rem; }
 

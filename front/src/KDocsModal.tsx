@@ -90,7 +90,7 @@ export default function KDocsModal({ backend, onClose }: Props) {
     setMsg('');
   }
 
-  function handleDoubleClick(path: string) {
+  function handleSelect(path: string) {
     const file = files.find(f => f.path === path);
     if (!file) return;
     const ref = getRef(file);
@@ -211,13 +211,14 @@ export default function KDocsModal({ backend, onClose }: Props) {
 
             {folder === 'kboffs' && statusFilter === 'all' && (
               <p className="admin-section-desc">
-                Double-cliquez sur une KB pour lui attribuer un statut.
+                Cliquez sur une KB pour lui attribuer un statut.
               </p>
             )}
 
             <CorpusFileList
               files={corpusFiles}
-              onDoubleClick={(path) => handleDoubleClick(path)}
+              onSelect={(path) => handleSelect(path)}
+              selectedPath={selectedFile?.path}
               emptyMessage={emptyMsg}
               renderBadge={(path) => {
                 const file = files.find(f => f.path === path);
