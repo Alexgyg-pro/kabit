@@ -110,6 +110,102 @@ Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récu
 
 ## Terminé
 
+### ✅ ÉPIQUE — Pipeline KB → KDoc : traitement des bases de connaissance officielles
+
+**Objectif :** Permettre à l'administrateur de recenser les KB officielles (format brut, souvent incorrect), de générer automatiquement des fiches `.md` propres via le LLM, de les corriger si besoin, et de les intégrer au corpus RAG.
+
+**Workflow livré :**
+```
+KBOffs/  →  references.json  →  génération LLM  →  KDocs/  →  corpus RAG
+(KB brute)   (sélection/statut)   (fiche .md propre)   (KDoc éditable)   (indexé)
+```
+
+**Livré le :** 08/06/2026 — branches `feature/KDocs`, `feature/kdocs-rag`
+
+---
+
+### ✅ US-036 — Infrastructure : dossiers KBOffs/KDocs et references.json
+
+**En tant qu'** administrateur,
+**Je veux** que les dossiers `KBOffs/` et `KDocs/` existent dans `corpus/` et qu'un fichier `references.json` soit disponible,
+**Afin de** disposer de la structure nécessaire pour stocker les KB sources et les KDocs générés.
+
+**Critères d'acceptance :**
+- [x] `corpus/KBOffs/` créé
+- [x] `corpus/KDocs/` créé
+- [x] `corpus/references.json` initialisé avec `{ "kboffs": [], "kdocs": [] }`
+- [x] IDs séquentiels générés automatiquement (`KB00001`, `KDOC00001`, …)
+- [x] Endpoints backend : `GET/POST/DELETE /kdocs/references`, `GET /kdocs/files`
+
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
+
+---
+
+### ✅ US-037 — Interface de gestion des sources (liste, filtres, statuts)
+
+**En tant qu'** administrateur,
+**Je veux** une fenêtre dédiée accessible depuis la modale d'administration, qui affiche les fichiers présents dans `KBOffs/` et `KDocs/`, avec des filtres et la possibilité d'éditer leur statut dans `references.json`,
+**Afin de** piloter quelles KB sont utiles et à quel stade de traitement elles se trouvent.
+
+**Critères d'acceptance :**
+- [x] Les filtres dossier + statut fonctionnent et affichent les bons fichiers
+- [x] Le formulaire de statut se déclenche au clic simple, ligne en surbrillance
+- [x] L'enregistrement et le retrait depuis `references.json` fonctionnent
+- [x] `updatedAt` est renseigné automatiquement à chaque modification
+
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
+
+---
+
+### ✅ US-038 — Génération d'une fiche .md depuis une KB via LLM
+
+**En tant qu'** administrateur,
+**Je veux** sélectionner une KB dans `KBOffs/` et déclencher sa conversion en fiche `.md` conforme au format du corpus,
+**Afin de** produire automatiquement un KDoc exploitable par le RAG à partir d'une source de qualité variable.
+
+**Critères d'acceptance :**
+- [x] La fiche générée respecte le format frontmatter des fiches corpus existantes
+- [x] Le fichier est bien créé dans `KDocs/`
+- [x] Le statut de la KB passe en `done` avec horodatage dans `references.json`
+- [x] Un message de confirmation est affiché avec le nom du fichier créé
+
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
+
+---
+
+### ✅ US-039 — Indexation RAG des KDocs
+
+**En tant qu'** administrateur,
+**Je veux** que le RAG indexe les fichiers de `KDocs/` au même titre que les fiches de la racine `corpus/`,
+**Afin que** les KDocs générés et validés soient effectivement utilisés par l'assistant pour répondre aux techniciens.
+
+**Critères d'acceptance :**
+- [x] L'éditeur affiche le contenu du KDoc (lecture rendue + édition textarea)
+- [x] La sauvegarde écrit bien dans `KDocs/`
+- [x] Aucun fichier de `corpus/` (racine) n'est modifié ou déplacé
+- [x] Une confirmation est affichée après sauvegarde
+- [x] Le RAG indexe les fichiers de `KDocs/` au même titre que ceux de la racine `corpus/`
+
+**Livré le :** 08/06/2026 — branche `feature/kdocs-rag`
+
+---
+
+### ✅ US-040 — Composant partagé de visualisation et d'édition de fiche
+
+**En tant qu'** administrateur,
+**Je veux** un composant unique de visualisation/édition utilisé partout dans l'application où l'on ouvre une fiche,
+**Afin d'** avoir une expérience cohérente et de ne pas maintenir deux implémentations parallèles.
+
+**Critères d'acceptance :**
+- [x] `DocViewerModal` est utilisé pour les fiches corpus racine (comportement inchangé)
+- [x] Double-clic sur un KDoc dans `KDocsModal` ouvre `DocViewerModal` avec le contenu du fichier
+- [x] La sauvegarde d'un KDoc écrit bien dans `corpus/KDocs/` et déclenche un message de confirmation
+- [x] L'affichage et l'édition fonctionnent de façon identique dans les deux contextes
+
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
+
+---
+
 ### ✅ US-017 — Corpus supplémentaire
 
 **En tant que** Product Owner,

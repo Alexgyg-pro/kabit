@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import CatalogueModal from './CatalogueModal';
+import CorpusFileList from './components/CorpusFileList';
+import KDocsModal from './KDocsModal';
 
 interface AdminModalProps {
   systemPrompt: string;
   needsReindex: boolean;
   backend: string;
+  groqApiKey: string;
+  groqModel: string;
   techLevel: string;
   techLevels: { id: string; label: string }[];
   onTechLevelChange: (level: string) => void;
@@ -20,6 +24,8 @@ export default function AdminModal({
   systemPrompt,
   needsReindex,
   backend,
+  groqApiKey,
+  groqModel,
   techLevel,
   techLevels,
   onTechLevelChange,
@@ -43,10 +49,10 @@ export default function AdminModal({
   const [promptMsg, setPromptMsg] = useState('');
 
   const [mdFiles, setMdFiles] = useState<{ path: string; title: string }[]>([]);
-  const [search, setSearch] = useState('');
 
   const [catalogueContent, setCatalogueContent] = useState('');
   const [showCatalogue, setShowCatalogue] = useState(false);
+  const [showKDocs, setShowKDocs] = useState(false);
 
   async function fetchCatalogue() {
     try {
@@ -121,6 +127,7 @@ export default function AdminModal({
   }
 
   return (
+    <>
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card admin-modal-card" onClick={(e) => e.stopPropagation()}>
 
@@ -211,34 +218,10 @@ export default function AdminModal({
           {/* ── Section Fiches du corpus ─────────────────────────────── */}
           <section className="admin-section">
             <h2 className="admin-section-title">Fiches du corpus ({mdFiles.length})</h2>
-            {mdFiles.length === 0 ? (
-              <p className="admin-section-desc">Aucune fiche .md dans le corpus.</p>
-            ) : (
-              <>
-                <input
-                  type="text"
-                  placeholder="Rechercher une fiche..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="admin-input corpus-search"
-                />
-                <ul className="corpus-file-list">
-                  {mdFiles
-                    .filter((f) => f.title.toLowerCase().includes(search.toLowerCase()))
-                    .map((file) => (
-                      <li
-                        key={file.path}
-                        className="corpus-file-item"
-                        onClick={() => { onOpenDoc(file.path, file.title); onClose(); }}
-                      >
-                        <span className="corpus-file-icon">📄</span>
-                        <span className="corpus-file-title">{file.title}</span>
-                        <span className="corpus-file-path">{file.path}</span>
-                      </li>
-                    ))}
-                </ul>
-              </>
-            )}
+            <CorpusFileList
+              files={mdFiles}
+              onSelect={(path, title) => { onOpenDoc(path, title); onClose(); }}
+            />
           </section>
 
           {/* ── Section Catalogue IT ────────────────────────────────── */}
@@ -283,6 +266,17 @@ export default function AdminModal({
             </select>
           </section>
 
+          {/* ── Section Sources ─────────────────────────────────────── */}
+          <section className="admin-section">
+            <h2 className="admin-section-title">Sources</h2>
+            <p className="admin-section-desc">
+              Gérez les KB sources (KBOffs) et les KDocs générés, et leur statut de référencement.
+            </p>
+            <button className="btn-cat-open" onClick={() => setShowKDocs(true)}>
+              Ouvrir le gestionnaire de sources
+            </button>
+          </section>
+
           {/* ── Section Pré-prompt ───────────────────────────────────── */}
           <section className="admin-section">
             <h2 className="admin-section-title">Pré-prompt</h2>
@@ -311,5 +305,15 @@ export default function AdminModal({
 
       </div>
     </div>
+
+    {showKDocs && (
+      <KDocsModal
+        backend={backend}
+        groqApiKey={groqApiKey}
+        groqModel={groqModel}
+        onClose={() => setShowKDocs(false)}
+      />
+    )}
+    </>
   );
 }

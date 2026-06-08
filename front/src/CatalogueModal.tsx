@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import DualList from './DualList';
+import DualList from './components/DualList';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
