@@ -142,7 +142,7 @@ Stories enfants : US-036, US-037, US-038, US-039.
 
 ---
 
-### US-038 — Génération d'une fiche .md depuis une KB via LLM
+### ✅ US-038 — Génération d'une fiche .md depuis une KB via LLM
 
 **En tant qu'** administrateur,
 **Je veux** sélectionner une KB dans `KBOffs/` et déclencher sa conversion en fiche `.md` conforme au format du corpus,
@@ -150,40 +150,48 @@ Stories enfants : US-036, US-037, US-038, US-039.
 
 **Contexte :** Les KB sources sont des fichiers markdown issus de ServiceNow — même format de fichier pour toutes les KB.
 
-**Détail :**
-- Depuis la modale Sources, un bouton "Générer un KDoc" est disponible sur les KB avec statut `selected`
-- Le contenu de la KB est envoyé au LLM avec un prompt de transformation
-- Le LLM produit une fiche `.md` avec frontmatter complet (title, catégorie, service, équipes, etc.) conforme aux fiches existantes
-- La fiche générée est enregistrée dans `KDocs/` avec un nom de fichier dérivé du titre
-- Le statut de la KB dans `references.json` passe automatiquement à `passed` avec horodatage
+**Détail livré :**
+- Double-clic sur une KBOff → modale viewer deux colonnes (KB source rendue à gauche, génération à droite)
+- Le contenu de la KB est envoyé à Groq avec un prompt de transformation structuré
+- Le LLM produit une fiche `.md` avec frontmatter complet conforme aux fiches existantes
+- Le résultat est affiché dans un textarea éditable avant enregistrement
+- La fiche est enregistrée dans `KDocs/` avec un ID séquentiel (`KDOC000XX.md`)
+- Le statut de la KB passe automatiquement à `done` dans `references.json`
+- Le KDoc est créé avec le statut `testing` dans `references.json`
 
 **Critères d'acceptance :**
-- [ ] La fiche générée respecte le format frontmatter des fiches corpus existantes
-- [ ] Le fichier est bien créé dans `KDocs/`
-- [ ] Le statut passe en `passed` avec horodatage dans `references.json`
-- [ ] Un message de confirmation est affiché avec le nom du fichier créé
+- [x] La fiche générée respecte le format frontmatter des fiches corpus existantes
+- [x] Le fichier est bien créé dans `KDocs/`
+- [x] Le statut de la KB passe en `done` avec horodatage dans `references.json`
+- [x] Un message de confirmation est affiché avec le nom du fichier créé
+
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
 
 ---
 
-### US-039 — Édition et validation du KDoc généré
+### US-039 — Indexation RAG des KDocs
 
 **En tant qu'** administrateur,
-**Je veux** pouvoir ouvrir et éditer un KDoc depuis la modale Sources,
-**Afin de** corriger les éventuelles erreurs introduites lors de la génération avant que le RAG ne l'indexe.
+**Je veux** que le RAG indexe les fichiers de `KDocs/` au même titre que les fiches de la racine `corpus/`,
+**Afin que** les KDocs générés et validés soient effectivement utilisés par l'assistant pour répondre aux techniciens.
 
-**Contexte :** Les KDocs restent dans `KDocs/` — ils ne sont jamais copiés à la racine de `corpus/`. Les fiches existantes (racine de `corpus/`) et les KDocs générés (`KDocs/`) coexistent en période de transition sans être mélangés. Le RAG devra indexer `KDocs/` en plus de la racine — c'est le critère d'acceptance principal de cette US.
+**Contexte :** Les KDocs restent dans `KDocs/` — ils ne sont jamais copiés à la racine de `corpus/`. Les fiches existantes (racine de `corpus/`) et les KDocs (`KDocs/`) coexistent sans être mélangés.
 
-**Détail :**
-- Double-clic sur un fichier dans `KDocs/` ouvre un éditeur (textarea en markdown)
-- Sauvegarder écrit le fichier dans `KDocs/`
-- Le pipeline d'indexation (`runIndexing`) est mis à jour pour couvrir aussi `KDocs/`
+**Ce qui est déjà livré (via US-040) :**
+- Double-clic sur un KDoc → visualisation rendue + mode édition
+- Sauvegarde via `PUT /kdocs/file` → écrit dans `KDocs/`
+- Confirmation affichée après sauvegarde
+
+**Ce qui reste à faire :**
+- Mettre à jour `runIndexing` pour couvrir aussi `corpus/KDocs/`
+- Mettre à jour le backend (`/corpus/list` ou nouvel endpoint) pour servir les fichiers de `KDocs/`
 
 **Critères d'acceptance :**
-- [ ] L'éditeur affiche le contenu brut markdown du KDoc
-- [ ] La sauvegarde écrit bien dans `KDocs/`
+- [x] L'éditeur affiche le contenu du KDoc (lecture rendue + édition textarea)
+- [x] La sauvegarde écrit bien dans `KDocs/`
+- [x] Aucun fichier de `corpus/` (racine) n'est modifié ou déplacé
+- [x] Une confirmation est affichée après sauvegarde
 - [ ] Le RAG indexe les fichiers de `KDocs/` au même titre que ceux de la racine `corpus/`
-- [ ] Aucun fichier de `corpus/` (racine) n'est modifié ou déplacé
-- [ ] Une confirmation est affichée après sauvegarde
 
 ---
 
