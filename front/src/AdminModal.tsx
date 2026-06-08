@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import CatalogueModal from './CatalogueModal';
 import CorpusFileList from './components/CorpusFileList';
+import KDocsModal from './KDocsModal';
 
 interface AdminModalProps {
   systemPrompt: string;
@@ -47,6 +48,7 @@ export default function AdminModal({
 
   const [catalogueContent, setCatalogueContent] = useState('');
   const [showCatalogue, setShowCatalogue] = useState(false);
+  const [showKDocs, setShowKDocs] = useState(false);
 
   async function fetchCatalogue() {
     try {
@@ -121,6 +123,7 @@ export default function AdminModal({
   }
 
   return (
+    <>
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card admin-modal-card" onClick={(e) => e.stopPropagation()}>
 
@@ -259,6 +262,17 @@ export default function AdminModal({
             </select>
           </section>
 
+          {/* ── Section KDocs ───────────────────────────────────────── */}
+          <section className="admin-section">
+            <h2 className="admin-section-title">Sources KDocs</h2>
+            <p className="admin-section-desc">
+              Gérez les fichiers sources (KBOffs, KDocs) et leur statut de référencement.
+            </p>
+            <button className="btn-cat-open" onClick={() => setShowKDocs(true)}>
+              Ouvrir le gestionnaire KDocs
+            </button>
+          </section>
+
           {/* ── Section Pré-prompt ───────────────────────────────────── */}
           <section className="admin-section">
             <h2 className="admin-section-title">Pré-prompt</h2>
@@ -287,5 +301,10 @@ export default function AdminModal({
 
       </div>
     </div>
+
+    {showKDocs && (
+      <KDocsModal backend={backend} onClose={() => setShowKDocs(false)} />
+    )}
+    </>
   );
 }

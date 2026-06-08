@@ -144,6 +144,96 @@ app.post('/corpus/add', (req, res) => {
   }
 });
 
+// ── KDocs ─────────────────────────────────────────────────────────────────────
+const REFERENCES_PATH = path.join(CORPUS_DIR, 'references.json');
+const KDOCS_FOLDERS = ['KBOffs', 'KDocs'];
+
+function readReferences() {
+  if (!fs.existsSync(REFERENCES_PATH)) return { references: [] };
+  return JSON.parse(fs.readFileSync(REFERENCES_PATH, 'utf-8'));
+}
+
+function writeReferences(data) {
+  fs.writeFileSync(REFERENCES_PATH, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+// GET /kdocs/files — liste les fichiers dans KBOffs et KDocs
+app.get('/kdocs/files', (req, res) => {
+  try {
+    const files = [];
+    for (const folder of KDOCS_FOLDERS) {
+      const dirPath = path.join(CORPUS_DIR, folder);
+      if (!fs.existsSync(dirPath)) continue;
+      const entries = fs.readdirSync(dirPath).filter(f => !f.startsWith('.'));
+      for (const entry of entries) {
+        files.push({ path: `${folder}/${entry}`, name: entry, folder });
+      }
+    }
+    res.json(files);
+  } catch (err) {
+    console.error('Erreur /kdocs/files:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /kdocs/references — retourne references.json
+app.get('/kdocs/references', (req, res) => {
+  try {
+    res.json(readReferences());
+  } catch (err) {
+    console.error('Erreur GET /kdocs/references:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /kdocs/references — ajoute ou met à jour une référence
+app.post('/kdocs/references', (req, res) => {
+  try {
+    const { path: filePath, status } = req.body;
+    if (!filePath || !['selected', 'passed'].includes(status)) {
+      return res.status(400).json({ error: 'path et status (selected|passed) requis' });
+    }
+    const validFolder = KDOCS_FOLDERS.some(d => filePath.startsWith(d + '/'));
+    if (!validFolder) return res.status(400).json({ error: 'Dossier invalide' });
+
+    const data = readReferences();
+    const existing = data.references.find(r => r.path === filePath);
+    if (existing) {
+      if (status === 'passed' && existing.status !== 'passed') {
+        existing.passedAt = new Date().toISOString();
+      }
+      existing.status = status;
+    } else {
+      data.references.push({
+        path: filePath,
+        status,
+        passedAt: status === 'passed' ? new Date().toISOString() : null,
+      });
+    }
+    writeReferences(data);
+    res.json(data);
+  } catch (err) {
+    console.error('Erreur POST /kdocs/references:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /kdocs/references — retire une référence
+app.delete('/kdocs/references', (req, res) => {
+  try {
+    const { path: filePath } = req.body;
+    if (!filePath) return res.status(400).json({ error: 'path requis' });
+
+    const data = readReferences();
+    data.references = data.references.filter(r => r.path !== filePath);
+    writeReferences(data);
+    res.json(data);
+  } catch (err) {
+    console.error('Erreur DELETE /kdocs/references:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Servir le build React en mode production (si front/dist/ existe)
 const DIST_DIR = path.join(__dirname, '..', 'front', 'dist');
 if (fs.existsSync(DIST_DIR)) {
