@@ -7,13 +7,33 @@ interface KDocsFile {
   folder: string;
 }
 
-interface Reference {
-  path: string;
-  status: 'selected' | 'passed';
-  passedAt: string | null;
+interface KBOffsRef {
+  id: string;
+  file: string;
+  title?: string;
+  status: 'selected' | 'out' | 'duplicate' | 'done';
+  updatedAt: string;
 }
 
-type View = 'kboffs' | 'kdocs' | 'referenced';
+interface KDocRef {
+  id: string;
+  file: string;
+  title?: string;
+  status: 'testing' | 'passed' | 'rejected';
+  source_kb?: string;
+  updatedAt?: string;
+  createdAt?: string;
+}
+
+interface References {
+  kboffs: KBOffsRef[];
+  kdocs: KDocRef[];
+}
+
+type Folder = 'kboffs' | 'kdocs';
+
+const KBOFFS_STATUSES = ['selected', 'out', 'duplicate', 'done'] as const;
+const KDOCS_STATUSES  = ['testing', 'passed', 'rejected'] as const;
 
 interface Props {
   backend: string;
@@ -21,17 +41,16 @@ interface Props {
 }
 
 export default function KDocsModal({ backend, onClose }: Props) {
-  const [files, setFiles] = useState<KDocsFile[]>([]);
-  const [references, setReferences] = useState<Reference[]>([]);
-  const [view, setView] = useState<View>('kboffs');
+  const [files, setFiles]           = useState<KDocsFile[]>([]);
+  const [references, setReferences] = useState<References>({ kboffs: [], kdocs: [] });
+  const [folder, setFolder]         = useState<Folder>('kboffs');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedFile, setSelectedFile] = useState<KDocsFile | null>(null);
-  const [pendingStatus, setPendingStatus] = useState<'selected' | 'passed'>('selected');
+  const [pendingStatus, setPendingStatus] = useState<string>('selected');
+  const [pendingTitle, setPendingTitle]   = useState('');
   const [msg, setMsg] = useState('');
 
-  useEffect(() => {
-    fetchFiles();
-    fetchReferences();
-  }, []);
+  useEffect(() => { fetchFiles(); fetchReferences(); }, []);
 
   async function fetchFiles() {
     try {
@@ -43,29 +62,41 @@ export default function KDocsModal({ backend, onClose }: Props) {
   async function fetchReferences() {
     try {
       const res = await fetch(`${backend}/kdocs/references`);
-      if (res.ok) {
-        const data = await res.json();
-        setReferences(data.references ?? []);
-      }
+      if (res.ok) setReferences(await res.json());
     } catch { /* backend absent */ }
   }
 
-  function getRef(path: string): Reference | undefined {
-    return references.find(r => r.path === path);
+  function getRef(file: KDocsFile): KBOffsRef | KDocRef | undefined {
+    if (file.folder === 'KBOffs') return references.kboffs.find(r => r.file === file.name);
+    return references.kdocs.find(r => r.file === file.name);
+  }
+
+  function folderFiles(): KDocsFile[] {
+    const target = folder === 'kboffs' ? 'KBOffs' : 'KDocs';
+    return files.filter(f => f.folder === target);
   }
 
   function visibleFiles(): KDocsFile[] {
-    if (view === 'kdocs')      return files.filter(f => f.folder === 'KDocs');
-    if (view === 'kboffs')     return files.filter(f => f.folder === 'KBOffs');
-    if (view === 'referenced') return files.filter(f => f.folder === 'KBOffs' && !!getRef(f.path));
-    return files;
+    const base = folderFiles();
+    if (statusFilter === 'all')          return base;
+    if (statusFilter === 'unreferenced') return base.filter(f => !getRef(f));
+    return base.filter(f => getRef(f)?.status === statusFilter);
+  }
+
+  function handleFolderChange(f: Folder) {
+    setFolder(f);
+    setStatusFilter('all');
+    setSelectedFile(null);
+    setMsg('');
   }
 
   function handleDoubleClick(path: string) {
     const file = files.find(f => f.path === path);
-    if (!file || file.folder !== 'KBOffs') return;
-    const existing = getRef(path);
-    setPendingStatus(existing?.status ?? 'selected');
+    if (!file) return;
+    const ref = getRef(file);
+    const defaultStatus = file.folder === 'KBOffs' ? 'selected' : 'testing';
+    setPendingStatus(ref?.status ?? defaultStatus);
+    setPendingTitle(ref?.title ?? '');
     setSelectedFile(file);
     setMsg('');
   }
@@ -76,11 +107,15 @@ export default function KDocsModal({ backend, onClose }: Props) {
       const res = await fetch(`${backend}/kdocs/references`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: selectedFile.path, status: pendingStatus }),
+        body: JSON.stringify({
+          path: selectedFile.path,
+          status: pendingStatus,
+          title: pendingTitle || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setReferences(data.references ?? []);
+      setReferences(data);
       setMsg('Statut enregistré.');
       setSelectedFile(null);
     } catch (e) {
@@ -98,7 +133,7 @@ export default function KDocsModal({ backend, onClose }: Props) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setReferences(data.references ?? []);
+      setReferences(data);
       setSelectedFile(null);
       setMsg('');
     } catch (e) {
@@ -106,20 +141,32 @@ export default function KDocsModal({ backend, onClose }: Props) {
     }
   }
 
-  const visible = visibleFiles();
-  const corpusFiles = visible.map(f => ({ path: f.path, title: f.name }));
+  const kboffsCount = files.filter(f => f.folder === 'KBOffs').length;
+  const kdocsCount  = files.filter(f => f.folder === 'KDocs').length;
 
-  const emptyMessages: Record<View, string> = {
-    kboffs:     'Aucun fichier dans KBOffs.',
-    kdocs:      'Aucun fichier dans KDocs.',
-    referenced: 'Aucune KB répertoriée dans references.json.',
-  };
+  const statusFilters = folder === 'kboffs'
+    ? [
+        { key: 'all',          label: 'Toutes' },
+        { key: 'unreferenced', label: 'Non répertoriées' },
+        ...KBOFFS_STATUSES.map(s => ({ key: s, label: s })),
+      ]
+    : [
+        { key: 'all',    label: 'Tous' },
+        ...KDOCS_STATUSES.map(s => ({ key: s, label: s })),
+      ];
 
-  const viewLabels: { key: View; label: string; count: number }[] = [
-    { key: 'kboffs',     label: 'KB (KBOffs)',    count: files.filter(f => f.folder === 'KBOffs').length },
-    { key: 'kdocs',      label: 'KDocs',          count: files.filter(f => f.folder === 'KDocs').length },
-    { key: 'referenced', label: 'KB répertoriées', count: files.filter(f => f.folder === 'KBOffs' && !!getRef(f.path)).length },
-  ];
+  const statusOptions = folder === 'kboffs'
+    ? KBOFFS_STATUSES
+    : KDOCS_STATUSES;
+
+  const visible      = visibleFiles();
+  const corpusFiles  = visible.map(f => ({ path: f.path, title: f.name }));
+
+  const emptyMsg = statusFilter === 'unreferenced'
+    ? 'Aucun fichier non répertorié.'
+    : statusFilter === 'all'
+    ? `Aucun fichier dans ${folder === 'kboffs' ? 'KBOffs' : 'KDocs'}.`
+    : `Aucun fichier avec le statut « ${statusFilter} ».`;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -131,32 +178,51 @@ export default function KDocsModal({ backend, onClose }: Props) {
         </div>
 
         <div className="modal-body admin-modal-body">
-
           <section className="admin-section">
+
+            {/* ── Sélecteur de dossier ── */}
+            <div className="kdocs-folder-tabs">
+              <button
+                className={`kdocs-folder-tab ${folder === 'kboffs' ? 'kdocs-folder-tab--active' : ''}`}
+                onClick={() => handleFolderChange('kboffs')}
+              >
+                KBOffs ({kboffsCount})
+              </button>
+              <button
+                className={`kdocs-folder-tab ${folder === 'kdocs' ? 'kdocs-folder-tab--active' : ''}`}
+                onClick={() => handleFolderChange('kdocs')}
+              >
+                KDocs ({kdocsCount})
+              </button>
+            </div>
+
+            {/* ── Filtres par statut ── */}
             <div className="kdocs-view-tabs">
-              {viewLabels.map(v => (
+              {statusFilters.map(f => (
                 <button
-                  key={v.key}
-                  className={`kdocs-tab ${view === v.key ? 'kdocs-tab--active' : ''}`}
-                  onClick={() => { setView(v.key); setSelectedFile(null); setMsg(''); }}
+                  key={f.key}
+                  className={`kdocs-tab ${statusFilter === f.key ? 'kdocs-tab--active' : ''}`}
+                  onClick={() => { setStatusFilter(f.key); setSelectedFile(null); setMsg(''); }}
                 >
-                  {v.label} ({v.count})
+                  {f.label}
                 </button>
               ))}
             </div>
 
-            {view === 'kboffs' && (
+            {folder === 'kboffs' && statusFilter === 'all' && (
               <p className="admin-section-desc">
-                Double-cliquez sur une KB pour lui attribuer un statut dans references.json.
+                Double-cliquez sur une KB pour lui attribuer un statut.
               </p>
             )}
 
             <CorpusFileList
               files={corpusFiles}
-              onDoubleClick={view !== 'kdocs' ? (path) => handleDoubleClick(path) : undefined}
-              emptyMessage={emptyMessages[view]}
+              onDoubleClick={(path) => handleDoubleClick(path)}
+              emptyMessage={emptyMsg}
               renderBadge={(path) => {
-                const ref = getRef(path);
+                const file = files.find(f => f.path === path);
+                if (!file) return null;
+                const ref = getRef(file);
                 if (!ref) return null;
                 return (
                   <span className={`kdocs-badge kdocs-badge--${ref.status}`}>
@@ -167,34 +233,36 @@ export default function KDocsModal({ backend, onClose }: Props) {
             />
           </section>
 
+          {/* ── Formulaire de statut ── */}
           {selectedFile && (
             <section className="admin-section">
-              <h2 className="admin-section-title">Statut — {selectedFile.name}</h2>
+              <h2 className="admin-section-title">
+                {getRef(selectedFile) ? 'Modifier' : 'Référencer'} — {selectedFile.name}
+              </h2>
+              <input
+                type="text"
+                placeholder="Titre (optionnel)"
+                value={pendingTitle}
+                onChange={(e) => setPendingTitle(e.target.value)}
+                className="admin-input"
+              />
               <div className="kdocs-status-options">
-                <label>
-                  <input
-                    type="radio"
-                    name="kdocs-status"
-                    value="selected"
-                    checked={pendingStatus === 'selected'}
-                    onChange={() => setPendingStatus('selected')}
-                  />
-                  {' '}selected
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="kdocs-status"
-                    value="passed"
-                    checked={pendingStatus === 'passed'}
-                    onChange={() => setPendingStatus('passed')}
-                  />
-                  {' '}passed
-                </label>
+                {statusOptions.map(s => (
+                  <label key={s}>
+                    <input
+                      type="radio"
+                      name="kdocs-status"
+                      value={s}
+                      checked={pendingStatus === s}
+                      onChange={() => setPendingStatus(s)}
+                    />
+                    {' '}{s}
+                  </label>
+                ))}
               </div>
               <div className="admin-save-row">
                 <button className="btn-save" onClick={handleSave}>Enregistrer</button>
-                {getRef(selectedFile.path) && (
+                {getRef(selectedFile) && (
                   <button className="btn-restore-default" onClick={handleRemove}>Retirer</button>
                 )}
                 <button

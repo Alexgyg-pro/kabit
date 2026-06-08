@@ -1389,6 +1389,36 @@
   cursor: pointer;
 }
 
+/* ── KDocs — sélecteur de dossier ──────────────────────────────────────────── */
+.kdocs-folder-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.kdocs-folder-tab {
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-deep);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.kdocs-folder-tab:hover {
+  background: var(--bg-hover, var(--bg-card));
+  color: var(--text);
+}
+
+.kdocs-folder-tab--active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
 /* ── KDocs — onglets de vue ─────────────────────────────────────────────────── */
 .kdocs-view-tabs {
   display: flex;

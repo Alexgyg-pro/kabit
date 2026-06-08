@@ -149,13 +149,29 @@ const REFERENCES_PATH = path.join(CORPUS_DIR, 'references.json');
 const KDOCS_FOLDERS = ['KBOffs', 'KDocs'];
 
 function readReferences() {
-  if (!fs.existsSync(REFERENCES_PATH)) return { references: [] };
-  return JSON.parse(fs.readFileSync(REFERENCES_PATH, 'utf-8'));
+  if (!fs.existsSync(REFERENCES_PATH)) return { kboffs: [], kdocs: [] };
+  try { return JSON.parse(fs.readFileSync(REFERENCES_PATH, 'utf-8')); }
+  catch { return { kboffs: [], kdocs: [] }; }
 }
 
 function writeReferences(data) {
   fs.writeFileSync(REFERENCES_PATH, JSON.stringify(data, null, 2), 'utf-8');
 }
+
+function generateId(data, folder) {
+  if (folder === 'KBOffs') {
+    const nums = data.kboffs.map(e => parseInt((e.id || '').replace('KB', ''))).filter(n => !isNaN(n));
+    const next = nums.length ? Math.max(...nums) + 1 : 1;
+    return `KB${String(next).padStart(5, '0')}`;
+  } else {
+    const nums = data.kdocs.map(e => parseInt((e.id || '').replace('KDOC', ''))).filter(n => !isNaN(n));
+    const next = nums.length ? Math.max(...nums) + 1 : 1;
+    return `KDOC${String(next).padStart(5, '0')}`;
+  }
+}
+
+const KBOFFS_STATUSES = ['selected', 'out', 'duplicate', 'done'];
+const KDOCS_STATUSES  = ['testing', 'passed', 'rejected'];
 
 // GET /kdocs/files — liste les fichiers dans KBOffs et KDocs
 app.get('/kdocs/files', (req, res) => {
@@ -189,27 +205,32 @@ app.get('/kdocs/references', (req, res) => {
 // POST /kdocs/references — ajoute ou met à jour une référence
 app.post('/kdocs/references', (req, res) => {
   try {
-    const { path: filePath, status } = req.body;
-    if (!filePath || !['selected', 'passed'].includes(status)) {
-      return res.status(400).json({ error: 'path et status (selected|passed) requis' });
+    const { path: filePath, status, title } = req.body;
+    const folder = KDOCS_FOLDERS.find(d => filePath?.startsWith(d + '/'));
+    if (!folder || !filePath || !status) {
+      return res.status(400).json({ error: 'path et status requis ; dossier invalide' });
     }
-    const validFolder = KDOCS_FOLDERS.some(d => filePath.startsWith(d + '/'));
-    if (!validFolder) return res.status(400).json({ error: 'Dossier invalide' });
+    const section   = folder === 'KBOffs' ? 'kboffs' : 'kdocs';
+    const validSt   = folder === 'KBOffs' ? KBOFFS_STATUSES : KDOCS_STATUSES;
+    if (!validSt.includes(status)) {
+      return res.status(400).json({ error: `Statut invalide pour ${folder} : ${validSt.join(', ')}` });
+    }
 
-    const data = readReferences();
-    const existing = data.references.find(r => r.path === filePath);
+    const filename = filePath.slice(folder.length + 1);
+    const data     = readReferences();
+    const now      = new Date().toISOString();
+    const existing = data[section].find(e => e.file === filename);
+
     if (existing) {
-      if (status === 'passed' && existing.status !== 'passed') {
-        existing.passedAt = new Date().toISOString();
-      }
-      existing.status = status;
+      existing.status    = status;
+      existing.updatedAt = now;
+      if (title !== undefined) existing.title = title;
     } else {
-      data.references.push({
-        path: filePath,
-        status,
-        passedAt: status === 'passed' ? new Date().toISOString() : null,
-      });
+      const entry = { id: generateId(data, folder), file: filename, status, updatedAt: now };
+      if (title) entry.title = title;
+      data[section].push(entry);
     }
+
     writeReferences(data);
     res.json(data);
   } catch (err) {
@@ -222,10 +243,13 @@ app.post('/kdocs/references', (req, res) => {
 app.delete('/kdocs/references', (req, res) => {
   try {
     const { path: filePath } = req.body;
-    if (!filePath) return res.status(400).json({ error: 'path requis' });
+    const folder = KDOCS_FOLDERS.find(d => filePath?.startsWith(d + '/'));
+    if (!folder || !filePath) return res.status(400).json({ error: 'path requis' });
 
-    const data = readReferences();
-    data.references = data.references.filter(r => r.path !== filePath);
+    const section  = folder === 'KBOffs' ? 'kboffs' : 'kdocs';
+    const filename = filePath.slice(folder.length + 1);
+    const data     = readReferences();
+    data[section]  = data[section].filter(e => e.file !== filename);
     writeReferences(data);
     res.json(data);
   } catch (err) {
