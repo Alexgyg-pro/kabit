@@ -144,6 +144,197 @@ app.post('/corpus/add', (req, res) => {
   }
 });
 
+// ── KDocs ─────────────────────────────────────────────────────────────────────
+const REFERENCES_PATH = path.join(CORPUS_DIR, 'references.json');
+const KDOCS_FOLDERS = ['KBOffs', 'KDocs'];
+
+function readReferences() {
+  if (!fs.existsSync(REFERENCES_PATH)) return { kboffs: [], kdocs: [] };
+  try { return JSON.parse(fs.readFileSync(REFERENCES_PATH, 'utf-8')); }
+  catch { return { kboffs: [], kdocs: [] }; }
+}
+
+function writeReferences(data) {
+  fs.writeFileSync(REFERENCES_PATH, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+function generateId(data, folder) {
+  if (folder === 'KBOffs') {
+    const nums = data.kboffs.map(e => parseInt((e.id || '').replace('KB', ''))).filter(n => !isNaN(n));
+    const next = nums.length ? Math.max(...nums) + 1 : 1;
+    return `KB${String(next).padStart(5, '0')}`;
+  } else {
+    const nums = data.kdocs.map(e => parseInt((e.id || '').replace('KDOC', ''))).filter(n => !isNaN(n));
+    const next = nums.length ? Math.max(...nums) + 1 : 1;
+    return `KDOC${String(next).padStart(5, '0')}`;
+  }
+}
+
+const KBOFFS_STATUSES = ['selected', 'out', 'duplicate', 'done'];
+const KDOCS_STATUSES  = ['testing', 'passed', 'rejected'];
+
+// GET /kdocs/files — liste les fichiers dans KBOffs et KDocs
+app.get('/kdocs/files', (req, res) => {
+  try {
+    const files = [];
+    for (const folder of KDOCS_FOLDERS) {
+      const dirPath = path.join(CORPUS_DIR, folder);
+      if (!fs.existsSync(dirPath)) continue;
+      const entries = fs.readdirSync(dirPath).filter(f => !f.startsWith('.'));
+      for (const entry of entries) {
+        files.push({ path: `${folder}/${entry}`, name: entry, folder });
+      }
+    }
+    res.json(files);
+  } catch (err) {
+    console.error('Erreur /kdocs/files:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /kdocs/references — retourne references.json
+app.get('/kdocs/references', (req, res) => {
+  try {
+    res.json(readReferences());
+  } catch (err) {
+    console.error('Erreur GET /kdocs/references:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /kdocs/references — ajoute ou met à jour une référence
+app.post('/kdocs/references', (req, res) => {
+  try {
+    const { path: filePath, status, title } = req.body;
+    const folder = KDOCS_FOLDERS.find(d => filePath?.startsWith(d + '/'));
+    if (!folder || !filePath || !status) {
+      return res.status(400).json({ error: 'path et status requis ; dossier invalide' });
+    }
+    const section   = folder === 'KBOffs' ? 'kboffs' : 'kdocs';
+    const validSt   = folder === 'KBOffs' ? KBOFFS_STATUSES : KDOCS_STATUSES;
+    if (!validSt.includes(status)) {
+      return res.status(400).json({ error: `Statut invalide pour ${folder} : ${validSt.join(', ')}` });
+    }
+
+    const filename = filePath.slice(folder.length + 1);
+    const data     = readReferences();
+    const now      = new Date().toISOString();
+    const existing = data[section].find(e => e.file === filename);
+
+    if (existing) {
+      existing.status    = status;
+      existing.updatedAt = now;
+      if (title !== undefined) existing.title = title;
+    } else {
+      const entry = { id: generateId(data, folder), file: filename, status, updatedAt: now };
+      if (title) entry.title = title;
+      data[section].push(entry);
+    }
+
+    writeReferences(data);
+    res.json(data);
+  } catch (err) {
+    console.error('Erreur POST /kdocs/references:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /kdocs/references — retire une référence
+app.delete('/kdocs/references', (req, res) => {
+  try {
+    const { path: filePath } = req.body;
+    const folder = KDOCS_FOLDERS.find(d => filePath?.startsWith(d + '/'));
+    if (!folder || !filePath) return res.status(400).json({ error: 'path requis' });
+
+    const section  = folder === 'KBOffs' ? 'kboffs' : 'kdocs';
+    const filename = filePath.slice(folder.length + 1);
+    const data     = readReferences();
+    data[section]  = data[section].filter(e => e.file !== filename);
+    writeReferences(data);
+    res.json(data);
+  } catch (err) {
+    console.error('Erreur DELETE /kdocs/references:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /kdocs/file?path=KBOffs/... — retourne le contenu d'un fichier KB ou KDoc
+app.get('/kdocs/file', (req, res) => {
+  try {
+    const filePath = req.query.path;
+    if (!filePath) return res.status(400).json({ error: 'Paramètre path manquant' });
+    const folder = KDOCS_FOLDERS.find(d => filePath.startsWith(d + '/'));
+    if (!folder) return res.status(400).json({ error: 'Dossier invalide (KBOffs ou KDocs attendu)' });
+    const filename = path.basename(filePath.slice(folder.length + 1));
+    const fullPath = path.join(CORPUS_DIR, folder, filename);
+    if (!fs.existsSync(fullPath)) return res.status(404).json({ error: 'Fichier introuvable' });
+    res.type('text/plain').send(fs.readFileSync(fullPath, 'utf-8'));
+  } catch (err) {
+    console.error('Erreur GET /kdocs/file:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /kdocs/file — met à jour le contenu d'un fichier dans KBOffs/ ou KDocs/
+app.put('/kdocs/file', (req, res) => {
+  try {
+    const { path: filePath, content } = req.body;
+    if (!filePath || typeof content !== 'string') {
+      return res.status(400).json({ error: 'path et content requis' });
+    }
+    const folder = KDOCS_FOLDERS.find(d => filePath.startsWith(d + '/'));
+    if (!folder) return res.status(400).json({ error: 'Dossier invalide (KBOffs ou KDocs attendu)' });
+    const filename = path.basename(filePath.slice(folder.length + 1));
+    const fullPath = path.join(CORPUS_DIR, folder, filename);
+    if (!fs.existsSync(fullPath)) return res.status(404).json({ error: 'Fichier introuvable' });
+    fs.writeFileSync(fullPath, content, 'utf-8');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erreur PUT /kdocs/file:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /kdocs/save — sauvegarde un KDoc généré dans KDocs/ et met à jour references.json
+app.post('/kdocs/save', (req, res) => {
+  try {
+    const { content, sourceKBPath } = req.body;
+    if (!content) return res.status(400).json({ error: 'content requis' });
+
+    const data     = readReferences();
+    const now      = new Date().toISOString();
+    const id       = generateId(data, 'KDocs');
+    const filename = `${id}.md`;
+    const fullPath = path.join(CORPUS_DIR, 'KDocs', filename);
+
+    fs.writeFileSync(fullPath, content, 'utf-8');
+
+    // Marquer la KB source comme 'done'
+    if (sourceKBPath) {
+      const sourceFilename = path.basename(sourceKBPath);
+      const kb = data.kboffs.find(e => e.file === sourceFilename);
+      if (kb) { kb.status = 'done'; kb.updatedAt = now; }
+    }
+
+    // Ajouter l'entrée KDoc
+    const entry = {
+      id,
+      file:      filename,
+      status:    'testing',
+      source_kb: sourceKBPath || undefined,
+      createdAt: now,
+      updatedAt: now,
+    };
+    data.kdocs.push(entry);
+    writeReferences(data);
+
+    res.json({ success: true, path: `KDocs/${filename}`, data });
+  } catch (err) {
+    console.error('Erreur POST /kdocs/save:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Servir le build React en mode production (si front/dist/ existe)
 const DIST_DIR = path.join(__dirname, '..', 'front', 'dist');
 if (fs.existsSync(DIST_DIR)) {

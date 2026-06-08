@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { loadEmbedder, embed, cosineSimilarity } from './embeddings';
 import { getAllDocs, putDoc, clearDocs, countDocs, DocRecord } from './db';
 import AdminModal from './AdminModal';
+import DocViewerModal from './components/DocViewerModal';
 import './App.css';
 
 const BACKEND = 'http://localhost:3001';
@@ -250,9 +251,6 @@ export default function App() {
   const [sources, setSources] = useState<Source[]>([]);
   const [isAsking, setIsAsking] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<Source | null>(null);
-  const [isEditingDoc, setIsEditingDoc] = useState(false);
-  const [editDocContent, setEditDocContent] = useState('');
-  const [editDocMsg, setEditDocMsg] = useState('');
 
   const [techLevel, setTechLevel] = useState<string>(
     () => localStorage.getItem('techLevel') ?? 'none'
@@ -554,43 +552,10 @@ export default function App() {
     if (!res.ok) throw new Error(`Impossible de charger ${path}`);
     const content = await res.text();
     setSelectedDoc({ id: path, path, title, score: 0, content });
-    setIsEditingDoc(true);
-    setEditDocContent(content);
-    setEditDocMsg('');
   }
 
-  function openDoc(doc: Source) {
-    setSelectedDoc(doc);
-    setIsEditingDoc(false);
-    setEditDocContent('');
-    setEditDocMsg('');
-  }
-
-  function closeDoc() {
-    setSelectedDoc(null);
-    setIsEditingDoc(false);
-    setEditDocContent('');
-    setEditDocMsg('');
-  }
-
-  async function handleSaveDoc() {
-    if (!selectedDoc) return;
-    try {
-      const res = await fetch(`${BACKEND}/corpus/file`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: selectedDoc.path, content: editDocContent }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setSelectedDoc({ ...selectedDoc, content: editDocContent });
-      setIsEditingDoc(false);
-      setNeedsReindex(true);
-      setEditDocMsg('');
-    } catch (e) {
-      setEditDocMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
-    }
-  }
+  function openDoc(doc: Source) { setSelectedDoc(doc); }
+  function closeDoc()            { setSelectedDoc(null); }
 
   async function handleSaveSystemPrompt(content: string): Promise<void> {
     const res = await fetch(`${BACKEND}/system-prompt`, {
@@ -776,49 +741,27 @@ export default function App() {
 
       {/* Modale document source */}
       {selectedDoc && (
-        <div className="modal-overlay" onClick={closeDoc}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <span className="modal-title">📄 {selectedDoc.title}</span>
-              <div className="modal-header-actions">
-                {role === 'admin' && !isEditingDoc && !selectedDoc.path.endsWith('.json') && (
-                  <button
-                    className="btn-doc-edit"
-                    onClick={() => { setIsEditingDoc(true); setEditDocContent(selectedDoc.content); }}
-                  >
-                    ✏️ Modifier
-                  </button>
-                )}
-                <button className="modal-close" onClick={closeDoc}>✕</button>
-              </div>
-            </div>
-            <div className="modal-meta">
-              {selectedDoc.path}{selectedDoc.score > 0 && <>&nbsp;·&nbsp; similarité : {selectedDoc.score.toFixed(2)}</>}
-            </div>
-            {isEditingDoc ? (
-              <div className="modal-edit-body">
-                <textarea
-                  className="doc-edit-textarea"
-                  value={editDocContent}
-                  onChange={(e) => setEditDocContent(e.target.value)}
-                />
-                <div className="modal-edit-footer">
-                  <button className="btn-save" onClick={handleSaveDoc}>Sauvegarder</button>
-                  <button className="btn-doc-cancel" onClick={() => { setIsEditingDoc(false); setEditDocMsg(''); }}>Annuler</button>
-                  {editDocMsg && <span className="admin-msg">{editDocMsg}</span>}
-                </div>
-              </div>
-            ) : selectedDoc.path.endsWith('.json') ? (
-              <div className="modal-body">
-                <pre className="catalogue-display">{selectedDoc.content}</pre>
-              </div>
-            ) : (
-              <div className="modal-body">
-                <ReactMarkdown>{selectedDoc.content}</ReactMarkdown>
-              </div>
-            )}
-          </div>
-        </div>
+        <DocViewerModal
+          title={selectedDoc.title}
+          content={selectedDoc.content}
+          meta={`${selectedDoc.path}${selectedDoc.score > 0 ? ` · similarité : ${selectedDoc.score.toFixed(2)}` : ''}`}
+          isJson={selectedDoc.path.endsWith('.json')}
+          onSave={role === 'admin' && !selectedDoc.path.endsWith('.json')
+            ? async (content) => {
+                const res = await fetch(`${BACKEND}/corpus/file`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ path: selectedDoc.path, content }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                setSelectedDoc((prev) => prev ? { ...prev, content } : null);
+                setNeedsReindex(true);
+              }
+            : undefined
+          }
+          onClose={closeDoc}
+        />
       )}
 
       {/* Modale admin */}
@@ -827,6 +770,8 @@ export default function App() {
           systemPrompt={systemPrompt}
           needsReindex={needsReindex}
           backend={BACKEND}
+          groqApiKey={GROQ_API_KEY ?? ''}
+          groqModel={selectedModel}
           techLevel={techLevel}
           techLevels={TECH_LEVELS}
           onTechLevelChange={handleTechLevelChange}

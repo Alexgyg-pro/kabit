@@ -51,6 +51,150 @@ préférez la formulation : "L'utilisateur a le message X, donne-moi les étapes
 
 ---
 
+### ✅ US-040 — Composant partagé de visualisation et d'édition de fiche
+
+**En tant qu'** administrateur,
+**Je veux** un composant unique de visualisation/édition utilisé partout dans l'application où l'on ouvre une fiche,
+**Afin d'** avoir une expérience cohérente et de ne pas maintenir deux implémentations parallèles.
+
+**Contexte :**
+Il existe actuellement deux endroits où une fiche markdown est affichée avec possibilité d'édition :
+- Les fiches du corpus racine (`corpus/*.md`), ouvertes depuis la liste "Fiches du corpus" ou depuis les sources d'une réponse
+- Les KDocs générés (`corpus/KDocs/*.md`), pour lesquels il n'y a pas encore de visualisation post-génération
+
+Le comportement attendu est identique dans les deux cas : affichage rendu en markdown, bouton Modifier (admin uniquement), textarea, Sauvegarder / Annuler.
+
+**Détail :**
+- Créer un composant `DocViewerModal` réutilisable avec les props : `title`, `content`, `onSave?`, `onClose`
+- Modes : lecture (markdown rendu) ↔ édition (textarea)
+- Bouton Modifier visible uniquement si `onSave` est fourni
+- Remplacer l'implémentation inline existante dans `App.tsx` par ce composant
+- Brancher le composant sur le double-clic dans la liste KDocs de `KDocsModal`
+
+**Critères d'acceptance :**
+- [x] `DocViewerModal` est utilisé pour les fiches corpus racine (comportement inchangé)
+- [x] Double-clic sur un KDoc dans `KDocsModal` ouvre `DocViewerModal` avec le contenu du fichier
+- [x] La sauvegarde d'un KDoc écrit bien dans `corpus/KDocs/` et déclenche un message de confirmation
+- [x] L'affichage et l'édition fonctionnent de façon identique dans les deux contextes
+
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
+
+---
+
+---
+
+## ÉPIQUE — Pipeline KB → KDoc : traitement des bases de connaissance officielles
+
+**Objectif :** Permettre à l'administrateur de recenser les KB officielles (format brut, souvent incorrect), de générer automatiquement des fiches `.md` propres via le LLM, de les corriger si besoin, et de les intégrer au corpus RAG.
+
+**Workflow cible :**
+```
+KBOffs/  →  références.json  →  génération LLM  →  KDocs/  →  corpus RAG
+(KB brute)   (sélection/statut)   (fiche .md propre)   (KDoc éditable)
+```
+
+Stories enfants : US-036, US-037, US-038, US-039.
+
+---
+
+### ✅ US-036 — Infrastructure : dossiers KBOffs/KDocs et references.json
+
+**En tant qu'** administrateur,
+**Je veux** que les dossiers `KBOffs/` et `KDocs/` existent dans `corpus/` et qu'un fichier `references.json` soit disponible,
+**Afin de** disposer de la structure nécessaire pour stocker les KB sources et les KDocs générés.
+
+**Critères d'acceptance :**
+- [x] `corpus/KBOffs/` créé
+- [x] `corpus/KDocs/` créé
+- [x] `corpus/references.json` initialisé avec `{ "kboffs": [], "kdocs": [] }`
+- [x] IDs séquentiels générés automatiquement (`KB00001`, `KDOC00001`, …)
+- [x] Endpoints backend : `GET/POST/DELETE /kdocs/references`, `GET /kdocs/files`
+
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
+
+---
+
+### ✅ US-037 — Interface de gestion des sources (liste, filtres, statuts)
+
+**En tant qu'** administrateur,
+**Je veux** une fenêtre dédiée accessible depuis la modale d'administration, qui affiche les fichiers présents dans `KBOffs/` et `KDocs/`, avec des filtres et la possibilité d'éditer leur statut dans `references.json`,
+**Afin de** piloter quelles KB sont utiles et à quel stade de traitement elles se trouvent.
+
+**Détail :**
+- Accessible depuis `AdminModal` via un bouton "Sources"
+- Filtre à deux niveaux :
+  - **Niveau 1 — sélecteur de dossier** : `KBOffs (N)` / `KDocs (N)`
+  - **Niveau 2 — chips de statut** :
+    - KBOffs : Toutes / Non répertoriées / `selected` / `out` / `duplicate` / `done`
+    - KDocs : Tous / `testing` / `passed` / `rejected`
+- Clic simple sur un fichier → formulaire de statut (ligne surlignée)
+- Champ titre optionnel + radios statut par dossier
+- Possibilité de retirer un fichier de `references.json`
+- `updatedAt` horodaté automatiquement à chaque enregistrement
+
+**Critères d'acceptance :**
+- [x] Les filtres dossier + statut fonctionnent et affichent les bons fichiers
+- [x] Le formulaire de statut se déclenche au clic simple, ligne en surbrillance
+- [x] L'enregistrement et le retrait depuis `references.json` fonctionnent
+- [x] `updatedAt` est renseigné automatiquement à chaque modification
+
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
+
+---
+
+### ✅ US-038 — Génération d'une fiche .md depuis une KB via LLM
+
+**En tant qu'** administrateur,
+**Je veux** sélectionner une KB dans `KBOffs/` et déclencher sa conversion en fiche `.md` conforme au format du corpus,
+**Afin de** produire automatiquement un KDoc exploitable par le RAG à partir d'une source de qualité variable.
+
+**Contexte :** Les KB sources sont des fichiers markdown issus de ServiceNow — même format de fichier pour toutes les KB.
+
+**Détail livré :**
+- Double-clic sur une KBOff → modale viewer deux colonnes (KB source rendue à gauche, génération à droite)
+- Le contenu de la KB est envoyé à Groq avec un prompt de transformation structuré
+- Le LLM produit une fiche `.md` avec frontmatter complet conforme aux fiches existantes
+- Le résultat est affiché dans un textarea éditable avant enregistrement
+- La fiche est enregistrée dans `KDocs/` avec un ID séquentiel (`KDOC000XX.md`)
+- Le statut de la KB passe automatiquement à `done` dans `references.json`
+- Le KDoc est créé avec le statut `testing` dans `references.json`
+
+**Critères d'acceptance :**
+- [x] La fiche générée respecte le format frontmatter des fiches corpus existantes
+- [x] Le fichier est bien créé dans `KDocs/`
+- [x] Le statut de la KB passe en `done` avec horodatage dans `references.json`
+- [x] Un message de confirmation est affiché avec le nom du fichier créé
+
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
+
+---
+
+### US-039 — Indexation RAG des KDocs
+
+**En tant qu'** administrateur,
+**Je veux** que le RAG indexe les fichiers de `KDocs/` au même titre que les fiches de la racine `corpus/`,
+**Afin que** les KDocs générés et validés soient effectivement utilisés par l'assistant pour répondre aux techniciens.
+
+**Contexte :** Les KDocs restent dans `KDocs/` — ils ne sont jamais copiés à la racine de `corpus/`. Les fiches existantes (racine de `corpus/`) et les KDocs (`KDocs/`) coexistent sans être mélangés.
+
+**Ce qui est déjà livré (via US-040) :**
+- Double-clic sur un KDoc → visualisation rendue + mode édition
+- Sauvegarde via `PUT /kdocs/file` → écrit dans `KDocs/`
+- Confirmation affichée après sauvegarde
+
+**Ce qui reste à faire :**
+- Mettre à jour `runIndexing` pour couvrir aussi `corpus/KDocs/`
+- Mettre à jour le backend (`/corpus/list` ou nouvel endpoint) pour servir les fichiers de `KDocs/`
+
+**Critères d'acceptance :**
+- [x] L'éditeur affiche le contenu du KDoc (lecture rendue + édition textarea)
+- [x] La sauvegarde écrit bien dans `KDocs/`
+- [x] Aucun fichier de `corpus/` (racine) n'est modifié ou déplacé
+- [x] Une confirmation est affichée après sauvegarde
+- [ ] Le RAG indexe les fichiers de `KDocs/` au même titre que ceux de la racine `corpus/`
+
+---
+
 ### 🔴 US-033 — Fiabilité du RAG : procédures non restituées malgré source trouvée (PRIORITAIRE)
 
 **En tant que** technicien de support,
