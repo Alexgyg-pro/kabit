@@ -51,7 +51,7 @@ préférez la formulation : "L'utilisateur a le message X, donne-moi les étapes
 
 ---
 
-### US-040 — Composant partagé de visualisation et d'édition de fiche
+### ✅ US-040 — Composant partagé de visualisation et d'édition de fiche
 
 **En tant qu'** administrateur,
 **Je veux** un composant unique de visualisation/édition utilisé partout dans l'application où l'on ouvre une fiche,
@@ -72,10 +72,12 @@ Le comportement attendu est identique dans les deux cas : affichage rendu en mar
 - Brancher le composant sur le double-clic dans la liste KDocs de `KDocsModal`
 
 **Critères d'acceptance :**
-- [ ] `DocViewerModal` est utilisé pour les fiches corpus racine (comportement inchangé)
-- [ ] Double-clic sur un KDoc dans `KDocsModal` ouvre `DocViewerModal` avec le contenu du fichier
-- [ ] La sauvegarde d'un KDoc écrit bien dans `corpus/KDocs/` et déclenche un message de confirmation
-- [ ] L'affichage et l'édition fonctionnent de façon identique dans les deux contextes
+- [x] `DocViewerModal` est utilisé pour les fiches corpus racine (comportement inchangé)
+- [x] Double-clic sur un KDoc dans `KDocsModal` ouvre `DocViewerModal` avec le contenu du fichier
+- [x] La sauvegarde d'un KDoc écrit bien dans `corpus/KDocs/` et déclenche un message de confirmation
+- [x] L'affichage et l'édition fonctionnent de façon identique dans les deux contextes
+
+**Livré le :** 08/06/2026 — branche `feature/KDocs`
 
 ---
 
