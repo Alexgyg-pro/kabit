@@ -51,6 +51,34 @@ préférez la formulation : "L'utilisateur a le message X, donne-moi les étapes
 
 ---
 
+### US-040 — Composant partagé de visualisation et d'édition de fiche
+
+**En tant qu'** administrateur,
+**Je veux** un composant unique de visualisation/édition utilisé partout dans l'application où l'on ouvre une fiche,
+**Afin d'** avoir une expérience cohérente et de ne pas maintenir deux implémentations parallèles.
+
+**Contexte :**
+Il existe actuellement deux endroits où une fiche markdown est affichée avec possibilité d'édition :
+- Les fiches du corpus racine (`corpus/*.md`), ouvertes depuis la liste "Fiches du corpus" ou depuis les sources d'une réponse
+- Les KDocs générés (`corpus/KDocs/*.md`), pour lesquels il n'y a pas encore de visualisation post-génération
+
+Le comportement attendu est identique dans les deux cas : affichage rendu en markdown, bouton Modifier (admin uniquement), textarea, Sauvegarder / Annuler.
+
+**Détail :**
+- Créer un composant `DocViewerModal` réutilisable avec les props : `title`, `content`, `onSave?`, `onClose`
+- Modes : lecture (markdown rendu) ↔ édition (textarea)
+- Bouton Modifier visible uniquement si `onSave` est fourni
+- Remplacer l'implémentation inline existante dans `App.tsx` par ce composant
+- Brancher le composant sur le double-clic dans la liste KDocs de `KDocsModal`
+
+**Critères d'acceptance :**
+- [ ] `DocViewerModal` est utilisé pour les fiches corpus racine (comportement inchangé)
+- [ ] Double-clic sur un KDoc dans `KDocsModal` ouvre `DocViewerModal` avec le contenu du fichier
+- [ ] La sauvegarde d'un KDoc écrit bien dans `corpus/KDocs/` et déclenche un message de confirmation
+- [ ] L'affichage et l'édition fonctionnent de façon identique dans les deux contextes
+
+---
+
 ---
 
 ## ÉPIQUE — Pipeline KB → KDoc : traitement des bases de connaissance officielles
