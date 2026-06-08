@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import CorpusFileList from './components/CorpusFileList';
 import KBOffViewerModal from './KBOffViewerModal';
+import DocViewerModal from './components/DocViewerModal';
 
 interface KDocsFile {
   path: string;
@@ -50,6 +51,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedFile, setSelectedFile] = useState<KDocsFile | null>(null);
   const [viewerFile, setViewerFile]     = useState<KDocsFile | null>(null);
+  const [kdocViewer, setKdocViewer]     = useState<{ file: KDocsFile; content: string } | null>(null);
   const [pendingStatus, setPendingStatus] = useState<string>('selected');
   const [pendingTitle, setPendingTitle]   = useState('');
   const [msg, setMsg] = useState('');
@@ -94,9 +96,15 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
     setMsg('');
   }
 
-  function handleDoubleClick(path: string) {
+  async function handleDoubleClick(path: string) {
     const file = files.find(f => f.path === path);
-    if (file?.folder === 'KBOffs') setViewerFile(file);
+    if (!file) return;
+    if (file.folder === 'KBOffs') {
+      setViewerFile(file);
+    } else {
+      const res = await fetch(`${backend}/kdocs/file?path=${encodeURIComponent(file.path)}`);
+      if (res.ok) setKdocViewer({ file, content: await res.text() });
+    }
   }
 
   function handleSelect(path: string) {
@@ -219,16 +227,19 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
               ))}
             </div>
 
-            {folder === 'kboffs' && statusFilter === 'all' && (
+            {statusFilter === 'all' && (
               <p className="admin-section-desc">
-                Clic : attribuer un statut — Double-clic : ouvrir et générer un KDoc.
+                {folder === 'kboffs'
+                  ? 'Clic : attribuer un statut — Double-clic : ouvrir et générer un KDoc.'
+                  : 'Clic : modifier le statut — Double-clic : visualiser et éditer le KDoc.'
+                }
               </p>
             )}
 
             <CorpusFileList
               files={corpusFiles}
               onSelect={(path) => handleSelect(path)}
-              onDoubleClick={folder === 'kboffs' ? (path) => handleDoubleClick(path) : undefined}
+              onDoubleClick={(path) => handleDoubleClick(path)}
               selectedPath={selectedFile?.path}
               emptyMessage={emptyMsg}
               renderBadge={(path) => {
@@ -305,6 +316,23 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
         file={viewerFile}
         onClose={() => setViewerFile(null)}
         onSaved={() => { fetchFiles(); fetchReferences(); setViewerFile(null); }}
+      />
+    )}
+
+    {kdocViewer && (
+      <DocViewerModal
+        title={kdocViewer.file.name}
+        content={kdocViewer.content}
+        onSave={async (content) => {
+          const res = await fetch(`${backend}/kdocs/file`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: kdocViewer.file.path, content }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error);
+        }}
+        onClose={() => setKdocViewer(null)}
       />
     )}
     </>

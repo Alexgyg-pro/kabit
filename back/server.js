@@ -275,6 +275,26 @@ app.get('/kdocs/file', (req, res) => {
   }
 });
 
+// PUT /kdocs/file — met à jour le contenu d'un fichier dans KBOffs/ ou KDocs/
+app.put('/kdocs/file', (req, res) => {
+  try {
+    const { path: filePath, content } = req.body;
+    if (!filePath || typeof content !== 'string') {
+      return res.status(400).json({ error: 'path et content requis' });
+    }
+    const folder = KDOCS_FOLDERS.find(d => filePath.startsWith(d + '/'));
+    if (!folder) return res.status(400).json({ error: 'Dossier invalide (KBOffs ou KDocs attendu)' });
+    const filename = path.basename(filePath.slice(folder.length + 1));
+    const fullPath = path.join(CORPUS_DIR, folder, filename);
+    if (!fs.existsSync(fullPath)) return res.status(404).json({ error: 'Fichier introuvable' });
+    fs.writeFileSync(fullPath, content, 'utf-8');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erreur PUT /kdocs/file:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /kdocs/save — sauvegarde un KDoc généré dans KDocs/ et met à jour references.json
 app.post('/kdocs/save', (req, res) => {
   try {
