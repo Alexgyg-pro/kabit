@@ -258,6 +258,25 @@ app.delete('/kdocs/references', (req, res) => {
   }
 });
 
+// GET /kdocs/list — liste les fichiers de KDocs/ avec leur titre
+app.get('/kdocs/list', (req, res) => {
+  try {
+    const dirPath = path.join(CORPUS_DIR, 'KDocs');
+    if (!fs.existsSync(dirPath)) return res.json([]);
+    const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.md'));
+    const list = files.map(file => {
+      const content = fs.readFileSync(path.join(dirPath, file), 'utf-8');
+      const h1 = content.match(/^#\s+(.+)/m);
+      const title = h1 ? h1[1].trim() : file.replace(/\.md$/, '');
+      return { path: `KDocs/${file}`, title };
+    });
+    res.json(list);
+  } catch (err) {
+    console.error('Erreur GET /kdocs/list:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /kdocs/file?path=KBOffs/... — retourne le contenu d'un fichier KB ou KDoc
 app.get('/kdocs/file', (req, res) => {
   try {
