@@ -13,6 +13,8 @@ interface Reference {
   passedAt: string | null;
 }
 
+type View = 'kboffs' | 'kdocs' | 'referenced';
+
 interface Props {
   backend: string;
   onClose: () => void;
@@ -21,6 +23,7 @@ interface Props {
 export default function KDocsModal({ backend, onClose }: Props) {
   const [files, setFiles] = useState<KDocsFile[]>([]);
   const [references, setReferences] = useState<Reference[]>([]);
+  const [view, setView] = useState<View>('kboffs');
   const [selectedFile, setSelectedFile] = useState<KDocsFile | null>(null);
   const [pendingStatus, setPendingStatus] = useState<'selected' | 'passed'>('selected');
   const [msg, setMsg] = useState('');
@@ -51,9 +54,16 @@ export default function KDocsModal({ backend, onClose }: Props) {
     return references.find(r => r.path === path);
   }
 
+  function visibleFiles(): KDocsFile[] {
+    if (view === 'kdocs')      return files.filter(f => f.folder === 'KDocs');
+    if (view === 'kboffs')     return files.filter(f => f.folder === 'KBOffs');
+    if (view === 'referenced') return files.filter(f => f.folder === 'KBOffs' && !!getRef(f.path));
+    return files;
+  }
+
   function handleDoubleClick(path: string) {
     const file = files.find(f => f.path === path);
-    if (!file) return;
+    if (!file || file.folder !== 'KBOffs') return;
     const existing = getRef(path);
     setPendingStatus(existing?.status ?? 'selected');
     setSelectedFile(file);
@@ -96,30 +106,55 @@ export default function KDocsModal({ backend, onClose }: Props) {
     }
   }
 
-  const corpusFiles = files.map(f => ({ path: f.path, title: f.name }));
+  const visible = visibleFiles();
+  const corpusFiles = visible.map(f => ({ path: f.path, title: f.name }));
+
+  const emptyMessages: Record<View, string> = {
+    kboffs:     'Aucun fichier dans KBOffs.',
+    kdocs:      'Aucun fichier dans KDocs.',
+    referenced: 'Aucune KB répertoriée dans references.json.',
+  };
+
+  const viewLabels: { key: View; label: string; count: number }[] = [
+    { key: 'kboffs',     label: 'KB (KBOffs)',    count: files.filter(f => f.folder === 'KBOffs').length },
+    { key: 'kdocs',      label: 'KDocs',          count: files.filter(f => f.folder === 'KDocs').length },
+    { key: 'referenced', label: 'KB répertoriées', count: files.filter(f => f.folder === 'KBOffs' && !!getRef(f.path)).length },
+  ];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card admin-modal-card" onClick={(e) => e.stopPropagation()}>
 
         <div className="modal-header">
-          <span className="modal-title">Sources KDocs</span>
+          <span className="modal-title">Sources</span>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body admin-modal-body">
 
           <section className="admin-section">
-            <h2 className="admin-section-title">
-              Fichiers disponibles ({files.length})
-            </h2>
-            <p className="admin-section-desc">
-              Double-cliquez sur un fichier pour lui attribuer un statut.
-            </p>
+            <div className="kdocs-view-tabs">
+              {viewLabels.map(v => (
+                <button
+                  key={v.key}
+                  className={`kdocs-tab ${view === v.key ? 'kdocs-tab--active' : ''}`}
+                  onClick={() => { setView(v.key); setSelectedFile(null); setMsg(''); }}
+                >
+                  {v.label} ({v.count})
+                </button>
+              ))}
+            </div>
+
+            {view === 'kboffs' && (
+              <p className="admin-section-desc">
+                Double-cliquez sur une KB pour lui attribuer un statut dans references.json.
+              </p>
+            )}
+
             <CorpusFileList
               files={corpusFiles}
-              onDoubleClick={(path) => handleDoubleClick(path)}
-              emptyMessage="Aucun fichier dans KBOffs ou KDocs."
+              onDoubleClick={view !== 'kdocs' ? (path) => handleDoubleClick(path) : undefined}
+              emptyMessage={emptyMessages[view]}
               renderBadge={(path) => {
                 const ref = getRef(path);
                 if (!ref) return null;
@@ -160,9 +195,7 @@ export default function KDocsModal({ backend, onClose }: Props) {
               <div className="admin-save-row">
                 <button className="btn-save" onClick={handleSave}>Enregistrer</button>
                 {getRef(selectedFile.path) && (
-                  <button className="btn-restore-default" onClick={handleRemove}>
-                    Retirer
-                  </button>
+                  <button className="btn-restore-default" onClick={handleRemove}>Retirer</button>
                 )}
                 <button
                   className="btn-doc-cancel"

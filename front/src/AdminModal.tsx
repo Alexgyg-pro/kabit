@@ -262,14 +262,14 @@ export default function AdminModal({
             </select>
           </section>
 
-          {/* ── Section KDocs ───────────────────────────────────────── */}
+          {/* ── Section Sources ─────────────────────────────────────── */}
           <section className="admin-section">
-            <h2 className="admin-section-title">Sources KDocs</h2>
+            <h2 className="admin-section-title">Sources</h2>
             <p className="admin-section-desc">
-              Gérez les fichiers sources (KBOffs, KDocs) et leur statut de référencement.
+              Gérez les KB sources (KBOffs) et les KDocs générés, et leur statut de référencement.
             </p>
             <button className="btn-cat-open" onClick={() => setShowKDocs(true)}>
-              Ouvrir le gestionnaire KDocs
+              Ouvrir le gestionnaire de sources
             </button>
           </section>
 
