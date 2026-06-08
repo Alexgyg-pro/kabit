@@ -1418,3 +1418,12 @@
   color: #fff;
   border-color: var(--accent);
 }
+
+/* ── KDocs — hauteur modale ─────────────────────────────────────────────────── */
+.kdocs-modal-card {
+  min-height: 70vh;
+}
+
+.kdocs-modal-card .corpus-file-list {
+  max-height: 45vh;
+}

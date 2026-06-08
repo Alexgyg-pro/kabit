@@ -123,7 +123,7 @@ export default function KDocsModal({ backend, onClose }: Props) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card admin-modal-card" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-card admin-modal-card kdocs-modal-card" onClick={(e) => e.stopPropagation()}>
 
         <div className="modal-header">
           <span className="modal-title">Sources</span>
