@@ -827,6 +827,8 @@ export default function App() {
           systemPrompt={systemPrompt}
           needsReindex={needsReindex}
           backend={BACKEND}
+          groqApiKey={GROQ_API_KEY ?? ''}
+          groqModel={selectedModel}
           techLevel={techLevel}
           techLevels={TECH_LEVELS}
           onTechLevelChange={handleTechLevelChange}

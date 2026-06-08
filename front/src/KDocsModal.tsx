@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import CorpusFileList from './components/CorpusFileList';
+import KBOffViewerModal from './KBOffViewerModal';
 
 interface KDocsFile {
   path: string;
@@ -37,15 +38,18 @@ const KDOCS_STATUSES  = ['testing', 'passed', 'rejected'] as const;
 
 interface Props {
   backend: string;
+  groqApiKey: string;
+  groqModel: string;
   onClose: () => void;
 }
 
-export default function KDocsModal({ backend, onClose }: Props) {
+export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: Props) {
   const [files, setFiles]           = useState<KDocsFile[]>([]);
   const [references, setReferences] = useState<References>({ kboffs: [], kdocs: [] });
   const [folder, setFolder]         = useState<Folder>('kboffs');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedFile, setSelectedFile] = useState<KDocsFile | null>(null);
+  const [viewerFile, setViewerFile]     = useState<KDocsFile | null>(null);
   const [pendingStatus, setPendingStatus] = useState<string>('selected');
   const [pendingTitle, setPendingTitle]   = useState('');
   const [msg, setMsg] = useState('');
@@ -88,6 +92,11 @@ export default function KDocsModal({ backend, onClose }: Props) {
     setStatusFilter('all');
     setSelectedFile(null);
     setMsg('');
+  }
+
+  function handleDoubleClick(path: string) {
+    const file = files.find(f => f.path === path);
+    if (file?.folder === 'KBOffs') setViewerFile(file);
   }
 
   function handleSelect(path: string) {
@@ -169,6 +178,7 @@ export default function KDocsModal({ backend, onClose }: Props) {
     : `Aucun fichier avec le statut « ${statusFilter} ».`;
 
   return (
+    <>
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card admin-modal-card kdocs-modal-card" onClick={(e) => e.stopPropagation()}>
 
@@ -211,13 +221,14 @@ export default function KDocsModal({ backend, onClose }: Props) {
 
             {folder === 'kboffs' && statusFilter === 'all' && (
               <p className="admin-section-desc">
-                Cliquez sur une KB pour lui attribuer un statut.
+                Clic : attribuer un statut — Double-clic : ouvrir et générer un KDoc.
               </p>
             )}
 
             <CorpusFileList
               files={corpusFiles}
               onSelect={(path) => handleSelect(path)}
+              onDoubleClick={folder === 'kboffs' ? (path) => handleDoubleClick(path) : undefined}
               selectedPath={selectedFile?.path}
               emptyMessage={emptyMsg}
               renderBadge={(path) => {
@@ -285,5 +296,17 @@ export default function KDocsModal({ backend, onClose }: Props) {
 
       </div>
     </div>
+
+    {viewerFile && (
+      <KBOffViewerModal
+        backend={backend}
+        groqApiKey={groqApiKey}
+        groqModel={groqModel}
+        file={viewerFile}
+        onClose={() => setViewerFile(null)}
+        onSaved={() => { fetchFiles(); fetchReferences(); setViewerFile(null); }}
+      />
+    )}
+    </>
   );
 }

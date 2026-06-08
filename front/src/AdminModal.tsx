@@ -7,6 +7,8 @@ interface AdminModalProps {
   systemPrompt: string;
   needsReindex: boolean;
   backend: string;
+  groqApiKey: string;
+  groqModel: string;
   techLevel: string;
   techLevels: { id: string; label: string }[];
   onTechLevelChange: (level: string) => void;
@@ -22,6 +24,8 @@ export default function AdminModal({
   systemPrompt,
   needsReindex,
   backend,
+  groqApiKey,
+  groqModel,
   techLevel,
   techLevels,
   onTechLevelChange,
@@ -303,7 +307,12 @@ export default function AdminModal({
     </div>
 
     {showKDocs && (
-      <KDocsModal backend={backend} onClose={() => setShowKDocs(false)} />
+      <KDocsModal
+        backend={backend}
+        groqApiKey={groqApiKey}
+        groqModel={groqModel}
+        onClose={() => setShowKDocs(false)}
+      />
     )}
     </>
   );

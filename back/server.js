@@ -258,6 +258,63 @@ app.delete('/kdocs/references', (req, res) => {
   }
 });
 
+// GET /kdocs/file?path=KBOffs/... — retourne le contenu d'un fichier KB ou KDoc
+app.get('/kdocs/file', (req, res) => {
+  try {
+    const filePath = req.query.path;
+    if (!filePath) return res.status(400).json({ error: 'Paramètre path manquant' });
+    const folder = KDOCS_FOLDERS.find(d => filePath.startsWith(d + '/'));
+    if (!folder) return res.status(400).json({ error: 'Dossier invalide (KBOffs ou KDocs attendu)' });
+    const filename = path.basename(filePath.slice(folder.length + 1));
+    const fullPath = path.join(CORPUS_DIR, folder, filename);
+    if (!fs.existsSync(fullPath)) return res.status(404).json({ error: 'Fichier introuvable' });
+    res.type('text/plain').send(fs.readFileSync(fullPath, 'utf-8'));
+  } catch (err) {
+    console.error('Erreur GET /kdocs/file:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /kdocs/save — sauvegarde un KDoc généré dans KDocs/ et met à jour references.json
+app.post('/kdocs/save', (req, res) => {
+  try {
+    const { content, sourceKBPath } = req.body;
+    if (!content) return res.status(400).json({ error: 'content requis' });
+
+    const data     = readReferences();
+    const now      = new Date().toISOString();
+    const id       = generateId(data, 'KDocs');
+    const filename = `${id}.md`;
+    const fullPath = path.join(CORPUS_DIR, 'KDocs', filename);
+
+    fs.writeFileSync(fullPath, content, 'utf-8');
+
+    // Marquer la KB source comme 'done'
+    if (sourceKBPath) {
+      const sourceFilename = path.basename(sourceKBPath);
+      const kb = data.kboffs.find(e => e.file === sourceFilename);
+      if (kb) { kb.status = 'done'; kb.updatedAt = now; }
+    }
+
+    // Ajouter l'entrée KDoc
+    const entry = {
+      id,
+      file:      filename,
+      status:    'testing',
+      source_kb: sourceKBPath || undefined,
+      createdAt: now,
+      updatedAt: now,
+    };
+    data.kdocs.push(entry);
+    writeReferences(data);
+
+    res.json({ success: true, path: `KDocs/${filename}`, data });
+  } catch (err) {
+    console.error('Erreur POST /kdocs/save:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Servir le build React en mode production (si front/dist/ existe)
 const DIST_DIR = path.join(__dirname, '..', 'front', 'dist');
 if (fs.existsSync(DIST_DIR)) {
