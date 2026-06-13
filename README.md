@@ -32,6 +32,15 @@ VITE_GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxx
 
 > La clé commence toujours par `gsk_`. Sans ce fichier, l'application affiche un avertissement et les réponses LLM ne fonctionnent pas.
 
+### 3. Générer le corpus de travail
+
+Le dossier `corpus/` n'est **pas versionné** (voir [Corpus : patrimoine vs bac à sable](#corpus--patrimoine-vs-bac-à-sable)). Après un clone, on le recrée depuis le patrimoine `corpus-seed/` :
+
+```bash
+cd back
+npm run corpus:reset
+```
+
 ---
 
 ## Lancer le projet
@@ -90,6 +99,35 @@ Déplier la section **Administration** en bas de la page, remplir le titre et le
 
 ---
 
+## Corpus : patrimoine vs bac à sable
+
+Le corpus est séparé en deux dossiers :
+
+| Dossier | Rôle | Versionné ? |
+|---------|------|-------------|
+| **`corpus-seed/`** | Patrimoine figé : fiches racine + `KBOffs/` (avec leurs annotations) + `references.seed.json` vierge. Source de vérité. | ✅ Oui |
+| **`corpus/`** | Bac à sable de l'application : KDocs générés, statuts, expérimentations. Jetable. | ❌ Non (gitignoré) |
+
+Ainsi, **expérimenter dans l'app ne pollue jamais git**.
+
+### Remettre le corpus à zéro
+
+Depuis `back/` :
+
+```bash
+# Recrée corpus/ depuis le seed (references vierge, KDocs vidé, KBOffs restaurés)
+npm run corpus:reset -- --force
+```
+
+> Le `-- --force` est obligatoire pour écraser un `corpus/` existant (garde-fou anti-accident).
+> Sur un dossier `corpus/` absent (après un clone), `npm run corpus:reset` suffit.
+
+### Promouvoir un essai au patrimoine
+
+Pour qu'une fiche ou une KB modifiée survive aux resets, la copier dans `corpus-seed/` et la committer (`corpus: …`).
+
+---
+
 ## Structure du projet
 
 ```
@@ -102,8 +140,11 @@ kabit/
 │       ├── embeddings.ts           # Interface Worker + calcul cosinus
 │       └── db.ts                   # Cache embeddings (IndexedDB)
 ├── back/                   # Express (port 3001)
-│   └── server.js           # Sert le corpus, expose /corpus/list et /corpus/add
-├── corpus/                 # Procédures IT au format .md / .json
+│   ├── server.js           # Sert le corpus, expose /corpus/* et /kdocs/*
+│   └── scripts/
+│       └── corpus-reset.js # Régénère corpus/ depuis corpus-seed/
+├── corpus-seed/            # Patrimoine versionné (seed du corpus)
+├── corpus/                 # Bac à sable de l'app — GITIGNORÉ (recréé par corpus:reset)
 └── BACKLOG-PO.md           # Backlog Product Owner
 ```
 
