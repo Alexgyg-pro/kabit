@@ -4,29 +4,28 @@
 
 ## À faire
 
-### US-048 — Champ « Note technicien » dédié à la génération/édition d'un KDoc
+### US-049 — Affichage soigné d'une fiche/KDoc pour le technicien
 
-**En tant que** rédacteur de KDoc,
-**Je veux** un champ de texte séparé pour les notes destinées au technicien lors de la génération ou de l'édition d'un KDoc,
-**Afin d'** ajouter facilement une zone hors-embedding (`<<<NOTE>>>`) sans la mélanger au contenu indexé, et de bien distinguer ce qui sert au RAG de ce qui ne sert qu'au technicien.
+**En tant que** technicien de support,
+**Je veux** que la modale de visualisation d'un document source mette en forme le frontmatter (titre, catégorie, service…) et affiche clairement la note technicien,
+**Afin de** lire une fiche propre et exploitable, pas un bloc de métadonnées en vrac.
 
-**Contexte :**
-Les fiches racine de `corpus/` sont temporaires ; à terme le RAG ne s'appuiera que sur les KDocs. Les KDocs doivent donc pouvoir porter une note hors-embedding (US-035), ajoutée par le rédacteur au moment de la génération.
+**Problème observé :**
+En cliquant sur un KDoc source, le frontmatter s'affiche aplati sans retours à la ligne : « title: … catégorie: … service: … ». Et la note `<<<NOTE>>>` n'apparaît pas tant que le KDoc n'a pas été réindexé (le panneau Sources lit le cache, pas le disque).
 
 **Comportement attendu :**
-- Dans `KBOffViewerModal` (génération/édition d'un KDoc), deux zones :
-  - **zone principale** = contenu indexé du KDoc (embedding)
-  - **zone secondaire (plus petite)** = note(s) technicien hors-embedding
-- À l'enregistrement, les deux zones sont recombinées : `contenu` + (si note non vide) `\n\n<<<NOTE>>>\n` + `note`
-- À l'ouverture d'un KDoc existant (cf. US-046), le contenu est **découpé** : la partie avant `<<<NOTE>>>` va dans la zone principale, la partie après dans la zone note
-- La génération LLM ne remplit que la zone principale ; la zone note reste à la main du rédacteur
+- Le frontmatter (`---` … `---`) est **parsé** et présenté en bloc lisible (clés/valeurs alignées), le titre n'étant pas répété puisqu'il est déjà dans l'en-tête de la modale
+- Le corps markdown s'affiche normalement en dessous
+- La note technicien reste affichée dans son bloc distinct (cf. US-035)
+- S'applique aussi aux fiches racine (même modale `DocViewerModal`)
+
+**Note technique :** l'affichage de la note dépend du contenu **indexé** → après édition d'un KDoc, un Réindexer est nécessaire. (Amélioration future possible : déclencher le réindex automatiquement après édition d'un KDoc.)
 
 **Critères d'acceptance :**
-- [ ] Deux zones distinctes (principale + note) à la génération et à l'édition d'un KDoc
-- [ ] Le KDoc enregistré contient la note sous un marqueur `<<<NOTE>>>` en fin de document
-- [ ] Rouvrir un KDoc avec note répartit correctement le contenu entre les deux zones
-- [ ] Un KDoc sans note ne contient aucun marqueur `<<<NOTE>>>` parasite
-- [ ] La note reste exclue de l'embedding (vérifié via US-035) et visible dans la modale de visualisation
+- [ ] Le frontmatter s'affiche en bloc clés/valeurs lisible, plus en ligne continue
+- [ ] Le titre n'est pas affiché deux fois
+- [ ] Le corps markdown et la note technicien restent correctement rendus
+- [ ] Aucune régression sur les fiches `.json` (catalogue) ni sur le mode édition
 
 ---
 
@@ -125,6 +124,29 @@ Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récu
 ---
 
 ## Terminé
+
+### ✅ US-048 — Champ « Note technicien » dédié à la génération/édition d'un KDoc
+
+**En tant que** rédacteur de KDoc,
+**Je veux** un champ de texte séparé pour les notes destinées au technicien lors de la génération ou de l'édition d'un KDoc,
+**Afin d'** ajouter facilement une zone hors-embedding (`<<<NOTE>>>`) sans la mélanger au contenu indexé.
+
+**Comportement livré :**
+- Dans `KBOffViewerModal`, deux zones : contenu indexé (grande) + note technicien (petite, optionnelle)
+- Enregistrement : recombine `contenu` + (si note) `\n\n<<<NOTE>>>\n` + `note` ; pas de marqueur parasite sans note
+- Ouverture d'un KDoc existant : `splitNote` répartit contenu/note dans les deux zones
+- La génération LLM ne remplit que la zone principale
+
+**Critères d'acceptance :**
+- [x] Deux zones distinctes (principale + note) à la génération et à l'édition d'un KDoc
+- [x] Le KDoc enregistré contient la note sous un marqueur `<<<NOTE>>>` en fin de document
+- [x] Rouvrir un KDoc avec note répartit correctement le contenu entre les deux zones
+- [x] Un KDoc sans note ne contient aucun marqueur `<<<NOTE>>>` parasite
+- [x] La note reste exclue de l'embedding et visible dans la modale de visualisation (après réindex — voir US-049)
+
+**Livré le :** 13/06/2026 — branche `feature/note-kdoc-generation`
+
+---
 
 ### ✅ US-035 — Zone hors-embedding dans les fiches : notes destinées au technicien
 
