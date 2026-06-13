@@ -4,6 +4,30 @@
 
 ## À faire
 
+### US-043 — Statut « none » explicite pour une source non répertoriée
+
+**En tant qu'** administrateur du corpus,
+**Je veux** qu'une KB (ou un KDoc) absent des références s'affiche avec un statut neutre « none » plutôt qu'avec « selected » coché par défaut,
+**Afin de** ne pas croire à tort qu'un statut est déjà attribué, et pouvoir retirer une source des références en repassant son statut à « none ».
+
+**Problème observé :**
+Au clic sur une source non répertoriée, le formulaire de statut pré-coche « selected » (KBOffs) ou « testing » (KDocs). Visuellement, on dirait que la source a déjà ce statut, alors qu'elle n'en a aucun.
+
+**Comportement attendu :**
+- Une option « none » s'ajoute en tête des choix de statut
+- Au clic sur une source **sans référence**, « none » est coché (aucun statut attribué)
+- Au clic sur une source **avec référence**, son statut réel reste coché (comportement actuel inchangé)
+- Choisir « none » + **Enregistrer** sur une source déjà référencée la **retire des références** (équivaut au bouton « Retirer »)
+- Choisir « none » + **Enregistrer** sur une source non référencée ne fait rien (pas d'entrée créée)
+
+**Critères d'acceptance :**
+- [ ] Une source non répertoriée affiche « none » coché, aucun autre statut
+- [ ] Enregistrer « none » sur une source référencée la supprime de `references.json`
+- [ ] Enregistrer « none » sur une source non référencée est un no-op (aucune entrée créée)
+- [ ] Attribuer un vrai statut puis Enregistrer fonctionne comme avant (aucune régression)
+
+---
+
 ### US-035 — Zone hors-embedding dans les fiches : notes destinées au technicien
 
 **En tant que** rédacteur de fiche corpus,
