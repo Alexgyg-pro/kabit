@@ -111,8 +111,8 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
     const file = files.find(f => f.path === path);
     if (!file) return;
     const ref = getRef(file);
-    const defaultStatus = file.folder === 'KBOffs' ? 'selected' : 'testing';
-    setPendingStatus(ref?.status ?? defaultStatus);
+    // Pas de référence → statut neutre « none » (rien n'est attribué tant qu'on n'enregistre pas)
+    setPendingStatus(ref?.status ?? 'none');
     setPendingTitle(ref?.title ?? '');
     setSelectedFile(file);
     setMsg('');
@@ -120,6 +120,16 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
 
   async function handleSave() {
     if (!selectedFile) return;
+    // « none » = pas de statut : retirer des références si présent, sinon ne rien créer
+    if (pendingStatus === 'none') {
+      if (getRef(selectedFile)) {
+        await handleRemove();
+      } else {
+        setSelectedFile(null);
+        setMsg('');
+      }
+      return;
+    }
     try {
       const res = await fetch(`${backend}/kdocs/references`, {
         method: 'POST',
@@ -270,7 +280,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
                 className="admin-input"
               />
               <div className="kdocs-status-options">
-                {statusOptions.map(s => (
+                {['none', ...statusOptions].map(s => (
                   <label key={s}>
                     <input
                       type="radio"
@@ -279,7 +289,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
                       checked={pendingStatus === s}
                       onChange={() => setPendingStatus(s)}
                     />
-                    {' '}{s}
+                    {' '}{s === 'none' ? 'none (non répertorié)' : s}
                   </label>
                 ))}
               </div>
