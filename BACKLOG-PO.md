@@ -4,28 +4,50 @@
 
 ## À faire
 
-### US-049 — Affichage soigné d'une fiche/KDoc pour le technicien
+### US-050 — Créer un KDoc autonome (sans KB source)
 
-**En tant que** technicien de support,
-**Je veux** que la modale de visualisation d'un document source mette en forme le frontmatter (titre, catégorie, service…) et affiche clairement la note technicien,
-**Afin de** lire une fiche propre et exploitable, pas un bloc de métadonnées en vrac.
+**En tant que** rédacteur de la base de connaissance,
+**Je veux** créer un KDoc directement, sans partir d'une KB,
+**Afin de** documenter des incidents ponctuels, des retours d'expérience, ou des solutions trouvées ailleurs (ex. doc Microsoft) qui ne sont pas dans la base KB.
 
-**Problème observé :**
-En cliquant sur un KDoc source, le frontmatter s'affiche aplati sans retours à la ligne : « title: … catégorie: … service: … ». Et la note `<<<NOTE>>>` n'apparaît pas tant que le KDoc n'a pas été réindexé (le panneau Sources lit le cache, pas le disque).
+**Contexte :**
+Aujourd'hui un KDoc naît toujours de la transformation d'une KB (`KBOffViewerModal`). Or certaines connaissances n'ont pas de KB d'origine. Les KDocs étant appelés à devenir la seule source du RAG, il faut pouvoir en créer librement.
 
 **Comportement attendu :**
-- Le frontmatter (`---` … `---`) est **parsé** et présenté en bloc lisible (clés/valeurs alignées), le titre n'étant pas répété puisqu'il est déjà dans l'en-tête de la modale
-- Le corps markdown s'affiche normalement en dessous
-- La note technicien reste affichée dans son bloc distinct (cf. US-035)
-- S'applique aussi aux fiches racine (même modale `DocViewerModal`)
-
-**Note technique :** l'affichage de la note dépend du contenu **indexé** → après édition d'un KDoc, un Réindexer est nécessaire. (Amélioration future possible : déclencher le réindex automatiquement après édition d'un KDoc.)
+- Une action « Nouveau KDoc » (depuis le gestionnaire de sources) ouvre un éditeur vierge : zone contenu indexé + zone note technicien (cf. US-048)
+- Le KDoc est enregistré dans `KDocs/` avec une entrée dans `references.json` **sans** `source_kb`
+- Possibilité de pré-remplir un squelette de fiche (frontmatter + sections KABIT) pour guider la rédaction
+- Génération LLM optionnelle (à partir d'un texte collé / de notes) ou rédaction 100 % manuelle
 
 **Critères d'acceptance :**
-- [ ] Le frontmatter s'affiche en bloc clés/valeurs lisible, plus en ligne continue
-- [ ] Le titre n'est pas affiché deux fois
-- [ ] Le corps markdown et la note technicien restent correctement rendus
-- [ ] Aucune régression sur les fiches `.json` (catalogue) ni sur le mode édition
+- [ ] On peut créer un KDoc sans sélectionner de KB
+- [ ] Le KDoc créé apparaît dans l'onglet KDocs avec un statut référencé, sans `source_kb`
+- [ ] Le KDoc autonome supporte la note hors-embedding `<<<NOTE>>>` (US-048)
+- [ ] Aucune régression sur la génération KDoc depuis une KB (US-046/048)
+
+---
+
+### US-051 — Feedback du technicien sur la réponse du RAG (log)
+
+**En tant que** technicien de support,
+**Je veux** indiquer si la réponse de l'assistant m'a aidé ou non, et laisser un commentaire,
+**Afin de** faire remonter la qualité des réponses et alimenter l'amélioration du corpus et du RAG.
+
+**Comportement attendu :**
+- Sous chaque réponse, deux actions rapides : 👍 « Utile » / 👎 « Pas utile »
+- Un champ commentaire optionnel (note libre du technicien)
+- Chaque feedback est enregistré dans un **log** côté backend, avec : horodatage, question posée, sources utilisées (ids/titres), verdict (utile/pas utile), commentaire, modèle utilisé
+- Le log doit être exploitable plus tard (ex. tableau de bord, cf. US-032)
+
+**Pistes techniques :**
+- Endpoint backend `POST /feedback` qui append une ligne dans un fichier de log (JSON Lines `feedback.log` ou `.jsonl`)
+- Stockage hors `corpus/` (donnée d'exploitation, pas de patrimoine) — à définir : dossier `logs/` gitignoré
+
+**Critères d'acceptance :**
+- [ ] 👍/👎 disponibles sous chaque réponse
+- [ ] Commentaire optionnel envoyé avec le feedback
+- [ ] Chaque feedback est journalisé avec contexte (question, sources, modèle, horodatage)
+- [ ] Le log persiste entre les sessions et reste lisible/parsable
 
 ---
 
@@ -124,6 +146,28 @@ Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récu
 ---
 
 ## Terminé
+
+### ✅ US-049 — Affichage soigné d'une fiche/KDoc pour le technicien
+
+**En tant que** technicien de support,
+**Je veux** que la modale de visualisation d'un document source mette en forme le frontmatter et affiche clairement la note technicien et le titre réel,
+**Afin de** lire une fiche propre et exploitable.
+
+**Comportement livré :**
+- Frontmatter parsé → bloc clés/valeurs lisible (titre non répété)
+- En-tête à deux niveaux : titre principal `fileId — vrai titre` (KDocs) ou vrai titre seul (fiches racine), + sous-titre = section du chunk cliqué
+- `section` stockée à l'indexation (`mdChunks`, `db.ts`, `Source`) jusqu'à la modale
+- Note technicien dans son bloc distinct ; `.json` et mode édition inchangés
+
+**Critères d'acceptance :**
+- [x] Le frontmatter s'affiche en bloc clés/valeurs lisible
+- [x] Le titre n'est pas affiché deux fois ; le vrai titre apparaît en en-tête (+ section en sous-titre)
+- [x] Le corps markdown et la note technicien restent correctement rendus
+- [x] Aucune régression sur les `.json` ni le mode édition
+
+**Livré le :** 13/06/2026 — branche `feature/affichage-soigne-fiche`
+
+---
 
 ### ✅ US-048 — Champ « Note technicien » dédié à la génération/édition d'un KDoc
 
