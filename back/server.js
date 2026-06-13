@@ -250,6 +250,14 @@ app.delete('/kdocs/references', (req, res) => {
     const filename = filePath.slice(folder.length + 1);
     const data     = readReferences();
     data[section]  = data[section].filter(e => e.file !== filename);
+
+    // Retrait d'un KDoc → délier la KB source (clé `kdoc` remise à vide)
+    if (folder === 'KDocs') {
+      for (const kb of data.kboffs) {
+        if (kb.kdoc === filename) kb.kdoc = '';
+      }
+    }
+
     writeReferences(data);
     res.json(data);
   } catch (err) {
@@ -315,48 +323,64 @@ app.put('/kdocs/file', (req, res) => {
 });
 
 // POST /kdocs/save — sauvegarde un KDoc généré dans KDocs/ et met à jour references.json
+// Invariant : une KB ne possède qu'UN SEUL KDoc. Si la KB source en a déjà un, on le
+// met à jour au lieu d'en créer un second (cf. clé `kdoc` sur l'entrée KB).
 app.post('/kdocs/save', (req, res) => {
   try {
     const { content, sourceKBPath } = req.body;
     if (!content) return res.status(400).json({ error: 'content requis' });
 
-    const data     = readReferences();
-    const now      = new Date().toISOString();
-    const id       = generateId(data, 'KDocs');
-    const filename = `${id}.md`;
-    const fullPath = path.join(CORPUS_DIR, 'KDocs', filename);
+    const data = readReferences();
+    const now  = new Date().toISOString();
 
-    fs.writeFileSync(fullPath, content, 'utf-8');
-
-    // Marquer la KB source comme 'done' (créer l'entrée si elle n'existe pas encore)
+    // Retrouver / créer l'entrée KB source et la marquer 'done'
+    let kb = null;
     if (sourceKBPath) {
       const sourceFilename = path.basename(sourceKBPath);
-      const kb = data.kboffs.find(e => e.file === sourceFilename);
+      kb = data.kboffs.find(e => e.file === sourceFilename);
       if (kb) {
         kb.status = 'done';
         kb.updatedAt = now;
       } else {
-        data.kboffs.push({
+        kb = {
           id: generateId(data, 'KBOffs'),
           file: sourceFilename,
           status: 'done',
+          kdoc: '',
           updatedAt: now,
-        });
+        };
+        data.kboffs.push(kb);
       }
     }
 
-    // Ajouter l'entrée KDoc
-    const entry = {
-      id,
-      file:      filename,
-      status:    'testing',
-      source_kb: sourceKBPath || undefined,
-      createdAt: now,
-      updatedAt: now,
-    };
-    data.kdocs.push(entry);
-    writeReferences(data);
+    // KDoc déjà associé à cette KB : via la clé `kdoc`, sinon rattrapage via source_kb
+    let kdocEntry = null;
+    if (kb && kb.kdoc) kdocEntry = data.kdocs.find(e => e.file === kb.kdoc);
+    if (!kdocEntry && sourceKBPath) kdocEntry = data.kdocs.find(e => e.source_kb === sourceKBPath);
+    const kdocExists = kdocEntry && fs.existsSync(path.join(CORPUS_DIR, 'KDocs', kdocEntry.file));
 
+    let filename;
+    if (kdocEntry && kdocExists) {
+      // Mise à jour du KDoc existant (pas de doublon)
+      filename = kdocEntry.file;
+      kdocEntry.updatedAt = now;
+    } else {
+      // Création d'un nouveau KDoc
+      const id = generateId(data, 'KDocs');
+      filename = `${id}.md`;
+      data.kdocs.push({
+        id,
+        file:      filename,
+        status:    'testing',
+        source_kb: sourceKBPath || undefined,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+    fs.writeFileSync(path.join(CORPUS_DIR, 'KDocs', filename), content, 'utf-8');
+    if (kb) kb.kdoc = filename; // lier (ou re-lier) la KB à son unique KDoc
+
+    writeReferences(data);
     res.json({ success: true, path: `KDocs/${filename}`, data });
   } catch (err) {
     console.error('Erreur POST /kdocs/save:', err);
