@@ -2,8 +2,30 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { splitNote } from '../note';
 
+// Sépare le frontmatter (--- … ---) du corps markdown, en extrait le titre et les autres
+// champs (clé/valeur). Le titre sert d'en-tête ; les autres champs forment le bloc méta.
+function parseDoc(raw: string): { title: string; meta: [string, string][]; body: string } {
+  const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!m) return { title: '', meta: [], body: raw };
+  let title = '';
+  const meta: [string, string][] = [];
+  for (const line of m[1].split(/\r?\n/)) {
+    const i = line.indexOf(':');
+    if (i > 0) {
+      const key = line.slice(0, i).trim();
+      const val = line.slice(i + 1).trim();
+      if (!key || !val) continue;
+      if (key === 'title') title = val;
+      else meta.push([key, val]);
+    }
+  }
+  return { title, meta, body: m[2] };
+}
+
 interface Props {
   title: string;
+  fileId?: string;       // identifiant du fichier (ex. KDOC00001) préfixé au titre
+  subtitle?: string;     // section du document d'où provient le chunk cliqué
   content: string;
   meta?: string;
   isJson?: boolean;
@@ -11,7 +33,7 @@ interface Props {
   onClose: () => void;
 }
 
-export default function DocViewerModal({ title, content, meta, isJson, onSave, onClose }: Props) {
+export default function DocViewerModal({ title, fileId, subtitle, content, meta, isJson, onSave, onClose }: Props) {
   const [isEditing, setIsEditing]     = useState(false);
   const [editContent, setEditContent] = useState('');
   const [localContent, setLocalContent] = useState(content);
@@ -39,12 +61,21 @@ export default function DocViewerModal({ title, content, meta, isJson, onSave, o
     }
   }
 
+  // Découpage du document pour l'affichage (hors JSON / hors édition)
+  const { main, note } = splitNote(localContent);
+  const { title: docTitle, meta: docMeta, body } = parseDoc(main);
+  // Titre d'en-tête : « <fileId> — <vrai titre> » ; à défaut, l'étiquette du chunk reçue
+  const headerTitle = (fileId ? `${fileId} — ` : '') + (docTitle || title);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
 
         <div className="modal-header">
-          <span className="modal-title">📄 {title}</span>
+          <div className="doc-viewer-titlebar">
+            <span className="doc-viewer-title">📄 {headerTitle}</span>
+            {subtitle && <span className="doc-viewer-subtitle">{subtitle}</span>}
+          </div>
           <div className="modal-header-actions">
             {onSave && !isEditing && (
               <button className="btn-doc-edit" onClick={startEdit}>✏️ Modifier</button>
@@ -81,20 +112,23 @@ export default function DocViewerModal({ title, content, meta, isJson, onSave, o
           </div>
         ) : (
           <div className="modal-body">
-            {(() => {
-              const { main, note } = splitNote(localContent);
-              return (
-                <>
-                  <ReactMarkdown>{main}</ReactMarkdown>
-                  {note && (
-                    <div className="doc-note">
-                      <div className="doc-note-title">💡 Note technicien</div>
-                      <ReactMarkdown>{note}</ReactMarkdown>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+            {docMeta.length > 0 && (
+              <dl className="doc-meta">
+                {docMeta.map(([k, v]) => (
+                  <div className="doc-meta-row" key={k}>
+                    <dt className="doc-meta-key">{k}</dt>
+                    <dd className="doc-meta-val">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            <ReactMarkdown>{body}</ReactMarkdown>
+            {note && (
+              <div className="doc-note">
+                <div className="doc-note-title">💡 Note technicien</div>
+                <ReactMarkdown>{note}</ReactMarkdown>
+              </div>
+            )}
           </div>
         )}
 
