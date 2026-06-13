@@ -560,6 +560,25 @@
 }
 .modal-body p { margin: 0 0 8px; }
 .modal-body strong { color: var(--text-primary); font-weight: 600; }
+
+/* Note technicien — zone hors-embedding (affichée mais non indexée) */
+.doc-note {
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: var(--bg-deep);
+  border: 1px dashed var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+}
+.doc-note-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-link);
+  margin-bottom: 6px;
+}
+.doc-note p:last-child { margin-bottom: 0; }
 .modal-body em { color: var(--text-secondary); font-style: italic; }
 .modal-body ul, .modal-body ol {
   padding-left: 20px;

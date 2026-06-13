@@ -208,6 +208,10 @@ export default function AdminModal({
                 className="admin-textarea"
                 rows={8}
               />
+              <p className="admin-section-desc">
+                Astuce : tout ce qui suit le marqueur <code>&lt;&lt;&lt;NOTE&gt;&gt;&gt;</code> est affiché
+                au technicien dans la fiche mais exclu de l'indexation RAG (note hors-embedding).
+              </p>
               <div className="admin-save-row">
                 <button className="btn-save" onClick={handleSaveCorpus}>Sauvegarder</button>
                 {corpusMsg && <span className="admin-msg">{corpusMsg}</span>}
