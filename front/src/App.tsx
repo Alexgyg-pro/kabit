@@ -4,6 +4,7 @@ import { loadEmbedder, embed, cosineSimilarity } from './embeddings';
 import { getAllDocs, putDoc, clearDocs, countDocs, DocRecord } from './db';
 import AdminModal from './AdminModal';
 import DocViewerModal from './components/DocViewerModal';
+import { splitNote } from './note';
 import './App.css';
 
 const BACKEND = 'http://localhost:3001';
@@ -50,7 +51,8 @@ interface MdChunk {
 function mdChunks(content: string, filePath: string, fileTitle: string): MdChunk[] {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   const frontmatter = match ? match[1] : '';
-  const body = match ? match[2] : content;
+  // Zone hors-embedding : tout ce qui suit <<<NOTE>>> est exclu de l'indexation et du contexte LLM
+  const body = splitNote(match ? match[2] : content).main;
 
   const get = (key: string) => {
     const m = frontmatter.match(new RegExp(`^${key}:\\s*(.+)$`, 'm'));

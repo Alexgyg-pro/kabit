@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { splitNote } from '../note';
 
 interface Props {
   title: string;
@@ -80,7 +81,20 @@ export default function DocViewerModal({ title, content, meta, isJson, onSave, o
           </div>
         ) : (
           <div className="modal-body">
-            <ReactMarkdown>{localContent}</ReactMarkdown>
+            {(() => {
+              const { main, note } = splitNote(localContent);
+              return (
+                <>
+                  <ReactMarkdown>{main}</ReactMarkdown>
+                  {note && (
+                    <div className="doc-note">
+                      <div className="doc-note-title">💡 Note technicien</div>
+                      <ReactMarkdown>{note}</ReactMarkdown>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
 
