@@ -110,6 +110,42 @@ Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récu
 
 ## Terminé
 
+### ✅ US-042 — Corpus : séparation patrimoine versionné / bac à sable jetable
+
+**En tant que** Product Owner,
+**Je veux** que mes expérimentations sur le corpus (KDocs générés, changements de statut, annotations) ne polluent pas le dépôt git,
+**Afin de** pouvoir tester librement tout en gardant un patrimoine de référence propre et versionné.
+
+**Comportement attendu :**
+- `corpus-seed/` versionné = patrimoine figé (fiches racine + `KBOffs/` annotés + `references.seed.json` vierge)
+- `corpus/` gitignoré = bac à sable de l'application, jetable
+- Script `npm run corpus:reset` (depuis `back/`) qui régénère `corpus/` depuis le seed
+
+**Critères d'acceptance :**
+- [x] `corpus/` retiré du suivi git et ajouté au `.gitignore`
+- [x] `corpus-seed/` contient le patrimoine, dont les annotations `Correction` (vérité-terrain de la démo : Correcte / doublon / Obsolète / Erronée / dangereuse)
+- [x] `npm run corpus:reset` régénère `corpus/` ; `-- --force` exigé pour écraser un corpus existant (garde-fou)
+- [x] Documenté dans le `README` et `CLAUDE.md`
+
+**Livré le :** 13/06/2026 — branche `feature/kb-auto-done`
+
+---
+
+### ✅ US-041 — KB source au statut « done » automatique à la génération du KDoc
+
+**En tant qu'** administrateur,
+**Je veux** que la KB source passe automatiquement au statut « done » dès qu'un KDoc est généré et enregistré, même si elle n'avait pas encore de statut,
+**Afin de** voir d'un coup d'œil quelles KB ont déjà produit un KDoc, sans marquage manuel.
+
+**Critères d'acceptance :**
+- [x] À l'enregistrement d'un KDoc, la KB source passe à « done » avec horodatage
+- [x] Si la KB n'avait pas encore d'entrée dans `references.json`, elle est créée avec le statut « done »
+- [x] Le badge de statut se met à jour automatiquement dans la modale Sources
+
+**Livré le :** 13/06/2026 — branche `feature/kb-auto-done`
+
+---
+
 ### ✅ ÉPIQUE — Pipeline KB → KDoc : traitement des bases de connaissance officielles
 
 **Objectif :** Permettre à l'administrateur de recenser les KB officielles (format brut, souvent incorrect), de générer automatiquement des fiches `.md` propres via le LLM, de les corriger si besoin, et de les intégrer au corpus RAG.
