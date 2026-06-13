@@ -4,6 +4,32 @@
 
 ## À faire
 
+### US-048 — Champ « Note technicien » dédié à la génération/édition d'un KDoc
+
+**En tant que** rédacteur de KDoc,
+**Je veux** un champ de texte séparé pour les notes destinées au technicien lors de la génération ou de l'édition d'un KDoc,
+**Afin d'** ajouter facilement une zone hors-embedding (`<<<NOTE>>>`) sans la mélanger au contenu indexé, et de bien distinguer ce qui sert au RAG de ce qui ne sert qu'au technicien.
+
+**Contexte :**
+Les fiches racine de `corpus/` sont temporaires ; à terme le RAG ne s'appuiera que sur les KDocs. Les KDocs doivent donc pouvoir porter une note hors-embedding (US-035), ajoutée par le rédacteur au moment de la génération.
+
+**Comportement attendu :**
+- Dans `KBOffViewerModal` (génération/édition d'un KDoc), deux zones :
+  - **zone principale** = contenu indexé du KDoc (embedding)
+  - **zone secondaire (plus petite)** = note(s) technicien hors-embedding
+- À l'enregistrement, les deux zones sont recombinées : `contenu` + (si note non vide) `\n\n<<<NOTE>>>\n` + `note`
+- À l'ouverture d'un KDoc existant (cf. US-046), le contenu est **découpé** : la partie avant `<<<NOTE>>>` va dans la zone principale, la partie après dans la zone note
+- La génération LLM ne remplit que la zone principale ; la zone note reste à la main du rédacteur
+
+**Critères d'acceptance :**
+- [ ] Deux zones distinctes (principale + note) à la génération et à l'édition d'un KDoc
+- [ ] Le KDoc enregistré contient la note sous un marqueur `<<<NOTE>>>` en fin de document
+- [ ] Rouvrir un KDoc avec note répartit correctement le contenu entre les deux zones
+- [ ] Un KDoc sans note ne contient aucun marqueur `<<<NOTE>>>` parasite
+- [ ] La note reste exclue de l'embedding (vérifié via US-035) et visible dans la modale de visualisation
+
+---
+
 ### US-045 — Types de réponse : pédagogique (long) vs procédure (court)
 
 **En tant que** technicien de support,
@@ -20,35 +46,6 @@
 - [ ] Le sélecteur est visible et persistant pendant la session
 - [ ] Le style « Procédure » produit une réponse nettement plus courte que « Pédagogique » sur une même question
 - [ ] Le style par défaut est défini (proposition : Procédure)
-
----
-
-### US-035 — Zone hors-embedding dans les fiches : notes destinées au technicien
-
-**En tant que** rédacteur de fiche corpus,
-**Je veux** pouvoir ajouter une section en bas de fiche qui ne soit pas indexée par le RAG,
-**Afin de** glisser des conseils à l'intention du technicien — par exemple comment formuler son prompt pour obtenir une meilleure réponse dans un contexte donné — sans polluer l'embedding.
-
-**Comportement attendu :**
-- Un marqueur spécial (ex. : `<<<NOTE>>>`) délimite la fin du contenu indexé
-- Tout ce qui se trouve **après** ce marqueur est exclu de l'embedding et du chunking
-- Le contenu après le marqueur reste **visible dans la modale de visualisation de la fiche**
-- La section est affichée avec un style distinct dans la modale (ex. : fond légèrement différent, titre "Note technicien")
-
-**Exemple d'usage dans une fiche :**
-```
-[...procédure...]
-
-<<<NOTE>>>
-💡 Pour obtenir une procédure pas-à-pas adaptée au niveau du technicien,
-préférez la formulation : "L'utilisateur a le message X, donne-moi les étapes détaillées."
-```
-
-**Critères d'acceptance :**
-- [ ] Le marqueur est reconnu à l'indexation : le contenu après est exclu de l'embedding
-- [ ] La modale de visualisation affiche la note avec un style distinct
-- [ ] La note n'apparaît pas dans le contexte envoyé au LLM
-- [ ] Le marqueur est documenté dans le formulaire d'édition (placeholder ou tooltip)
 
 ---
 
@@ -128,6 +125,28 @@ Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récu
 ---
 
 ## Terminé
+
+### ✅ US-035 — Zone hors-embedding dans les fiches : notes destinées au technicien
+
+**En tant que** rédacteur de fiche corpus,
+**Je veux** pouvoir ajouter une section en bas de fiche qui ne soit pas indexée par le RAG,
+**Afin de** glisser des conseils à l'intention du technicien (ex. : comment formuler son prompt) sans polluer l'embedding.
+
+**Comportement livré :**
+- Marqueur `<<<NOTE>>>` : tout ce qui suit est exclu dès l'indexation (`mdChunks`) → ni embedding ni contexte LLM
+- La note reste visible dans la modale de visualisation, dans un bloc distinct « 💡 Note technicien »
+- Marqueur documenté par une astuce sous le textarea de création (`AdminModal`)
+- Logique factorisée dans `front/src/note.ts` (`splitNote`)
+
+**Critères d'acceptance :**
+- [x] Le marqueur est reconnu à l'indexation : le contenu après est exclu de l'embedding
+- [x] La modale de visualisation affiche la note avec un style distinct
+- [x] La note n'apparaît pas dans le contexte envoyé au LLM
+- [x] Le marqueur est documenté dans le formulaire d'édition
+
+**Livré le :** 13/06/2026 — branche `feature/zone-hors-embedding`
+
+---
 
 ### ✅ US-047 — Afficher le vrai titre des KB/KDocs dans la liste des sources
 
