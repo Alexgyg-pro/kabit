@@ -52,11 +52,12 @@ interface Props {
   groqApiKey: string;
   groqModel: string;
   file: KDocsFile;
+  existingKdocPath?: string;   // KDoc déjà généré pour cette KB (chargé dans l'éditeur)
   onClose: () => void;
   onSaved: () => void;
 }
 
-export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file, onClose, onSaved }: Props) {
+export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file, existingKdocPath, onClose, onSaved }: Props) {
   const [content, setContent]       = useState('');
   const [loading, setLoading]       = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -65,7 +66,7 @@ export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file,
   const [saved, setSaved]           = useState(false);
   const [msg, setMsg]               = useState('');
 
-  useEffect(() => { fetchContent(); }, []);
+  useEffect(() => { fetchContent(); if (existingKdocPath) loadExistingKdoc(); }, []);
 
   async function fetchContent() {
     try {
@@ -79,11 +80,23 @@ export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file,
     }
   }
 
+  // Cette KB a déjà un KDoc : on le charge dans l'éditeur (évite un doublon à l'enregistrement)
+  async function loadExistingKdoc() {
+    try {
+      const res = await fetch(`${backend}/kdocs/file?path=${encodeURIComponent(existingKdocPath!)}`);
+      if (res.ok) {
+        setGenerated((await res.text()).trim());
+        setMsg('KDoc existant chargé — modifie et enregistre, ou clique « Regénérer ».');
+      }
+    } catch { /* le KDoc lié est introuvable : on laissera générer un nouveau */ }
+  }
+
   async function handleGenerate() {
     if (!groqApiKey) { setMsg('Clé API Groq manquante.'); return; }
     setGenerating(true);
     setMsg('');
     setGenerated('');
+    setSaved(false);
     try {
       const today = new Date().toLocaleDateString('fr-FR');
       const res = await fetch(GROQ_ENDPOINT, {

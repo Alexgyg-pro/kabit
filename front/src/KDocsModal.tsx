@@ -14,6 +14,7 @@ interface KBOffsRef {
   file: string;
   title?: string;
   status: 'selected' | 'out' | 'duplicate' | 'done';
+  kdoc?: string;          // fichier de l'unique KDoc généré depuis cette KB ('' = aucun)
   updatedAt: string;
 }
 
@@ -51,6 +52,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedFile, setSelectedFile] = useState<KDocsFile | null>(null);
   const [viewerFile, setViewerFile]     = useState<KDocsFile | null>(null);
+  const [viewerKdocPath, setViewerKdocPath] = useState<string | null>(null);
   const [kdocViewer, setKdocViewer]     = useState<{ file: KDocsFile; content: string } | null>(null);
   const [pendingStatus, setPendingStatus] = useState<string>('selected');
   const [pendingTitle, setPendingTitle]   = useState('');
@@ -100,6 +102,10 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
     const file = files.find(f => f.path === path);
     if (!file) return;
     if (file.folder === 'KBOffs') {
+      // KDoc déjà généré pour cette KB : via la clé `kdoc`, sinon rattrapage via source_kb
+      const ref = references.kboffs.find(r => r.file === file.name);
+      const kdocFile = ref?.kdoc || references.kdocs.find(k => k.source_kb === file.path)?.file || '';
+      setViewerKdocPath(kdocFile ? `KDocs/${kdocFile}` : null);
       setViewerFile(file);
     } else {
       const res = await fetch(`${backend}/kdocs/file?path=${encodeURIComponent(file.path)}`);
@@ -324,8 +330,9 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
         groqApiKey={groqApiKey}
         groqModel={groqModel}
         file={viewerFile}
-        onClose={() => setViewerFile(null)}
-        onSaved={() => { fetchFiles(); fetchReferences(); setViewerFile(null); }}
+        existingKdocPath={viewerKdocPath ?? undefined}
+        onClose={() => { setViewerFile(null); setViewerKdocPath(null); }}
+        onSaved={() => { fetchFiles(); fetchReferences(); setViewerFile(null); setViewerKdocPath(null); }}
       />
     )}
 
