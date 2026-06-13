@@ -43,6 +43,7 @@ type AppStatus = 'init' | 'loading-model' | 'indexing' | 'ready' | 'error';
 interface MdChunk {
   id: string;
   title: string;
+  section?: string;
   embeddingText: string;
   chunkText: string;
 }
@@ -79,6 +80,7 @@ function mdChunks(content: string, filePath: string, fileTitle: string): MdChunk
     return {
       id: `${filePath}#${i}`,
       title: sectionTitle ? `${fileTitle} — ${sectionTitle}` : fileTitle,
+      section: sectionTitle ?? undefined,
       embeddingText: (header + '\n' + part).slice(0, 500),
       chunkText: part.slice(0, 1500),
     };
@@ -198,6 +200,7 @@ interface Source {
   id: string;
   path: string;
   title: string;
+  section?: string;
   score: number;
   content: string;
 }
@@ -361,6 +364,7 @@ export default function App() {
               title: chunk.title,
               content,
               chunkText: chunk.chunkText,
+              section: chunk.section,
               embedding,
               timestamp: Date.now(),
             });
@@ -412,7 +416,7 @@ export default function App() {
         return;
       }
 
-      setSources(scored.map((r) => ({ id: r.doc.id, path: r.doc.path, title: r.doc.title, score: r.score, content: r.doc.content })));
+      setSources(scored.map((r) => ({ id: r.doc.id, path: r.doc.path, title: r.doc.title, section: r.doc.section, score: r.score, content: r.doc.content })));
 
       // 3. Contexte
       const contextBlocks = scored
@@ -755,6 +759,8 @@ export default function App() {
       {selectedDoc && (
         <DocViewerModal
           title={selectedDoc.title}
+          fileId={selectedDoc.path.startsWith('KDocs/') ? selectedDoc.path.split('/').pop()?.replace(/\.md$/, '') : undefined}
+          subtitle={selectedDoc.section}
           content={selectedDoc.content}
           meta={`${selectedDoc.path}${selectedDoc.score > 0 ? ` · similarité : ${selectedDoc.score.toFixed(2)}` : ''}`}
           isJson={selectedDoc.path.endsWith('.json')}

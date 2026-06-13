@@ -335,6 +335,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
     {kdocViewer && (
       <DocViewerModal
         title={kdocViewer.file.name}
+        fileId={kdocViewer.file.name.replace(/\.md$/, '')}
         content={kdocViewer.content}
         onSave={async (content) => {
           const res = await fetch(`${backend}/kdocs/file`, {
