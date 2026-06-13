@@ -328,11 +328,21 @@ app.post('/kdocs/save', (req, res) => {
 
     fs.writeFileSync(fullPath, content, 'utf-8');
 
-    // Marquer la KB source comme 'done'
+    // Marquer la KB source comme 'done' (créer l'entrée si elle n'existe pas encore)
     if (sourceKBPath) {
       const sourceFilename = path.basename(sourceKBPath);
       const kb = data.kboffs.find(e => e.file === sourceFilename);
-      if (kb) { kb.status = 'done'; kb.updatedAt = now; }
+      if (kb) {
+        kb.status = 'done';
+        kb.updatedAt = now;
+      } else {
+        data.kboffs.push({
+          id: generateId(data, 'KBOffs'),
+          file: sourceFilename,
+          status: 'done',
+          updatedAt: now,
+        });
+      }
     }
 
     // Ajouter l'entrée KDoc
