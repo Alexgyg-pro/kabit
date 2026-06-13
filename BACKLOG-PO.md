@@ -4,6 +4,47 @@
 
 ## À faire
 
+### US-044 — Génération de KDoc fidèle à la KB source
+
+**En tant qu'** administrateur du corpus,
+**Je veux** que le KDoc généré depuis une KB conserve les informations opérationnelles importantes (avertissements de sécurité, conditions préalables, consignes d'escalade, renvois vers d'autres KB),
+**Afin de** ne pas perdre d'information critique lors de la transformation KB → KDoc.
+
+**Problème observé :**
+KDOC00001 (généré depuis KB00001, 1756 car.) ne fait que 559 caractères. Le plafond de 2200 n'était pas atteint : le LLM avait **résumé agressivement** et supprimé l'avertissement de sécurité ⚠️, la consigne d'escalade N2 et les Notes (renvoi vers KB00002). La cause est le prompt de génération (consignes « phrases courtes » / « ne garder que la principale »).
+
+**Comportement attendu :**
+- Le prompt de génération impose la **fidélité** : ne supprimer aucune info opérationnelle (sécurité, escalade, conditions, renvois)
+- Sections optionnelles `## ⚠️ Précautions` et `## Notes` ajoutées au format, incluses seulement si la KB en contient
+- Budget relevé de 2200 → 3000 caractères pour laisser la place à ces infos
+- Plusieurs procédures : garder la principale en détail, mentionner les autres dans les Notes
+
+**Critères d'acceptance :**
+- [ ] Un KDoc régénéré depuis KB00001 conserve l'avertissement, l'escalade N2 et le renvoi vers KB00002
+- [ ] Le format inclut les sections Précautions/Notes uniquement quand c'est pertinent
+- [ ] Aucune régression de format (frontmatter + sections KABIT respectés)
+
+---
+
+### US-045 — Types de réponse : pédagogique (long) vs procédure (court)
+
+**En tant que** technicien de support,
+**Je veux** choisir le style de réponse de l'assistant — explicatif/pédagogique ou procédure sèche en étapes,
+**Afin d'** obtenir soit une réponse détaillée qui m'aide à comprendre, soit une liste d'actions rapide quand je sais déjà ce que je fais.
+
+**Comportement attendu :**
+- Un sélecteur de **style de réponse** dans l'interface : `Procédure (court)` / `Pédagogique (long)`
+- Le style choisi ajuste le prompt système **et** la limite `max_tokens` au moment de répondre
+- `Procédure` : étapes numérotées, pas de paragraphe explicatif, réponse courte
+- `Pédagogique` : contexte, explication du pourquoi, puis étapes
+
+**Critères d'acceptance :**
+- [ ] Le sélecteur est visible et persistant pendant la session
+- [ ] Le style « Procédure » produit une réponse nettement plus courte que « Pédagogique » sur une même question
+- [ ] Le style par défaut est défini (proposition : Procédure)
+
+---
+
 ### US-035 — Zone hors-embedding dans les fiches : notes destinées au technicien
 
 **En tant que** rédacteur de fiche corpus,
