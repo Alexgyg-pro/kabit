@@ -7,6 +7,7 @@ interface KDocsFile {
   path: string;
   name: string;
   folder: string;
+  title?: string;   // titre lisible extrait du fichier (H1 pour KB, frontmatter pour KDoc)
 }
 
 interface KBOffsRef {
@@ -119,7 +120,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
     const ref = getRef(file);
     // Pas de référence → statut neutre « none » (rien n'est attribué tant qu'on n'enregistre pas)
     setPendingStatus(ref?.status ?? 'none');
-    setPendingTitle(ref?.title ?? '');
+    setPendingTitle(ref?.title || file.title || file.name);
     setSelectedFile(file);
     setMsg('');
   }
@@ -193,7 +194,8 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
     : KDOCS_STATUSES;
 
   const visible      = visibleFiles();
-  const corpusFiles  = visible.map(f => ({ path: f.path, title: f.name }));
+  // Titre affiché : override `references` > titre lu dans le fichier > nom de fichier
+  const corpusFiles  = visible.map(f => ({ path: f.path, title: getRef(f)?.title || f.title || f.name }));
 
   const emptyMsg = statusFilter === 'unreferenced'
     ? 'Aucun fichier non répertorié.'
@@ -278,13 +280,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
               <h2 className="admin-section-title">
                 {getRef(selectedFile) ? 'Modifier' : 'Référencer'} — {selectedFile.name}
               </h2>
-              <input
-                type="text"
-                placeholder="Titre (optionnel)"
-                value={pendingTitle}
-                onChange={(e) => setPendingTitle(e.target.value)}
-                className="admin-input"
-              />
+              <p className="kdocs-selected-title">{pendingTitle}</p>
               <div className="kdocs-status-options">
                 {['none', ...statusOptions].map(s => (
                   <label key={s}>
