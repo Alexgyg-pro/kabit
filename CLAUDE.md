@@ -50,3 +50,11 @@ Exemples :
 - `front/.env.local` (clé API Groq) — couvert par `.gitignore`
 - `node_modules/`
 - `dist/`
+- `corpus/` — bac à sable d'exécution de l'app, gitignoré (voir ci-dessous)
+
+## Corpus : patrimoine vs bac à sable
+- **`corpus-seed/`** : patrimoine versionné et figé (fiches racine + `KBOffs/` + `references.seed.json` vierge). Source de vérité.
+- **`corpus/`** : espace de travail de l'app, **gitignoré et jetable** (KDocs générés, statuts, expérimentations). Git ne le suit pas.
+- Après un clone, recréer `corpus/` : `cd back && npm run corpus:reset`.
+- Pour repartir d'un corpus propre : `npm run corpus:reset -- --force` (écrase le bac à sable).
+- Pour promouvoir un essai au patrimoine : copier le fichier dans `corpus-seed/` et committer (`corpus: …`).
