@@ -4,29 +4,6 @@
 
 ## À faire
 
-### US-046 — Une KB ne génère qu'un seul KDoc (lien KB ↔ KDoc dans references)
-
-**En tant qu'** administrateur du corpus,
-**Je veux** qu'une KB soit liée à un et un seul KDoc, et que double-cliquer sur une KB déjà transformée rouvre son KDoc existant dans l'éditeur,
-**Afin de** ne pas générer de doublons de KDocs pour une même KB.
-
-**Problème observé :**
-Double-clic sur une KB déjà transformée → l'éditeur de KDoc s'ouvre **vierge** (il ne charge pas le KDoc existant). Si on clique « Générer » puis « Enregistrer », on obtient **deux KDocs pour la même KB**.
-
-**Comportement attendu :**
-- Dans `references.json`, l'entrée d'une KB porte une clé `kdoc` (chaîne vide par défaut) qui référence son unique KDoc
-- Double-clic sur une KB qui a déjà un `kdoc` → le KDoc répertorié est chargé dans la zone d'édition (pas de zone vierge)
-- L'enregistrement d'un KDoc renseigne/met à jour la clé `kdoc` de la KB source — il ne crée jamais un second KDoc pour cette KB
-- Supprimer un KDoc nettoie la clé `kdoc` de la KB correspondante (remise à chaîne vide)
-
-**Critères d'acceptance :**
-- [ ] L'entrée KB dans `references.json` contient `kdoc` (vide par défaut)
-- [ ] Double-clic sur une KB déjà transformée affiche son KDoc existant dans l'éditeur
-- [ ] Régénérer/enregistrer met à jour le KDoc existant au lieu d'en créer un second
-- [ ] Supprimer un KDoc remet à vide la clé `kdoc` de la KB source
-
----
-
 ### US-045 — Types de réponse : pédagogique (long) vs procédure (court)
 
 **En tant que** technicien de support,
@@ -151,6 +128,31 @@ Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récu
 ---
 
 ## Terminé
+
+### ✅ US-046 — Une KB ne génère qu'un seul KDoc (lien KB ↔ KDoc dans references)
+
+**En tant qu'** administrateur du corpus,
+**Je veux** qu'une KB soit liée à un et un seul KDoc, et que double-cliquer sur une KB déjà transformée rouvre son KDoc existant dans l'éditeur,
+**Afin de** ne pas générer de doublons de KDocs pour une même KB.
+
+**Problème observé :**
+Double-clic sur une KB déjà transformée → l'éditeur de KDoc s'ouvrait **vierge** ; un « Générer » + « Enregistrer » produisait **deux KDocs pour la même KB**.
+
+**Comportement livré :**
+- Clé `kdoc` sur l'entrée KB de `references.json` (lien vers son unique KDoc)
+- Double-clic sur une KB transformée → son KDoc existant est chargé dans l'éditeur
+- L'enregistrement **met à jour** le KDoc existant (rattrapage via `source_kb` pour les données déjà en place — pas de reset nécessaire)
+- Retirer un KDoc remet à vide la clé `kdoc` de la KB source
+
+**Critères d'acceptance :**
+- [x] L'entrée KB dans `references.json` contient `kdoc` (vide par défaut)
+- [x] Double-clic sur une KB déjà transformée affiche son KDoc existant dans l'éditeur
+- [x] Régénérer/enregistrer met à jour le KDoc existant au lieu d'en créer un second
+- [x] Supprimer un KDoc remet à vide la clé `kdoc` de la KB source
+
+**Livré le :** 13/06/2026 — branche `feature/kb-kdoc-unique`
+
+---
 
 ### ✅ US-044 — Génération de KDoc fidèle à la KB source
 
