@@ -4,35 +4,6 @@
 
 ## À faire
 
-### US-047 — Afficher le vrai titre des KB/KDocs dans la liste des sources
-
-**En tant qu'** administrateur du corpus,
-**Je veux** voir le titre lisible d'une KB ou d'un KDoc dans la liste (et non son seul nom de fichier `KB00001.md`),
-**Afin de** savoir à quelle source j'ai affaire avant de l'ouvrir, et m'épargner des clics.
-
-**Problème observé :**
-Dans la modale Sources, la liste affiche `KB00001.md` / `KDOC00001.md` comme « titre ». `KDocsModal` passe `title: f.name` (le nom de fichier) et l'endpoint `/kdocs/files` n'extrait aucun titre du contenu.
-
-**Comportement attendu :**
-- Le backend (`/kdocs/files`) lit un titre lisible dans chaque fichier :
-  - **KB** (`KBOffs/`) → titre en **H1** (`# …`)
-  - **KDoc** (`KDocs/`) → titre en **frontmatter** (`title: …`)
-  - fallback sur le nom de fichier si aucun titre trouvé
-- Si une clé `title` existe dans `references.json` pour la source, elle a la priorité (titre choisi par l'admin)
-- La liste affiche le **titre lisible en principal** et garde le **nom de fichier en secondaire** (déjà présent sous le titre)
-- Ne casse pas la recherche (le filtre doit porter sur le titre lisible)
-
-**Note :** toutes les KB ne sont pas répertoriées dans `references.json` → la lecture du titre dans le fichier reste la source primaire ; la clé `title` n'est qu'un complément/override.
-
-**Critères d'acceptance :**
-- [ ] Une KB non répertoriée affiche son titre H1 dans la liste
-- [ ] Un KDoc affiche son titre de frontmatter dans la liste
-- [ ] Le nom de fichier reste visible en secondaire
-- [ ] La recherche filtre sur le titre lisible
-- [ ] Aucune régression d'ouverture (simple/double-clic) ni des badges de statut
-
----
-
 ### US-045 — Types de réponse : pédagogique (long) vs procédure (court)
 
 **En tant que** technicien de support,
@@ -157,6 +128,29 @@ Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récu
 ---
 
 ## Terminé
+
+### ✅ US-047 — Afficher le vrai titre des KB/KDocs dans la liste des sources
+
+**En tant qu'** administrateur du corpus,
+**Je veux** voir le titre lisible d'une KB ou d'un KDoc dans la liste (et non son seul nom de fichier `KB00001.md`),
+**Afin de** savoir à quelle source j'ai affaire avant de l'ouvrir, et m'épargner des clics.
+
+**Comportement livré :**
+- `/kdocs/files` extrait un titre lisible par fichier : H1 pour les KB, frontmatter `title:` pour les KDocs, fallback nom de fichier
+- La liste affiche le titre lisible (override `references.title` › titre du fichier › nom de fichier), nom de fichier en secondaire
+- La recherche filtre sur le titre lisible → outil de recherche réellement utile
+- Le champ « Titre (optionnel) » du formulaire de statut devient un **texte fixe** affichant le titre de la source (toujours persisté dans `references.title` à l'enregistrement)
+
+**Critères d'acceptance :**
+- [x] Une KB non répertoriée affiche son titre H1 dans la liste
+- [x] Un KDoc affiche son titre de frontmatter dans la liste
+- [x] Le nom de fichier reste visible en secondaire
+- [x] La recherche filtre sur le titre lisible
+- [x] Aucune régression d'ouverture (simple/double-clic) ni des badges de statut
+
+**Livré le :** 13/06/2026 — branche `feature/titre-lisible-sources`
+
+---
 
 ### ✅ US-046 — Une KB ne génère qu'un seul KDoc (lien KB ↔ KDoc dans references)
 
