@@ -40,7 +40,21 @@ if (dirHasContent(CORPUS) && !force) {
 }
 
 // Remettre corpus/ à zéro
-fs.rmSync(CORPUS, { recursive: true, force: true });
+// maxRetries/retryDelay : sous Windows, un handle transitoire (éditeur, Explorateur,
+// antivirus, synchro cloud) verrouille parfois un dossier → EBUSY. On laisse Node réessayer.
+try {
+  fs.rmSync(CORPUS, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+} catch (err) {
+  if (err.code === 'EBUSY' || err.code === 'EPERM' || err.code === 'ENOTEMPTY') {
+    console.error(`❌ Impossible de vider corpus/ : ${err.code} sur ${err.path}`);
+    console.error('   Un programme garde ce dossier ouvert. Ferme :');
+    console.error('   • l\'Explorateur Windows pointé sur corpus/ (ou un sous-dossier)');
+    console.error('   • l\'onglet/aperçu d\'un fichier corpus/ dans ton éditeur');
+    console.error('   • mets en pause OneDrive/antivirus le temps du reset, puis relance.');
+    process.exit(1);
+  }
+  throw err;
+}
 fs.mkdirSync(CORPUS, { recursive: true });
 
 // Copier le seed (tout sauf le references.seed.json)
