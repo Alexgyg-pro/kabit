@@ -4,25 +4,26 @@
 
 ## À faire
 
-### US-044 — Génération de KDoc fidèle à la KB source
+### US-046 — Une KB ne génère qu'un seul KDoc (lien KB ↔ KDoc dans references)
 
 **En tant qu'** administrateur du corpus,
-**Je veux** que le KDoc généré depuis une KB conserve les informations opérationnelles importantes (avertissements de sécurité, conditions préalables, consignes d'escalade, renvois vers d'autres KB),
-**Afin de** ne pas perdre d'information critique lors de la transformation KB → KDoc.
+**Je veux** qu'une KB soit liée à un et un seul KDoc, et que double-cliquer sur une KB déjà transformée rouvre son KDoc existant dans l'éditeur,
+**Afin de** ne pas générer de doublons de KDocs pour une même KB.
 
 **Problème observé :**
-KDOC00001 (généré depuis KB00001, 1756 car.) ne fait que 559 caractères. Le plafond de 2200 n'était pas atteint : le LLM avait **résumé agressivement** et supprimé l'avertissement de sécurité ⚠️, la consigne d'escalade N2 et les Notes (renvoi vers KB00002). La cause est le prompt de génération (consignes « phrases courtes » / « ne garder que la principale »).
+Double-clic sur une KB déjà transformée → l'éditeur de KDoc s'ouvre **vierge** (il ne charge pas le KDoc existant). Si on clique « Générer » puis « Enregistrer », on obtient **deux KDocs pour la même KB**.
 
 **Comportement attendu :**
-- Le prompt de génération impose la **fidélité** : ne supprimer aucune info opérationnelle (sécurité, escalade, conditions, renvois)
-- Sections optionnelles `## ⚠️ Précautions` et `## Notes` ajoutées au format, incluses seulement si la KB en contient
-- Budget relevé de 2200 → 3000 caractères pour laisser la place à ces infos
-- Plusieurs procédures : garder la principale en détail, mentionner les autres dans les Notes
+- Dans `references.json`, l'entrée d'une KB porte une clé `kdoc` (chaîne vide par défaut) qui référence son unique KDoc
+- Double-clic sur une KB qui a déjà un `kdoc` → le KDoc répertorié est chargé dans la zone d'édition (pas de zone vierge)
+- L'enregistrement d'un KDoc renseigne/met à jour la clé `kdoc` de la KB source — il ne crée jamais un second KDoc pour cette KB
+- Supprimer un KDoc nettoie la clé `kdoc` de la KB correspondante (remise à chaîne vide)
 
 **Critères d'acceptance :**
-- [ ] Un KDoc régénéré depuis KB00001 conserve l'avertissement, l'escalade N2 et le renvoi vers KB00002
-- [ ] Le format inclut les sections Précautions/Notes uniquement quand c'est pertinent
-- [ ] Aucune régression de format (frontmatter + sections KABIT respectés)
+- [ ] L'entrée KB dans `references.json` contient `kdoc` (vide par défaut)
+- [ ] Double-clic sur une KB déjà transformée affiche son KDoc existant dans l'éditeur
+- [ ] Régénérer/enregistrer met à jour le KDoc existant au lieu d'en créer un second
+- [ ] Supprimer un KDoc remet à vide la clé `kdoc` de la KB source
 
 ---
 
@@ -150,6 +151,30 @@ Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récu
 ---
 
 ## Terminé
+
+### ✅ US-044 — Génération de KDoc fidèle à la KB source
+
+**En tant qu'** administrateur du corpus,
+**Je veux** que le KDoc généré depuis une KB conserve les informations opérationnelles importantes (avertissements de sécurité, conditions préalables, consignes d'escalade, renvois vers d'autres KB),
+**Afin de** ne pas perdre d'information critique lors de la transformation KB → KDoc.
+
+**Problème observé :**
+KDOC00001 (généré depuis KB00001, 1756 car.) ne faisait que 559 caractères. Le plafond de 2200 n'était pas atteint : le LLM résumait agressivement et supprimait l'avertissement ⚠️, l'escalade N2 et les Notes. Cause = prompt de génération.
+
+**Comportement livré :**
+- Prompt de génération imposant la fidélité (sécurité, escalade, conditions, renvois conservés)
+- Sections optionnelles `## ⚠️ Précautions` et `## Notes` ajoutées au format
+- Budget relevé 2200 → 3000 caractères
+- Plusieurs procédures : principale en détail, autres mentionnées dans les Notes
+
+**Critères d'acceptance :**
+- [x] Un KDoc régénéré depuis KB00001 conserve l'avertissement, l'escalade N2 et le renvoi vers KB00002
+- [x] Le format inclut les sections Précautions/Notes uniquement quand c'est pertinent
+- [x] Aucune régression de format (frontmatter + sections KABIT respectés)
+
+**Livré le :** 13/06/2026 — branche `feature/kdoc-generation-fidele`
+
+---
 
 ### ✅ US-043 — Statut « none » explicite pour une source non répertoriée
 
