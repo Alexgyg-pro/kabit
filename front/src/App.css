@@ -1377,6 +1377,13 @@
   border: 1px solid var(--badge-green-text, #4ade80);
 }
 
+.kdocs-selected-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .kdocs-status-options {
   display: flex;
   gap: 1.5rem;

@@ -173,7 +173,16 @@ function generateId(data, folder) {
 const KBOFFS_STATUSES = ['selected', 'out', 'duplicate', 'done'];
 const KDOCS_STATUSES  = ['testing', 'passed', 'rejected'];
 
-// GET /kdocs/files — liste les fichiers dans KBOffs et KDocs
+// Titre lisible d'un fichier source : KDoc → frontmatter `title:`, KB → H1 `# …`
+function extractFileTitle(content, folder) {
+  const fm      = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  const fmTitle = fm ? (fm[1].match(/^title:\s*(.+)$/m)?.[1].trim() || '') : '';
+  const h1      = content.match(/^#\s+(.+)/m);
+  const h1Title = h1 ? h1[1].trim() : '';
+  return folder === 'KDocs' ? (fmTitle || h1Title) : (h1Title || fmTitle);
+}
+
+// GET /kdocs/files — liste les fichiers dans KBOffs et KDocs (avec titre lisible)
 app.get('/kdocs/files', (req, res) => {
   try {
     const files = [];
@@ -182,7 +191,14 @@ app.get('/kdocs/files', (req, res) => {
       if (!fs.existsSync(dirPath)) continue;
       const entries = fs.readdirSync(dirPath).filter(f => !f.startsWith('.'));
       for (const entry of entries) {
-        files.push({ path: `${folder}/${entry}`, name: entry, folder });
+        let title = entry.replace(/\.md$/, '');
+        if (entry.endsWith('.md')) {
+          try {
+            const content = fs.readFileSync(path.join(dirPath, entry), 'utf-8');
+            title = extractFileTitle(content, folder) || title;
+          } catch { /* fichier illisible : garder le nom de fichier */ }
+        }
+        files.push({ path: `${folder}/${entry}`, name: entry, folder, title });
       }
     }
     res.json(files);
