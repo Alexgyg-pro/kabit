@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { NOTE_MARKER, splitNote } from './note';
 
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
@@ -62,6 +63,7 @@ export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file,
   const [loading, setLoading]       = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated]   = useState('');
+  const [note, setNote]             = useState('');   // note technicien hors-embedding (<<<NOTE>>>)
   const [saving, setSaving]         = useState(false);
   const [saved, setSaved]           = useState(false);
   const [msg, setMsg]               = useState('');
@@ -85,7 +87,10 @@ export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file,
     try {
       const res = await fetch(`${backend}/kdocs/file?path=${encodeURIComponent(existingKdocPath!)}`);
       if (res.ok) {
-        setGenerated((await res.text()).trim());
+        // Répartir le KDoc existant : contenu indexé dans la zone principale, note dans sa zone
+        const { main, note: existingNote } = splitNote((await res.text()).trim());
+        setGenerated(main);
+        setNote(existingNote);
         setMsg('KDoc existant chargé — modifie et enregistre, ou clique « Regénérer ».');
       }
     } catch { /* le KDoc lié est introuvable : on laissera générer un nouveau */ }
@@ -125,11 +130,15 @@ export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file,
   async function handleSave() {
     setSaving(true);
     setMsg('');
+    // Recombiner contenu indexé + note hors-embedding (marqueur seulement si une note existe)
+    const fullContent = note.trim()
+      ? `${generated.trim()}\n\n${NOTE_MARKER}\n${note.trim()}`
+      : generated.trim();
     try {
       const res = await fetch(`${backend}/kdocs/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: generated, sourceKBPath: file.path }),
+        body: JSON.stringify({ content: fullContent, sourceKBPath: file.path }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -188,7 +197,17 @@ export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file,
                   className="admin-textarea kdoc-generated-textarea"
                   value={generated}
                   onChange={(e) => setGenerated(e.target.value)}
-                  rows={18}
+                  rows={16}
+                />
+                <label className="kdoc-note-label">
+                  💡 Note technicien — hors-embedding, optionnelle
+                </label>
+                <textarea
+                  className="admin-textarea kdoc-note-textarea"
+                  placeholder="Conseils pour le technicien (ex. : comment formuler sa question). Exclus du RAG, ajoutés en fin de KDoc sous <<<NOTE>>>."
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  rows={4}
                 />
                 <div className="admin-save-row">
                   {!saved && (

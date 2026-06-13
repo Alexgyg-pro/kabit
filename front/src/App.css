@@ -1545,3 +1545,19 @@
   font-family: monospace;
   font-size: 0.82rem;
 }
+
+.kdoc-note-label {
+  display: block;
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-link);
+}
+
+.kdoc-note-textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-family: monospace;
+  font-size: 0.82rem;
+  border-left: 3px solid var(--accent);
+}
