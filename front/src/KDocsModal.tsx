@@ -7,6 +7,7 @@ interface KDocsFile {
   path: string;
   name: string;
   folder: string;
+  title?: string;   // titre lisible extrait du fichier (H1 pour KB, frontmatter pour KDoc)
 }
 
 interface KBOffsRef {
@@ -14,6 +15,7 @@ interface KBOffsRef {
   file: string;
   title?: string;
   status: 'selected' | 'out' | 'duplicate' | 'done';
+  kdoc?: string;          // fichier de l'unique KDoc généré depuis cette KB ('' = aucun)
   updatedAt: string;
 }
 
@@ -51,6 +53,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedFile, setSelectedFile] = useState<KDocsFile | null>(null);
   const [viewerFile, setViewerFile]     = useState<KDocsFile | null>(null);
+  const [viewerKdocPath, setViewerKdocPath] = useState<string | null>(null);
   const [kdocViewer, setKdocViewer]     = useState<{ file: KDocsFile; content: string } | null>(null);
   const [pendingStatus, setPendingStatus] = useState<string>('selected');
   const [pendingTitle, setPendingTitle]   = useState('');
@@ -100,6 +103,10 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
     const file = files.find(f => f.path === path);
     if (!file) return;
     if (file.folder === 'KBOffs') {
+      // KDoc déjà généré pour cette KB : via la clé `kdoc`, sinon rattrapage via source_kb
+      const ref = references.kboffs.find(r => r.file === file.name);
+      const kdocFile = ref?.kdoc || references.kdocs.find(k => k.source_kb === file.path)?.file || '';
+      setViewerKdocPath(kdocFile ? `KDocs/${kdocFile}` : null);
       setViewerFile(file);
     } else {
       const res = await fetch(`${backend}/kdocs/file?path=${encodeURIComponent(file.path)}`);
@@ -111,15 +118,25 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
     const file = files.find(f => f.path === path);
     if (!file) return;
     const ref = getRef(file);
-    const defaultStatus = file.folder === 'KBOffs' ? 'selected' : 'testing';
-    setPendingStatus(ref?.status ?? defaultStatus);
-    setPendingTitle(ref?.title ?? '');
+    // Pas de référence → statut neutre « none » (rien n'est attribué tant qu'on n'enregistre pas)
+    setPendingStatus(ref?.status ?? 'none');
+    setPendingTitle(ref?.title || file.title || file.name);
     setSelectedFile(file);
     setMsg('');
   }
 
   async function handleSave() {
     if (!selectedFile) return;
+    // « none » = pas de statut : retirer des références si présent, sinon ne rien créer
+    if (pendingStatus === 'none') {
+      if (getRef(selectedFile)) {
+        await handleRemove();
+      } else {
+        setSelectedFile(null);
+        setMsg('');
+      }
+      return;
+    }
     try {
       const res = await fetch(`${backend}/kdocs/references`, {
         method: 'POST',
@@ -177,7 +194,8 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
     : KDOCS_STATUSES;
 
   const visible      = visibleFiles();
-  const corpusFiles  = visible.map(f => ({ path: f.path, title: f.name }));
+  // Titre affiché : override `references` > titre lu dans le fichier > nom de fichier
+  const corpusFiles  = visible.map(f => ({ path: f.path, title: getRef(f)?.title || f.title || f.name }));
 
   const emptyMsg = statusFilter === 'unreferenced'
     ? 'Aucun fichier non répertorié.'
@@ -262,15 +280,9 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
               <h2 className="admin-section-title">
                 {getRef(selectedFile) ? 'Modifier' : 'Référencer'} — {selectedFile.name}
               </h2>
-              <input
-                type="text"
-                placeholder="Titre (optionnel)"
-                value={pendingTitle}
-                onChange={(e) => setPendingTitle(e.target.value)}
-                className="admin-input"
-              />
+              <p className="kdocs-selected-title">{pendingTitle}</p>
               <div className="kdocs-status-options">
-                {statusOptions.map(s => (
+                {['none', ...statusOptions].map(s => (
                   <label key={s}>
                     <input
                       type="radio"
@@ -279,7 +291,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
                       checked={pendingStatus === s}
                       onChange={() => setPendingStatus(s)}
                     />
-                    {' '}{s}
+                    {' '}{s === 'none' ? 'none (non répertorié)' : s}
                   </label>
                 ))}
               </div>
@@ -314,14 +326,16 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
         groqApiKey={groqApiKey}
         groqModel={groqModel}
         file={viewerFile}
-        onClose={() => setViewerFile(null)}
-        onSaved={() => { fetchFiles(); fetchReferences(); setViewerFile(null); }}
+        existingKdocPath={viewerKdocPath ?? undefined}
+        onClose={() => { setViewerFile(null); setViewerKdocPath(null); }}
+        onSaved={() => { fetchFiles(); fetchReferences(); setViewerFile(null); setViewerKdocPath(null); }}
       />
     )}
 
     {kdocViewer && (
       <DocViewerModal
         title={kdocViewer.file.name}
+        fileId={kdocViewer.file.name.replace(/\.md$/, '')}
         content={kdocViewer.content}
         onSave={async (content) => {
           const res = await fetch(`${backend}/kdocs/file`, {

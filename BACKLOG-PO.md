@@ -4,32 +4,69 @@
 
 ## À faire
 
-### US-035 — Zone hors-embedding dans les fiches : notes destinées au technicien
+### US-050 — Créer un KDoc autonome (sans KB source)
 
-**En tant que** rédacteur de fiche corpus,
-**Je veux** pouvoir ajouter une section en bas de fiche qui ne soit pas indexée par le RAG,
-**Afin de** glisser des conseils à l'intention du technicien — par exemple comment formuler son prompt pour obtenir une meilleure réponse dans un contexte donné — sans polluer l'embedding.
+**En tant que** rédacteur de la base de connaissance,
+**Je veux** créer un KDoc directement, sans partir d'une KB,
+**Afin de** documenter des incidents ponctuels, des retours d'expérience, ou des solutions trouvées ailleurs (ex. doc Microsoft) qui ne sont pas dans la base KB.
+
+**Contexte :**
+Aujourd'hui un KDoc naît toujours de la transformation d'une KB (`KBOffViewerModal`). Or certaines connaissances n'ont pas de KB d'origine. Les KDocs étant appelés à devenir la seule source du RAG, il faut pouvoir en créer librement.
 
 **Comportement attendu :**
-- Un marqueur spécial (ex. : `<<<NOTE>>>`) délimite la fin du contenu indexé
-- Tout ce qui se trouve **après** ce marqueur est exclu de l'embedding et du chunking
-- Le contenu après le marqueur reste **visible dans la modale de visualisation de la fiche**
-- La section est affichée avec un style distinct dans la modale (ex. : fond légèrement différent, titre "Note technicien")
-
-**Exemple d'usage dans une fiche :**
-```
-[...procédure...]
-
-<<<NOTE>>>
-💡 Pour obtenir une procédure pas-à-pas adaptée au niveau du technicien,
-préférez la formulation : "L'utilisateur a le message X, donne-moi les étapes détaillées."
-```
+- Une action « Nouveau KDoc » (depuis le gestionnaire de sources) ouvre un éditeur vierge : zone contenu indexé + zone note technicien (cf. US-048)
+- Le KDoc est enregistré dans `KDocs/` avec une entrée dans `references.json` **sans** `source_kb`
+- Possibilité de pré-remplir un squelette de fiche (frontmatter + sections KABIT) pour guider la rédaction
+- Génération LLM optionnelle (à partir d'un texte collé / de notes) ou rédaction 100 % manuelle
 
 **Critères d'acceptance :**
-- [ ] Le marqueur est reconnu à l'indexation : le contenu après est exclu de l'embedding
-- [ ] La modale de visualisation affiche la note avec un style distinct
-- [ ] La note n'apparaît pas dans le contexte envoyé au LLM
-- [ ] Le marqueur est documenté dans le formulaire d'édition (placeholder ou tooltip)
+- [ ] On peut créer un KDoc sans sélectionner de KB
+- [ ] Le KDoc créé apparaît dans l'onglet KDocs avec un statut référencé, sans `source_kb`
+- [ ] Le KDoc autonome supporte la note hors-embedding `<<<NOTE>>>` (US-048)
+- [ ] Aucune régression sur la génération KDoc depuis une KB (US-046/048)
+
+---
+
+### US-051 — Feedback du technicien sur la réponse du RAG (log)
+
+**En tant que** technicien de support,
+**Je veux** indiquer si la réponse de l'assistant m'a aidé ou non, et laisser un commentaire,
+**Afin de** faire remonter la qualité des réponses et alimenter l'amélioration du corpus et du RAG.
+
+**Comportement attendu :**
+- Sous chaque réponse, deux actions rapides : 👍 « Utile » / 👎 « Pas utile »
+- Un champ commentaire optionnel (note libre du technicien)
+- Chaque feedback est enregistré dans un **log** côté backend, avec : horodatage, question posée, sources utilisées (ids/titres), verdict (utile/pas utile), commentaire, modèle utilisé
+- Le log doit être exploitable plus tard (ex. tableau de bord, cf. US-032)
+
+**Pistes techniques :**
+- Endpoint backend `POST /feedback` qui append une ligne dans un fichier de log (JSON Lines `feedback.log` ou `.jsonl`)
+- Stockage hors `corpus/` (donnée d'exploitation, pas de patrimoine) — à définir : dossier `logs/` gitignoré
+
+**Critères d'acceptance :**
+- [ ] 👍/👎 disponibles sous chaque réponse
+- [ ] Commentaire optionnel envoyé avec le feedback
+- [ ] Chaque feedback est journalisé avec contexte (question, sources, modèle, horodatage)
+- [ ] Le log persiste entre les sessions et reste lisible/parsable
+
+---
+
+### US-045 — Types de réponse : pédagogique (long) vs procédure (court)
+
+**En tant que** technicien de support,
+**Je veux** choisir le style de réponse de l'assistant — explicatif/pédagogique ou procédure sèche en étapes,
+**Afin d'** obtenir soit une réponse détaillée qui m'aide à comprendre, soit une liste d'actions rapide quand je sais déjà ce que je fais.
+
+**Comportement attendu :**
+- Un sélecteur de **style de réponse** dans l'interface : `Procédure (court)` / `Pédagogique (long)`
+- Le style choisi ajuste le prompt système **et** la limite `max_tokens` au moment de répondre
+- `Procédure` : étapes numérotées, pas de paragraphe explicatif, réponse courte
+- `Pédagogique` : contexte, explication du pourquoi, puis étapes
+
+**Critères d'acceptance :**
+- [ ] Le sélecteur est visible et persistant pendant la session
+- [ ] Le style « Procédure » produit une réponse nettement plus courte que « Pédagogique » sur une même question
+- [ ] Le style par défaut est défini (proposition : Procédure)
 
 ---
 
@@ -109,6 +146,204 @@ Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récu
 ---
 
 ## Terminé
+
+### ✅ US-049 — Affichage soigné d'une fiche/KDoc pour le technicien
+
+**En tant que** technicien de support,
+**Je veux** que la modale de visualisation d'un document source mette en forme le frontmatter et affiche clairement la note technicien et le titre réel,
+**Afin de** lire une fiche propre et exploitable.
+
+**Comportement livré :**
+- Frontmatter parsé → bloc clés/valeurs lisible (titre non répété)
+- En-tête à deux niveaux : titre principal `fileId — vrai titre` (KDocs) ou vrai titre seul (fiches racine), + sous-titre = section du chunk cliqué
+- `section` stockée à l'indexation (`mdChunks`, `db.ts`, `Source`) jusqu'à la modale
+- Note technicien dans son bloc distinct ; `.json` et mode édition inchangés
+
+**Critères d'acceptance :**
+- [x] Le frontmatter s'affiche en bloc clés/valeurs lisible
+- [x] Le titre n'est pas affiché deux fois ; le vrai titre apparaît en en-tête (+ section en sous-titre)
+- [x] Le corps markdown et la note technicien restent correctement rendus
+- [x] Aucune régression sur les `.json` ni le mode édition
+
+**Livré le :** 13/06/2026 — branche `feature/affichage-soigne-fiche`
+
+---
+
+### ✅ US-048 — Champ « Note technicien » dédié à la génération/édition d'un KDoc
+
+**En tant que** rédacteur de KDoc,
+**Je veux** un champ de texte séparé pour les notes destinées au technicien lors de la génération ou de l'édition d'un KDoc,
+**Afin d'** ajouter facilement une zone hors-embedding (`<<<NOTE>>>`) sans la mélanger au contenu indexé.
+
+**Comportement livré :**
+- Dans `KBOffViewerModal`, deux zones : contenu indexé (grande) + note technicien (petite, optionnelle)
+- Enregistrement : recombine `contenu` + (si note) `\n\n<<<NOTE>>>\n` + `note` ; pas de marqueur parasite sans note
+- Ouverture d'un KDoc existant : `splitNote` répartit contenu/note dans les deux zones
+- La génération LLM ne remplit que la zone principale
+
+**Critères d'acceptance :**
+- [x] Deux zones distinctes (principale + note) à la génération et à l'édition d'un KDoc
+- [x] Le KDoc enregistré contient la note sous un marqueur `<<<NOTE>>>` en fin de document
+- [x] Rouvrir un KDoc avec note répartit correctement le contenu entre les deux zones
+- [x] Un KDoc sans note ne contient aucun marqueur `<<<NOTE>>>` parasite
+- [x] La note reste exclue de l'embedding et visible dans la modale de visualisation (après réindex — voir US-049)
+
+**Livré le :** 13/06/2026 — branche `feature/note-kdoc-generation`
+
+---
+
+### ✅ US-035 — Zone hors-embedding dans les fiches : notes destinées au technicien
+
+**En tant que** rédacteur de fiche corpus,
+**Je veux** pouvoir ajouter une section en bas de fiche qui ne soit pas indexée par le RAG,
+**Afin de** glisser des conseils à l'intention du technicien (ex. : comment formuler son prompt) sans polluer l'embedding.
+
+**Comportement livré :**
+- Marqueur `<<<NOTE>>>` : tout ce qui suit est exclu dès l'indexation (`mdChunks`) → ni embedding ni contexte LLM
+- La note reste visible dans la modale de visualisation, dans un bloc distinct « 💡 Note technicien »
+- Marqueur documenté par une astuce sous le textarea de création (`AdminModal`)
+- Logique factorisée dans `front/src/note.ts` (`splitNote`)
+
+**Critères d'acceptance :**
+- [x] Le marqueur est reconnu à l'indexation : le contenu après est exclu de l'embedding
+- [x] La modale de visualisation affiche la note avec un style distinct
+- [x] La note n'apparaît pas dans le contexte envoyé au LLM
+- [x] Le marqueur est documenté dans le formulaire d'édition
+
+**Livré le :** 13/06/2026 — branche `feature/zone-hors-embedding`
+
+---
+
+### ✅ US-047 — Afficher le vrai titre des KB/KDocs dans la liste des sources
+
+**En tant qu'** administrateur du corpus,
+**Je veux** voir le titre lisible d'une KB ou d'un KDoc dans la liste (et non son seul nom de fichier `KB00001.md`),
+**Afin de** savoir à quelle source j'ai affaire avant de l'ouvrir, et m'épargner des clics.
+
+**Comportement livré :**
+- `/kdocs/files` extrait un titre lisible par fichier : H1 pour les KB, frontmatter `title:` pour les KDocs, fallback nom de fichier
+- La liste affiche le titre lisible (override `references.title` › titre du fichier › nom de fichier), nom de fichier en secondaire
+- La recherche filtre sur le titre lisible → outil de recherche réellement utile
+- Le champ « Titre (optionnel) » du formulaire de statut devient un **texte fixe** affichant le titre de la source (toujours persisté dans `references.title` à l'enregistrement)
+
+**Critères d'acceptance :**
+- [x] Une KB non répertoriée affiche son titre H1 dans la liste
+- [x] Un KDoc affiche son titre de frontmatter dans la liste
+- [x] Le nom de fichier reste visible en secondaire
+- [x] La recherche filtre sur le titre lisible
+- [x] Aucune régression d'ouverture (simple/double-clic) ni des badges de statut
+
+**Livré le :** 13/06/2026 — branche `feature/titre-lisible-sources`
+
+---
+
+### ✅ US-046 — Une KB ne génère qu'un seul KDoc (lien KB ↔ KDoc dans references)
+
+**En tant qu'** administrateur du corpus,
+**Je veux** qu'une KB soit liée à un et un seul KDoc, et que double-cliquer sur une KB déjà transformée rouvre son KDoc existant dans l'éditeur,
+**Afin de** ne pas générer de doublons de KDocs pour une même KB.
+
+**Problème observé :**
+Double-clic sur une KB déjà transformée → l'éditeur de KDoc s'ouvrait **vierge** ; un « Générer » + « Enregistrer » produisait **deux KDocs pour la même KB**.
+
+**Comportement livré :**
+- Clé `kdoc` sur l'entrée KB de `references.json` (lien vers son unique KDoc)
+- Double-clic sur une KB transformée → son KDoc existant est chargé dans l'éditeur
+- L'enregistrement **met à jour** le KDoc existant (rattrapage via `source_kb` pour les données déjà en place — pas de reset nécessaire)
+- Retirer un KDoc remet à vide la clé `kdoc` de la KB source
+
+**Critères d'acceptance :**
+- [x] L'entrée KB dans `references.json` contient `kdoc` (vide par défaut)
+- [x] Double-clic sur une KB déjà transformée affiche son KDoc existant dans l'éditeur
+- [x] Régénérer/enregistrer met à jour le KDoc existant au lieu d'en créer un second
+- [x] Supprimer un KDoc remet à vide la clé `kdoc` de la KB source
+
+**Livré le :** 13/06/2026 — branche `feature/kb-kdoc-unique`
+
+---
+
+### ✅ US-044 — Génération de KDoc fidèle à la KB source
+
+**En tant qu'** administrateur du corpus,
+**Je veux** que le KDoc généré depuis une KB conserve les informations opérationnelles importantes (avertissements de sécurité, conditions préalables, consignes d'escalade, renvois vers d'autres KB),
+**Afin de** ne pas perdre d'information critique lors de la transformation KB → KDoc.
+
+**Problème observé :**
+KDOC00001 (généré depuis KB00001, 1756 car.) ne faisait que 559 caractères. Le plafond de 2200 n'était pas atteint : le LLM résumait agressivement et supprimait l'avertissement ⚠️, l'escalade N2 et les Notes. Cause = prompt de génération.
+
+**Comportement livré :**
+- Prompt de génération imposant la fidélité (sécurité, escalade, conditions, renvois conservés)
+- Sections optionnelles `## ⚠️ Précautions` et `## Notes` ajoutées au format
+- Budget relevé 2200 → 3000 caractères
+- Plusieurs procédures : principale en détail, autres mentionnées dans les Notes
+
+**Critères d'acceptance :**
+- [x] Un KDoc régénéré depuis KB00001 conserve l'avertissement, l'escalade N2 et le renvoi vers KB00002
+- [x] Le format inclut les sections Précautions/Notes uniquement quand c'est pertinent
+- [x] Aucune régression de format (frontmatter + sections KABIT respectés)
+
+**Livré le :** 13/06/2026 — branche `feature/kdoc-generation-fidele`
+
+---
+
+### ✅ US-043 — Statut « none » explicite pour une source non répertoriée
+
+**En tant qu'** administrateur du corpus,
+**Je veux** qu'une KB (ou un KDoc) absent des références s'affiche avec un statut neutre « none » plutôt qu'avec « selected » coché par défaut,
+**Afin de** ne pas croire à tort qu'un statut est déjà attribué, et pouvoir retirer une source des références en repassant son statut à « none ».
+
+**Comportement attendu :**
+- Option « none » en tête des choix de statut
+- Source sans référence → « none » coché (aucun statut attribué)
+- Source avec référence → son statut réel reste coché
+- « none » + **Enregistrer** sur une source référencée → la retire des références
+- « none » + **Enregistrer** sur une source non référencée → no-op
+
+**Critères d'acceptance :**
+- [x] Une source non répertoriée affiche « none » coché, aucun autre statut
+- [x] Enregistrer « none » sur une source référencée la supprime de `references.json`
+- [x] Enregistrer « none » sur une source non référencée est un no-op (aucune entrée créée)
+- [x] Attribuer un vrai statut puis Enregistrer fonctionne comme avant (aucune régression)
+
+**Livré le :** 13/06/2026 — branche `feature/kb-statut-none`
+
+---
+
+### ✅ US-042 — Corpus : séparation patrimoine versionné / bac à sable jetable
+
+**En tant que** Product Owner,
+**Je veux** que mes expérimentations sur le corpus (KDocs générés, changements de statut, annotations) ne polluent pas le dépôt git,
+**Afin de** pouvoir tester librement tout en gardant un patrimoine de référence propre et versionné.
+
+**Comportement attendu :**
+- `corpus-seed/` versionné = patrimoine figé (fiches racine + `KBOffs/` annotés + `references.seed.json` vierge)
+- `corpus/` gitignoré = bac à sable de l'application, jetable
+- Script `npm run corpus:reset` (depuis `back/`) qui régénère `corpus/` depuis le seed
+
+**Critères d'acceptance :**
+- [x] `corpus/` retiré du suivi git et ajouté au `.gitignore`
+- [x] `corpus-seed/` contient le patrimoine, dont les annotations `Correction` (vérité-terrain de la démo : Correcte / doublon / Obsolète / Erronée / dangereuse)
+- [x] `npm run corpus:reset` régénère `corpus/` ; `-- --force` exigé pour écraser un corpus existant (garde-fou)
+- [x] Documenté dans le `README` et `CLAUDE.md`
+
+**Livré le :** 13/06/2026 — branche `feature/kb-auto-done`
+
+---
+
+### ✅ US-041 — KB source au statut « done » automatique à la génération du KDoc
+
+**En tant qu'** administrateur,
+**Je veux** que la KB source passe automatiquement au statut « done » dès qu'un KDoc est généré et enregistré, même si elle n'avait pas encore de statut,
+**Afin de** voir d'un coup d'œil quelles KB ont déjà produit un KDoc, sans marquage manuel.
+
+**Critères d'acceptance :**
+- [x] À l'enregistrement d'un KDoc, la KB source passe à « done » avec horodatage
+- [x] Si la KB n'avait pas encore d'entrée dans `references.json`, elle est créée avec le statut « done »
+- [x] Le badge de statut se met à jour automatiquement dans la modale Sources
+
+**Livré le :** 13/06/2026 — branche `feature/kb-auto-done`
+
+---
 
 ### ✅ ÉPIQUE — Pipeline KB → KDoc : traitement des bases de connaissance officielles
 

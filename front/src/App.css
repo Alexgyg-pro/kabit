@@ -560,6 +560,69 @@
 }
 .modal-body p { margin: 0 0 8px; }
 .modal-body strong { color: var(--text-primary); font-weight: 600; }
+
+/* En-tête de la modale document : vrai titre + section en sous-titre */
+.doc-viewer-titlebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.doc-viewer-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--accent-link);
+  line-height: 1.3;
+}
+.doc-viewer-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Métadonnées de fiche (frontmatter) — bloc clés/valeurs lisible */
+.doc-meta {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+.doc-meta-row {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+}
+.doc-meta-key {
+  flex: 0 0 130px;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+.doc-meta-val {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Note technicien — zone hors-embedding (affichée mais non indexée) */
+.doc-note {
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: var(--bg-deep);
+  border: 1px dashed var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+}
+.doc-note-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-link);
+  margin-bottom: 6px;
+}
+.doc-note p:last-child { margin-bottom: 0; }
 .modal-body em { color: var(--text-secondary); font-style: italic; }
 .modal-body ul, .modal-body ol {
   padding-left: 20px;
@@ -1377,6 +1440,13 @@
   border: 1px solid var(--badge-green-text, #4ade80);
 }
 
+.kdocs-selected-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .kdocs-status-options {
   display: flex;
   gap: 1.5rem;
@@ -1518,4 +1588,20 @@
   min-height: 300px;
   font-family: monospace;
   font-size: 0.82rem;
+}
+
+.kdoc-note-label {
+  display: block;
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-link);
+}
+
+.kdoc-note-textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-family: monospace;
+  font-size: 0.82rem;
+  border-left: 3px solid var(--accent);
 }

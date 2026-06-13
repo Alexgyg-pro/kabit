@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { NOTE_MARKER, splitNote } from './note';
 
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
 const SYSTEM_PROMPT = `Tu es un assistant de rédaction technique pour une base de connaissance IT support.
 
-Ta tâche : transformer la KB source en une fiche de procédure au format KABIT.
+Ta tâche : transformer la KB source en une fiche de procédure au format KABIT, en restant FIDÈLE à son contenu.
 
 FORMAT ATTENDU — respecte-le impérativement, y compris le frontmatter :
 ---
@@ -20,17 +21,24 @@ statut: Publié
 ## Symptômes / Contexte
 [description courte du problème]
 
+## ⚠️ Précautions
+[à inclure UNIQUEMENT si la KB contient un avertissement, un risque ou une condition préalable — reprends-le fidèlement ; sinon, omets cette section]
+
 ## Procédure
 [étapes numérotées, claires et actionnables]
 
 ## Vérification
-[comment confirmer que le problème est résolu]
+[comment confirmer que le problème est résolu, Y COMPRIS la consigne d'escalade si la KB en mentionne une]
+
+## Notes
+[à inclure UNIQUEMENT si la KB contient des remarques utiles ou des renvois vers d'autres KB — sinon, omets cette section]
 
 RÈGLES :
-- Vocabulaire technicien N1 IT, phrases courtes
+- Vocabulaire technicien N1 IT, phrases claires
+- Reformule pour la clarté, mais ne SUPPRIME aucune information opérationnelle : avertissements de sécurité, conditions préalables, consignes d'escalade, renvois vers d'autres KB
 - Aucune mention d'auteur, de ServiceNow, de codes internes KB
-- Ne jamais dépasser 2200 caractères au total (frontmatter inclus)
-- Si la KB contient plusieurs procédures, ne garder que la principale
+- Ne jamais dépasser 3000 caractères au total (frontmatter inclus)
+- Si la KB contient plusieurs procédures distinctes, garde la principale en détail et mentionne brièvement les autres dans les Notes
 
 Réponds uniquement avec le contenu de la fiche (frontmatter inclus), sans aucun commentaire.`;
 
@@ -45,20 +53,22 @@ interface Props {
   groqApiKey: string;
   groqModel: string;
   file: KDocsFile;
+  existingKdocPath?: string;   // KDoc déjà généré pour cette KB (chargé dans l'éditeur)
   onClose: () => void;
   onSaved: () => void;
 }
 
-export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file, onClose, onSaved }: Props) {
+export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file, existingKdocPath, onClose, onSaved }: Props) {
   const [content, setContent]       = useState('');
   const [loading, setLoading]       = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated]   = useState('');
+  const [note, setNote]             = useState('');   // note technicien hors-embedding (<<<NOTE>>>)
   const [saving, setSaving]         = useState(false);
   const [saved, setSaved]           = useState(false);
   const [msg, setMsg]               = useState('');
 
-  useEffect(() => { fetchContent(); }, []);
+  useEffect(() => { fetchContent(); if (existingKdocPath) loadExistingKdoc(); }, []);
 
   async function fetchContent() {
     try {
@@ -72,11 +82,26 @@ export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file,
     }
   }
 
+  // Cette KB a déjà un KDoc : on le charge dans l'éditeur (évite un doublon à l'enregistrement)
+  async function loadExistingKdoc() {
+    try {
+      const res = await fetch(`${backend}/kdocs/file?path=${encodeURIComponent(existingKdocPath!)}`);
+      if (res.ok) {
+        // Répartir le KDoc existant : contenu indexé dans la zone principale, note dans sa zone
+        const { main, note: existingNote } = splitNote((await res.text()).trim());
+        setGenerated(main);
+        setNote(existingNote);
+        setMsg('KDoc existant chargé — modifie et enregistre, ou clique « Regénérer ».');
+      }
+    } catch { /* le KDoc lié est introuvable : on laissera générer un nouveau */ }
+  }
+
   async function handleGenerate() {
     if (!groqApiKey) { setMsg('Clé API Groq manquante.'); return; }
     setGenerating(true);
     setMsg('');
     setGenerated('');
+    setSaved(false);
     try {
       const today = new Date().toLocaleDateString('fr-FR');
       const res = await fetch(GROQ_ENDPOINT, {
@@ -105,11 +130,15 @@ export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file,
   async function handleSave() {
     setSaving(true);
     setMsg('');
+    // Recombiner contenu indexé + note hors-embedding (marqueur seulement si une note existe)
+    const fullContent = note.trim()
+      ? `${generated.trim()}\n\n${NOTE_MARKER}\n${note.trim()}`
+      : generated.trim();
     try {
       const res = await fetch(`${backend}/kdocs/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: generated, sourceKBPath: file.path }),
+        body: JSON.stringify({ content: fullContent, sourceKBPath: file.path }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -168,7 +197,17 @@ export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file,
                   className="admin-textarea kdoc-generated-textarea"
                   value={generated}
                   onChange={(e) => setGenerated(e.target.value)}
-                  rows={18}
+                  rows={16}
+                />
+                <label className="kdoc-note-label">
+                  💡 Note technicien — hors-embedding, optionnelle
+                </label>
+                <textarea
+                  className="admin-textarea kdoc-note-textarea"
+                  placeholder="Conseils pour le technicien (ex. : comment formuler sa question). Exclus du RAG, ajoutés en fin de KDoc sous <<<NOTE>>>."
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  rows={4}
                 />
                 <div className="admin-save-row">
                   {!saved && (

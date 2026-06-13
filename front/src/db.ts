@@ -6,6 +6,7 @@ export interface DocRecord {
   title: string;
   content: string;     // fichier entier — pour affichage et édition
   chunkText?: string;  // texte du chunk — envoyé au LLM (absent = utiliser content)
+  section?: string;    // titre de la section (##) d'où provient le chunk — sous-titre d'affichage
   embedding: number[];
   timestamp: number;
 }
