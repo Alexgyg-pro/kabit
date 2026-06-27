@@ -10,3 +10,6 @@ DEMO.md
 # corpus/ = bac à sable d'exécution de l'app (jetable).
 # Le patrimoine versionné vit dans corpus-seed/ ; régénérer avec « npm run corpus:reset ».
 /corpus/
+
+# Plan de pilotage local — jamais committé
+AIPLAN.md
