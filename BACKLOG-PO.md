@@ -4,6 +4,31 @@
 
 ## À faire
 
+### ✅ US-052 — Modale admin en onglets
+
+**En tant qu'** administrateur,
+**Je veux** que la modale d'administration soit organisée en onglets plutôt qu'en une longue liste de sections empilées,
+**Afin de** ne pas avoir à scroller sur toute la hauteur pour accéder à une section.
+
+**Contexte :**
+La modale admin comptait 6 sections empilées verticalement (Corpus, Fiches du corpus, Catalogue IT, Profil technicien, Sources, Pré-prompt). US-019 (Révision du UX) était trop générique pour couvrir ce besoin précis.
+
+**Comportement livré :**
+- 3 onglets, regroupement logique des 6 sections :
+  - **Corpus** : ajout de fiche, liste des fiches du corpus, catalogue IT
+  - **Sources KDocs** : gestionnaire de sources (KBOffs/KDocs)
+  - **Préférences** : profil technicien, pré-prompt
+- Le bouton « Réindexer le corpus » reste visible en permanence au-dessus des onglets (action globale, pas liée à un seul onglet)
+
+**Critères d'acceptance :**
+- [x] Les 6 sections d'origine sont accessibles sans régression fonctionnelle
+- [x] Un seul onglet est affiché à la fois, plus besoin de scroller sur toute la hauteur
+- [x] Le bouton de réindexation reste accessible depuis n'importe quel onglet
+
+**Livré le :** 13/09/2026 — branche `feature/admin-onglets`
+
+---
+
 ### US-050 — Créer un KDoc autonome (sans KB source)
 
 **En tant que** rédacteur de la base de connaissance,

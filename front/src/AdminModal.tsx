@@ -54,6 +54,14 @@ export default function AdminModal({
   const [showCatalogue, setShowCatalogue] = useState(false);
   const [showKDocs, setShowKDocs] = useState(false);
 
+  type AdminTab = 'corpus' | 'sources' | 'preferences';
+  const [activeTab, setActiveTab] = useState<AdminTab>('corpus');
+  const TABS: { id: AdminTab; label: string }[] = [
+    { id: 'corpus',      label: 'Corpus' },
+    { id: 'sources',     label: 'Sources KDocs' },
+    { id: 'preferences', label: 'Préférences' },
+  ];
+
   async function fetchCatalogue() {
     try {
       const res = await fetch(`${backend}/corpus/file?path=catalogue-it.json`);
@@ -136,23 +144,37 @@ export default function AdminModal({
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
+        <div className="admin-reindex-row admin-reindex-row--global">
+          <button
+            className={`btn-reindex ${needsReindex ? 'pulse' : ''}`}
+            onClick={onReindex}
+          >
+            Réindexer le corpus
+          </button>
+          {needsReindex && (
+            <span className="admin-reindex-hint">Nouveau fichier en attente d'indexation</span>
+          )}
+        </div>
+
+        <div className="admin-tabs">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              className={`admin-tab ${activeTab === t.id ? 'admin-tab--active' : ''}`}
+              onClick={() => setActiveTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
         <div className="modal-body admin-modal-body">
 
-          {/* ── Section Corpus ───────────────────────────────────────── */}
-          <section className="admin-section">
-            <h2 className="admin-section-title">Corpus</h2>
+          {activeTab === 'corpus' && <>
 
-            <div className="admin-reindex-row">
-              <button
-                className={`btn-reindex ${needsReindex ? 'pulse' : ''}`}
-                onClick={onReindex}
-              >
-                Réindexer le corpus
-              </button>
-              {needsReindex && (
-                <span className="admin-reindex-hint">Nouveau fichier en attente d'indexation</span>
-              )}
-            </div>
+          {/* ── Section Ajouter une fiche ────────────────────────────── */}
+          <section className="admin-section">
+            <h2 className="admin-section-title">Ajouter une fiche</h2>
 
             <div className="admin-form">
               <label className="admin-label">Ajouter une procédure</label>
@@ -253,6 +275,25 @@ export default function AdminModal({
             )}
           </section>
 
+          </>}
+
+          {activeTab === 'sources' && <>
+
+          {/* ── Section Sources ─────────────────────────────────────── */}
+          <section className="admin-section">
+            <h2 className="admin-section-title">Sources</h2>
+            <p className="admin-section-desc">
+              Gérez les KB sources (KBOffs) et les KDocs générés, et leur statut de référencement.
+            </p>
+            <button className="btn-cat-open" onClick={() => setShowKDocs(true)}>
+              Ouvrir le gestionnaire de sources
+            </button>
+          </section>
+
+          </>}
+
+          {activeTab === 'preferences' && <>
+
           {/* ── Section Profil technicien ────────────────────────────── */}
           <section className="admin-section">
             <h2 className="admin-section-title">Profil technicien</h2>
@@ -268,17 +309,6 @@ export default function AdminModal({
                 <option key={l.id} value={l.id}>{l.label}</option>
               ))}
             </select>
-          </section>
-
-          {/* ── Section Sources ─────────────────────────────────────── */}
-          <section className="admin-section">
-            <h2 className="admin-section-title">Sources</h2>
-            <p className="admin-section-desc">
-              Gérez les KB sources (KBOffs) et les KDocs générés, et leur statut de référencement.
-            </p>
-            <button className="btn-cat-open" onClick={() => setShowKDocs(true)}>
-              Ouvrir le gestionnaire de sources
-            </button>
           </section>
 
           {/* ── Section Pré-prompt ───────────────────────────────────── */}
@@ -300,6 +330,8 @@ export default function AdminModal({
               {promptMsg && <span className="admin-msg">{promptMsg}</span>}
             </div>
           </section>
+
+          </>}
 
         </div>
 

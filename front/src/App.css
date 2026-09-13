@@ -784,6 +784,43 @@
   gap: 12px;
 }
 
+.admin-reindex-row--global {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Onglets de la modale admin */
+.admin-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 8px 18px 0;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.admin-tab {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.admin-tab:hover { color: var(--text-primary); background: var(--border); }
+.admin-tab--active {
+  color: var(--text-primary);
+  border-color: var(--border);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--bg-surface);
+  margin-bottom: -1px;
+  font-weight: 600;
+}
+
 .admin-reindex-hint {
   font-size: 0.82rem;
   color: var(--code-text);
