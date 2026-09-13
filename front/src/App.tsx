@@ -266,6 +266,16 @@ export default function App() {
     setTechLevel(level);
   }
 
+  const [kboldEnabled, setKboldEnabled] = useState<boolean>(
+    () => localStorage.getItem('kboldEnabled') !== 'false'
+  );
+
+  function handleToggleKbold(enabled: boolean) {
+    localStorage.setItem('kboldEnabled', String(enabled));
+    setKboldEnabled(enabled);
+    runIndexing(enabled);
+  }
+
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyDepth, setHistoryDepth] = useState('0');
   const [copied, setCopied] = useState(false);
@@ -306,19 +316,22 @@ export default function App() {
   }
 
   // ── Indexation ────────────────────────────────────────────────────────────
-  const runIndexing = useCallback(async () => {
+  // kboldOverride : évite de lire un `kboldEnabled` périmé quand on réindexe
+  // juste après avoir basculé le switch (setState est asynchrone).
+  const runIndexing = useCallback(async (kboldOverride?: boolean) => {
+    const useKbold = kboldOverride ?? kboldEnabled;
     setAppStatus('indexing');
     setNeedsReindex(false);
     try {
       const [listRes, kboldRes, kdocsRes] = await Promise.all([
         fetch(`${BACKEND}/corpus/list`),
-        fetch(`${BACKEND}/corpus/kbold/list`),
+        useKbold ? fetch(`${BACKEND}/corpus/kbold/list`) : Promise.resolve(null),
         fetch(`${BACKEND}/kdocs/list`),
       ]);
       if (!listRes.ok) throw new Error('Backend inaccessible');
 
       const corpusFiles: { path: string; title: string }[] = await listRes.json();
-      const kboldFiles: { path: string; title: string }[]  = kboldRes.ok ? await kboldRes.json() : [];
+      const kboldFiles: { path: string; title: string }[]  = kboldRes?.ok ? await kboldRes.json() : [];
       const kdocsFiles: { path: string; title: string }[]  = kdocsRes.ok ? await kdocsRes.json() : [];
       const allFiles = [...corpusFiles, ...kboldFiles, ...kdocsFiles];
 
@@ -382,7 +395,7 @@ export default function App() {
       setStatusMsg(`Erreur indexation : ${msg}`);
       setAppStatus('error');
     }
-  }, []);
+  }, [kboldEnabled]);
 
   // ── Question → RAG → Groq ────────────────────────────────────────────────
   async function handleAsk() {
@@ -643,7 +656,7 @@ export default function App() {
 
           <button
             className={`btn-reindex ${needsReindex ? 'pulse' : ''}`}
-            onClick={runIndexing}
+            onClick={() => runIndexing()}
             disabled={appStatus === 'indexing'}
           >
             Réindexer
@@ -795,6 +808,8 @@ export default function App() {
           techLevel={techLevel}
           techLevels={TECH_LEVELS}
           onTechLevelChange={handleTechLevelChange}
+          kboldEnabled={kboldEnabled}
+          onToggleKbold={handleToggleKbold}
           onReindex={() => { runIndexing(); setShowAdmin(false); }}
           onSave={handleAdminSave}
           onSaveSystemPrompt={handleSaveSystemPrompt}

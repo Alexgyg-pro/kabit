@@ -791,6 +791,18 @@
   flex-shrink: 0;
 }
 
+.admin-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.admin-toggle input { cursor: pointer; }
+
 /* Onglets de la modale admin */
 .admin-tabs {
   display: flex;

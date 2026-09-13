@@ -4,6 +4,28 @@
 
 ## À faire
 
+### ✅ US-053 — Switch KBOld actif/inactif + onglet Catalogue dédié
+
+**En tant qu'** administrateur préparant une démo,
+**Je veux** pouvoir désactiver temporairement `KBOld/` de l'indexation RAG sans le supprimer, et retrouver le Catalogue IT dans son propre onglet,
+**Afin de** tester la pertinence du RAG avec seulement quelques fiches `KDocs/`, tout en gardant `KBOld/` actif par défaut pour des réponses pertinentes en présentation.
+
+**Comportement livré :**
+- Switch « KBOld actif » dans la barre globale de la modale admin (visible quel que soit l'onglet), coché par défaut
+- Basculer le switch relance immédiatement l'indexation avec/sans `KBOld/`, sans fermer la modale
+- Préférence persistée en `localStorage` (`kboldEnabled`)
+- Le Catalogue IT quitte l'onglet Corpus pour son propre onglet **Catalogue IT**
+
+**Critères d'acceptance :**
+- [x] KBOld actif par défaut au premier chargement
+- [x] Désactiver le switch retire les fiches KBOld de l'index sans les supprimer du disque
+- [x] Réactiver le switch les réintègre immédiatement
+- [x] Le Catalogue IT est accessible depuis un onglet séparé de Corpus
+
+**Livré le :** 13/09/2026 — branche `feature/admin-kbold-switch-catalogue-tab`
+
+---
+
 ### ✅ US-052 — Modale admin en onglets
 
 **En tant qu'** administrateur,

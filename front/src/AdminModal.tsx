@@ -12,6 +12,8 @@ interface AdminModalProps {
   techLevel: string;
   techLevels: { id: string; label: string }[];
   onTechLevelChange: (level: string) => void;
+  kboldEnabled: boolean;
+  onToggleKbold: (enabled: boolean) => void;
   onReindex: () => void;
   onSave: (title: string, content: string) => Promise<{ path: string }>;
   onSaveSystemPrompt: (content: string) => Promise<void>;
@@ -29,6 +31,8 @@ export default function AdminModal({
   techLevel,
   techLevels,
   onTechLevelChange,
+  kboldEnabled,
+  onToggleKbold,
   onReindex,
   onSave,
   onSaveSystemPrompt,
@@ -54,10 +58,11 @@ export default function AdminModal({
   const [showCatalogue, setShowCatalogue] = useState(false);
   const [showKDocs, setShowKDocs] = useState(false);
 
-  type AdminTab = 'corpus' | 'sources' | 'preferences';
+  type AdminTab = 'corpus' | 'catalogue' | 'sources' | 'preferences';
   const [activeTab, setActiveTab] = useState<AdminTab>('corpus');
   const TABS: { id: AdminTab; label: string }[] = [
     { id: 'corpus',      label: 'Corpus' },
+    { id: 'catalogue',   label: 'Catalogue IT' },
     { id: 'sources',     label: 'Sources KDocs' },
     { id: 'preferences', label: 'Préférences' },
   ];
@@ -158,6 +163,14 @@ export default function AdminModal({
           {needsReindex && (
             <span className="admin-reindex-hint">Nouveau fichier en attente d'indexation</span>
           )}
+          <label className="admin-toggle" title="Inclure KBOld/ dans l'indexation RAG">
+            <input
+              type="checkbox"
+              checked={kboldEnabled}
+              onChange={(e) => onToggleKbold(e.target.checked)}
+            />
+            KBOld actif
+          </label>
         </div>
 
         <div className="admin-tabs">
@@ -253,6 +266,10 @@ export default function AdminModal({
               onSelect={(path, title) => { onOpenDoc(path, title); onClose(); }}
             />
           </section>
+
+          </>}
+
+          {activeTab === 'catalogue' && <>
 
           {/* ── Section Catalogue IT ────────────────────────────────── */}
           <section className="admin-section">
