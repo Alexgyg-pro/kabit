@@ -93,13 +93,25 @@ Les embeddings sont mis en cache dans IndexedDB — les lancements suivants sont
 
 ---
 
-## Ajouter des documents au corpus
+## Interface d'administration
+
+Accessible via le bouton **⚙ Administration** dans l'en-tête (rôle Administrateur requis, cf. sélecteur de rôle). La modale est organisée en 3 onglets ; le bouton **Réindexer le corpus** reste visible en permanence au-dessus, quel que soit l'onglet actif.
+
+| Onglet | Contenu |
+|--------|---------|
+| **Corpus** | Formulaire d'ajout de fiche · liste des fiches existantes (clic pour ouvrir/éditer) · éditeur structuré du catalogue IT |
+| **Sources KDocs** | Gestionnaire du pipeline KB → KDoc : fichiers `KBOffs/` et `KDocs/`, statuts de référencement |
+| **Préférences** | Niveau technicien (adapte les conseils d'escalade) · pré-prompt système (`system-prompt.md`) |
+
+> ⚠️ **Démo uniquement :** la création, l'édition et l'affichage de fiches dans l'onglet **Corpus** opèrent sur `KBOld/` — un corpus de démonstration fictif. Dans un usage réel, la base de connaissances de l'entreprise reste la source unique (voir [Corpus : patrimoine vs bac à sable](#corpus--patrimoine-vs-bac-à-sable)) ; ces fiches n'ont pas vocation à être éditées depuis KABIT.
+
+### Ajouter des documents au corpus
 
 **Option A — Directement dans le dossier :**
-Copier des fichiers `.md` ou `.json` dans `corpus/`, puis cliquer sur **Réindexer** dans l'interface.
+Copier des fichiers `.md` dans `corpus/KBOld/` (ou `.json` à la racine), puis cliquer sur **Réindexer** dans l'interface.
 
-**Option B — Via le panneau Administration :**
-Déplier la section **Administration** en bas de la page, remplir le titre et le contenu, cliquer **Sauvegarder**, puis **Réindexer**.
+**Option B — Via l'onglet Corpus de l'admin :**
+Remplir le titre et le contenu dans le formulaire, cliquer **Sauvegarder**, puis **Réindexer**.
 
 ---
 
