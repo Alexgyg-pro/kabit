@@ -161,11 +161,14 @@ app.post('/corpus/add', (req, res) => {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '') + '.md';
 
-    const fullPath = path.join(CORPUS_DIR, filename);
+    const kboldDir = path.join(CORPUS_DIR, 'KBOld');
+    fs.mkdirSync(kboldDir, { recursive: true });
+    const fullPath = path.join(kboldDir, filename);
     const fullContent = `# ${title}\n\n${content}`;
     fs.writeFileSync(fullPath, fullContent, 'utf-8');
 
-    res.json({ success: true, path: filename, message: `Fichier ${filename} créé` });
+    const relPath = `KBOld/${filename}`;
+    res.json({ success: true, path: relPath, message: `Fichier ${relPath} créé` });
   } catch (err) {
     console.error('Erreur /corpus/add:', err);
     res.status(500).json({ error: err.message });

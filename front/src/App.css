@@ -747,6 +747,7 @@
 /* ── Modale admin ────────────────────────────────────────────────────────── */
 .admin-modal-card {
   max-width: 640px;
+  height: 80vh;
 }
 
 .admin-modal-body {

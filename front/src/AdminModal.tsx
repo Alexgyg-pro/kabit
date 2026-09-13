@@ -71,10 +71,14 @@ export default function AdminModal({
 
   async function fetchMdFiles() {
     try {
-      const res = await fetch(`${backend}/corpus/list`);
+      const [res, kboldRes] = await Promise.all([
+        fetch(`${backend}/corpus/list`),
+        fetch(`${backend}/corpus/kbold/list`),
+      ]);
       if (!res.ok) return;
       const files: { path: string; title: string }[] = await res.json();
-      setMdFiles(files.filter(f => f.path.endsWith('.md')).sort((a, b) => a.title.localeCompare(b.title)));
+      const kboldFiles: { path: string; title: string }[] = kboldRes.ok ? await kboldRes.json() : [];
+      setMdFiles([...files, ...kboldFiles].filter(f => f.path.endsWith('.md')).sort((a, b) => a.title.localeCompare(b.title)));
     } catch { /* backend absent */ }
   }
 
