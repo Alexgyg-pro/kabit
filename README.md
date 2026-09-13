@@ -95,11 +95,12 @@ Les embeddings sont mis en cache dans IndexedDB — les lancements suivants sont
 
 ## Interface d'administration
 
-Accessible via le bouton **⚙ Administration** dans l'en-tête (rôle Administrateur requis, cf. sélecteur de rôle). La modale est organisée en 3 onglets ; le bouton **Réindexer le corpus** reste visible en permanence au-dessus, quel que soit l'onglet actif.
+Accessible via le bouton **⚙ Administration** dans l'en-tête (rôle Administrateur requis, cf. sélecteur de rôle). La modale est organisée en 4 onglets ; une barre globale reste visible en permanence au-dessus, quel que soit l'onglet actif : le bouton **Réindexer le corpus**, et un switch **KBOld actif** (coché par défaut) pour inclure ou non `KBOld/` dans l'indexation RAG — utile pour tester la pertinence du RAG avec seulement quelques `KDocs/`, sans supprimer `KBOld/`.
 
 | Onglet | Contenu |
 |--------|---------|
-| **Corpus** | Formulaire d'ajout de fiche · liste des fiches existantes (clic pour ouvrir/éditer) · éditeur structuré du catalogue IT |
+| **Corpus** | Formulaire d'ajout de fiche · liste des fiches existantes (clic pour ouvrir/éditer) |
+| **Catalogue IT** | Éditeur structuré de `catalogue-it.json` (services, matériel, applications, outils) |
 | **Sources KDocs** | Gestionnaire du pipeline KB → KDoc : fichiers `KBOffs/` et `KDocs/`, statuts de référencement |
 | **Préférences** | Niveau technicien (adapte les conseils d'escalade) · pré-prompt système (`system-prompt.md`) |
 
@@ -200,9 +201,11 @@ kabit/
 ├── corpus-seed/            # Patrimoine versionné (seed du corpus)
 │   ├── KBOld/                       # Anciennes fiches KB officielles (indexées)
 │   ├── KBOffs/                      # KB officielles brutes, en attente de tri
-│   └── KDocs/                       # KDocs déjà générés et validés
+│   └── KDocs/                       # KDocs promus au patrimoine
 ├── corpus/                 # Bac à sable de l'app — GITIGNORÉ (recréé par corpus:reset)
-│   └── KBOld/                       # Copie de travail des fiches KBOld (indexées)
+│   ├── KBOld/                       # Copie de travail des fiches KBOld (indexées)
+│   ├── KBOffs/                      # Copie de travail (non indexée pour le RAG)
+│   └── KDocs/                       # Copie de travail des KDocs (indexés)
 └── BACKLOG-PO.md           # Backlog Product Owner
 ```
 
