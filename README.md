@@ -109,8 +109,10 @@ Le corpus est séparé en deux dossiers :
 
 | Dossier | Rôle | Versionné ? |
 |---------|------|-------------|
-| **`corpus-seed/`** | Patrimoine figé : fiches racine + `KBOffs/` (avec leurs annotations) + `references.seed.json` vierge. Source de vérité. | ✅ Oui |
+| **`corpus-seed/`** | Patrimoine figé : `KBOld/` + `KBOffs/` (avec leurs annotations) + catalogue racine + `references.seed.json` vierge. Source de vérité. | ✅ Oui |
 | **`corpus/`** | Bac à sable de l'application : KDocs générés, statuts, expérimentations. Jetable. | ❌ Non (gitignoré) |
+
+À la racine de `corpus/` ne restent que le catalogue matériel (`catalogue-it.json`/`.md`) et `references.json` (bookkeeping du pipeline KDocs). Les anciennes fiches KB « officielles » (héritées du principe initial d'un corpus dédié, abandonné au profit d'une base de connaissances unique côté entreprise) vivent dans **`KBOld/`** — toujours indexées pour le RAG, comme avant leur déplacement.
 
 Ainsi, **expérimenter dans l'app ne pollue jamais git**.
 
@@ -148,7 +150,9 @@ kabit/
 │   └── scripts/
 │       └── corpus-reset.js # Régénère corpus/ depuis corpus-seed/
 ├── corpus-seed/            # Patrimoine versionné (seed du corpus)
+│   └── KBOld/                       # Anciennes fiches KB officielles (indexées)
 ├── corpus/                 # Bac à sable de l'app — GITIGNORÉ (recréé par corpus:reset)
+│   └── KBOld/                       # Copie de travail des fiches KBOld (indexées)
 └── BACKLOG-PO.md           # Backlog Product Owner
 ```
 

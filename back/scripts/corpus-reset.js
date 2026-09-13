@@ -3,7 +3,7 @@
  * corpus-reset — recrée le dossier de travail corpus/ à partir du patrimoine
  * versionné corpus-seed/.
  *
- * corpus-seed/  = source de vérité, figée et commitée (fiches racine + KBOffs/).
+ * corpus-seed/  = source de vérité, figée et commitée (KBOld/ + KBOffs/ + catalogue).
  * corpus/       = bac à sable de l'application, gitignoré et jetable.
  *
  * Usage :
@@ -68,11 +68,15 @@ fs.writeFileSync(path.join(CORPUS, 'references.json'), EMPTY_REFERENCES, 'utf-8'
 fs.mkdirSync(path.join(CORPUS, 'KDocs'), { recursive: true });
 
 const fiches = fs.readdirSync(CORPUS).filter((f) => f.endsWith('.md')).length;
+const kbold = fs.existsSync(path.join(CORPUS, 'KBOld'))
+  ? fs.readdirSync(path.join(CORPUS, 'KBOld')).length
+  : 0;
 const kboffs = fs.existsSync(path.join(CORPUS, 'KBOffs'))
   ? fs.readdirSync(path.join(CORPUS, 'KBOffs')).length
   : 0;
 
 console.log('✅ corpus/ régénéré depuis corpus-seed/');
-console.log(`   • ${fiches} fiches racine`);
+console.log(`   • ${fiches} fiches racine (catalogue)`);
+console.log(`   • ${kbold} fichiers KBOld/`);
 console.log(`   • ${kboffs} fichiers KBOffs/`);
 console.log('   • references.json vierge, KDocs/ vide');

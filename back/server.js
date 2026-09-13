@@ -78,15 +78,25 @@ app.get('/corpus/list', (req, res) => {
   }
 });
 
-// GET /corpus/file?path=file.md — retourne le contenu d'un fichier
+// Résout un path de /corpus/file en chemin disque sûr.
+// Racine ("file.md") ou sous-dossier whitelisté ("KBOld/file.md") — jamais de traversal.
+const CORPUS_SUBFOLDERS = ['KBOld'];
+function resolveCorpusFilePath(filePath) {
+  const subfolder = CORPUS_SUBFOLDERS.find(d => filePath.startsWith(d + '/'));
+  if (subfolder) {
+    const filename = path.basename(filePath.slice(subfolder.length + 1));
+    return path.join(CORPUS_DIR, subfolder, filename);
+  }
+  return path.join(CORPUS_DIR, path.basename(filePath));
+}
+
+// GET /corpus/file?path=file.md — retourne le contenu d'un fichier (racine ou KBOld/)
 app.get('/corpus/file', (req, res) => {
   try {
     const filePath = req.query.path;
     if (!filePath) return res.status(400).json({ error: 'Paramètre path manquant' });
 
-    // Sécurité : empêcher path traversal
-    const safePath = path.basename(filePath);
-    const fullPath = path.join(CORPUS_DIR, safePath);
+    const fullPath = resolveCorpusFilePath(filePath);
 
     if (!fs.existsSync(fullPath)) {
       return res.status(404).json({ error: 'Fichier introuvable' });
@@ -99,15 +109,14 @@ app.get('/corpus/file', (req, res) => {
   }
 });
 
-// PUT /corpus/file — met à jour le contenu d'un fichier existant
+// PUT /corpus/file — met à jour le contenu d'un fichier existant (racine ou KBOld/)
 app.put('/corpus/file', (req, res) => {
   try {
     const { path: filePath, content } = req.body;
     if (!filePath || typeof content !== 'string') {
       return res.status(400).json({ error: 'path et content requis' });
     }
-    const safePath = path.basename(filePath);
-    const fullPath = path.join(CORPUS_DIR, safePath);
+    const fullPath = resolveCorpusFilePath(filePath);
     if (!fs.existsSync(fullPath)) {
       return res.status(404).json({ error: 'Fichier introuvable' });
     }
@@ -115,6 +124,25 @@ app.put('/corpus/file', (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Erreur PUT /corpus/file:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /corpus/kbold/list — liste les anciennes fiches KB officielles déplacées dans KBOld/
+app.get('/corpus/kbold/list', (req, res) => {
+  try {
+    const dirPath = path.join(CORPUS_DIR, 'KBOld');
+    if (!fs.existsSync(dirPath)) return res.json([]);
+    const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.md'));
+    const list = files.map(file => {
+      const content = fs.readFileSync(path.join(dirPath, file), 'utf-8');
+      const h1 = content.match(/^#\s+(.+)/m);
+      const title = h1 ? h1[1].trim() : file.replace(/\.md$/, '');
+      return { path: `KBOld/${file}`, title };
+    });
+    res.json(list);
+  } catch (err) {
+    console.error('Erreur GET /corpus/kbold/list:', err);
     res.status(500).json({ error: err.message });
   }
 });

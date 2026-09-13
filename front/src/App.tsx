@@ -310,15 +310,17 @@ export default function App() {
     setAppStatus('indexing');
     setNeedsReindex(false);
     try {
-      const [listRes, kdocsRes] = await Promise.all([
+      const [listRes, kboldRes, kdocsRes] = await Promise.all([
         fetch(`${BACKEND}/corpus/list`),
+        fetch(`${BACKEND}/corpus/kbold/list`),
         fetch(`${BACKEND}/kdocs/list`),
       ]);
       if (!listRes.ok) throw new Error('Backend inaccessible');
 
       const corpusFiles: { path: string; title: string }[] = await listRes.json();
+      const kboldFiles: { path: string; title: string }[]  = kboldRes.ok ? await kboldRes.json() : [];
       const kdocsFiles: { path: string; title: string }[]  = kdocsRes.ok ? await kdocsRes.json() : [];
-      const allFiles = [...corpusFiles, ...kdocsFiles];
+      const allFiles = [...corpusFiles, ...kboldFiles, ...kdocsFiles];
 
       if (allFiles.length === 0) {
         setStatusMsg('Corpus vide — ajoutez des procédures via l\'admin');
