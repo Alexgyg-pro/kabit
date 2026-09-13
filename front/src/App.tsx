@@ -16,9 +16,9 @@ const THRESHOLD_MD = 0.20;
 const TOP_K = 5;
 
 const GROQ_MODELS = [
-  { id: 'llama-3.1-8b-instant',    label: 'Llama 3.1 8B (rapide)' },
-  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (meilleur)' },
-  { id: 'gemma2-9b-it',            label: 'Gemma 2 9B' },
+  { id: 'openai/gpt-oss-20b',  label: 'GPT OSS 20B (rapide)' },
+  { id: 'openai/gpt-oss-120b', label: 'GPT OSS 120B (meilleur)' },
+  { id: 'qwen/qwen3.8-27b',    label: 'Qwen3.8 27B' },
 ];
 
 const TECH_LEVELS = [
@@ -242,7 +242,7 @@ export default function App() {
 
   const [appStatus, setAppStatus] = useState<AppStatus>('init');
   const [statusMsg, setStatusMsg] = useState('Initialisation...');
-  const [selectedModel, setSelectedModel] = useState('llama-3.3-70b-versatile');
+  const [selectedModel, setSelectedModel] = useState('openai/gpt-oss-120b');
   const [docCount, setDocCount] = useState(0);
   const [needsReindex, setNeedsReindex] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);

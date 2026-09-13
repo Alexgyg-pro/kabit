@@ -10,7 +10,11 @@ embeddings 100% navigateur + cache IndexedDB + génération via l'API Groq (LLM 
 
 ## Installation
 
-### 1. Cloner et installer les dépendances
+### 1. Se placer à la racine du projet
+
+Le développement (Git, Claude Code, scripts) se pilote depuis la racine `kabit/`, pas depuis `front/` ni `back/`. Ce n'est qu'au moment de lancer une commande `npm` spécifique qu'on descend dans le sous-dossier concerné.
+
+### 2. Cloner et installer les dépendances
 
 ```bash
 # Backend
@@ -22,7 +26,7 @@ cd ../front
 npm install
 ```
 
-### 2. Configurer la clé API Groq
+### 3. Configurer la clé API Groq
 
 Créer le fichier `front/.env.local` (non versionné) :
 
@@ -32,7 +36,7 @@ VITE_GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxx
 
 > La clé commence toujours par `gsk_`. Sans ce fichier, l'application affiche un avertissement et les réponses LLM ne fonctionnent pas.
 
-### 3. Générer le corpus de travail
+### 4. Générer le corpus de travail
 
 Le dossier `corpus/` n'est **pas versionné** (voir [Corpus : patrimoine vs bac à sable](#corpus--patrimoine-vs-bac-à-sable)). Après un clone, on le recrée depuis le patrimoine `corpus-seed/` :
 
@@ -156,14 +160,29 @@ kabit/
 |-------|-------------|--------|
 | Embedding question | Transformers.js — `Xenova/all-MiniLM-L6-v2` | Tourne dans un Web Worker, vecteur 384 dims |
 | Recherche similarité | Cosinus en mémoire | Seuil 0.35, top 3 documents retenus |
-| Génération réponse | Groq API — `llama-3.3-70b-versatile` | Streaming SSE, modèle configurable |
+| Génération réponse | Groq API — `openai/gpt-oss-120b` | Streaming SSE, modèle configurable |
 | Cache embeddings | IndexedDB (navigateur) | Persistant entre sessions, vidé sur Réindexer |
 
 ### Modèles Groq disponibles
 
 | Modèle | Vitesse | Qualité |
 |--------|---------|---------|
-| `llama-3.3-70b-versatile` | Moyenne | Meilleure (défaut) |
-| `llama-3.1-8b-instant` | Rapide | Bonne |
-| `mixtral-8x7b-32768` | Moyenne | Bonne |
-| `gemma2-9b-it` | Rapide | Correcte |
+| `openai/gpt-oss-120b` | Moyenne | Meilleure (défaut) |
+| `openai/gpt-oss-20b` | Rapide | Bonne |
+| `qwen/qwen3.8-27b` | Moyenne | Bonne |
+
+> ⚠️ Groq retire régulièrement des modèles de son catalogue. En cas d'erreur `model_not_found`, vérifier la liste à jour sur [console.groq.com/docs/models](https://console.groq.com/docs/models) ou via `GET https://api.groq.com/openai/v1/models`, et mettre à jour `GROQ_MODELS` dans `front/src/App.tsx`.
+
+**Afficher le catalogue complet (JSON brut) :**
+```bash
+curl.exe https://api.groq.com/openai/v1/models -H "Authorization: Bearer TA_CLE_ICI"
+```
+> Sous PowerShell, `curl` est un alias vers `Invoke-WebRequest` qui ne gère pas `-H` de la même façon — utiliser `curl.exe` explicitement (l'exécutable Windows natif), ou la commande PowerShell ci-dessous.
+
+**Afficher juste l'id et le fournisseur de chaque modèle (PowerShell, sans dépendance externe) :**
+```powershell
+(Invoke-RestMethod -Uri "https://api.groq.com/openai/v1/models" -Headers @{ Authorization = "Bearer TA_CLE_ICI" }).data |
+  Select-Object id, owned_by |
+  Sort-Object id |
+  Format-Table -AutoSize
+```
