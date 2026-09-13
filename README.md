@@ -77,6 +77,46 @@ Les embeddings sont mis en cache dans IndexedDB — les lancements suivants sont
 
 ---
 
+## Distribution (mode production)
+
+Pour transférer KABIT sur un autre poste (ex. démo/présentation) sans dépôt Git ni environnement de dev complet : un build unique du frontend, puis copie des fichiers nécessaires (OneDrive, clé USB…).
+
+### 1. Builder le frontend
+
+Depuis la racine, avec `front/.env.local` déjà configuré (la clé Groq est intégrée au build — pas besoin de la reconfigurer sur le poste cible) :
+
+```powershell
+.\build.ps1
+```
+
+Génère `front/dist/` (build statique, ~20 Mo, dont le runtime WASM du modèle d'embedding).
+
+### 2. Copier les fichiers sur le poste cible
+
+```
+back/server.js
+back/package.json
+front/dist/                 (dossier complet)
+corpus/                     (dossier complet)
+system-prompt.md
+system-prompt.default.md
+```
+
+> Copier `corpus/` tel quel reproduit l'état exact du corpus (fiches, statuts KBOffs/KDocs, KDocs générés) — pas besoin de `corpus:reset` sur le poste cible.
+
+### 3. Lancer sur le poste cible
+
+Node.js >= 18 doit être installé. Dans `back/` :
+
+```bash
+npm install
+node server.js
+```
+
+Ouvrir `http://localhost:3001` — un seul terminal suffit : le serveur sert directement le build React, pas besoin de Vite ni d'un second port.
+
+---
+
 ## Utilisation
 
 1. Taper une question dans le champ de saisie et appuyer sur **Entrée** ou cliquer **Envoyer**.

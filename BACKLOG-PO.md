@@ -4,75 +4,6 @@
 
 ## À faire
 
-### ✅ US-054 — Petites corrections UI admin + seed KDocs
-
-**En tant qu'** administrateur,
-**Je veux** des indications discrètes sur l'interaction des listes de fiches, une fenêtre de génération KDoc plus large, et le pipeline KDoc documenté,
-**Afin de** fluidifier l'usage courant de l'admin et fiabiliser l'onboarding.
-
-**Comportement livré :**
-- Indication discrète (clic/double-clic) toujours visible sous chaque liste de fiches (Corpus, KBOffs, KDocs), plus seulement quand le filtre est sur « Toutes »
-- Fenêtre de génération KDoc élargie (900px → 1200px) ; les colonnes source/généré étaient déjà à largeur égale (`1fr 1fr`)
-- README : nouvelle section « Pipeline KB → KDoc » documentant les statuts KBOffs (`selected`/`out`/`duplicate`/`done`) et KDocs (`testing`/`passed`/`rejected`)
-- `corpus-seed/KDocs/` créé et versionné avec l'unique KDoc existant (`KDOC00001.md`) ; `corpus-reset.js` mis à jour en conséquence
-
-**Critères d'acceptance :**
-- [x] L'indication d'interaction reste visible quel que soit le filtre de statut actif
-- [x] La fenêtre de génération KDoc est plus large
-- [x] Le README documente les statuts KBOffs/KDocs et les étapes de génération
-- [x] `npm run corpus:reset -- --force` restaure `KDocs/` depuis le seed
-
-**Livré le :** 13/09/2026 — branche `feature/admin-ui-fixes-kdocs-seed`
-
----
-
-### ✅ US-053 — Switch KBOld actif/inactif + onglet Catalogue dédié
-
-**En tant qu'** administrateur préparant une démo,
-**Je veux** pouvoir désactiver temporairement `KBOld/` de l'indexation RAG sans le supprimer, et retrouver le Catalogue IT dans son propre onglet,
-**Afin de** tester la pertinence du RAG avec seulement quelques fiches `KDocs/`, tout en gardant `KBOld/` actif par défaut pour des réponses pertinentes en présentation.
-
-**Comportement livré :**
-- Switch « KBOld actif » dans la barre globale de la modale admin (visible quel que soit l'onglet), coché par défaut
-- Basculer le switch relance immédiatement l'indexation avec/sans `KBOld/`, sans fermer la modale
-- Préférence persistée en `localStorage` (`kboldEnabled`)
-- Le Catalogue IT quitte l'onglet Corpus pour son propre onglet **Catalogue IT**
-
-**Critères d'acceptance :**
-- [x] KBOld actif par défaut au premier chargement
-- [x] Désactiver le switch retire les fiches KBOld de l'index sans les supprimer du disque
-- [x] Réactiver le switch les réintègre immédiatement
-- [x] Le Catalogue IT est accessible depuis un onglet séparé de Corpus
-
-**Livré le :** 13/09/2026 — branche `feature/admin-kbold-switch-catalogue-tab`
-
----
-
-### ✅ US-052 — Modale admin en onglets
-
-**En tant qu'** administrateur,
-**Je veux** que la modale d'administration soit organisée en onglets plutôt qu'en une longue liste de sections empilées,
-**Afin de** ne pas avoir à scroller sur toute la hauteur pour accéder à une section.
-
-**Contexte :**
-La modale admin comptait 6 sections empilées verticalement (Corpus, Fiches du corpus, Catalogue IT, Profil technicien, Sources, Pré-prompt). US-019 (Révision du UX) était trop générique pour couvrir ce besoin précis.
-
-**Comportement livré :**
-- 3 onglets, regroupement logique des 6 sections :
-  - **Corpus** : ajout de fiche, liste des fiches du corpus, catalogue IT
-  - **Sources KDocs** : gestionnaire de sources (KBOffs/KDocs)
-  - **Préférences** : profil technicien, pré-prompt
-- Le bouton « Réindexer le corpus » reste visible en permanence au-dessus des onglets (action globale, pas liée à un seul onglet)
-
-**Critères d'acceptance :**
-- [x] Les 6 sections d'origine sont accessibles sans régression fonctionnelle
-- [x] Un seul onglet est affiché à la fois, plus besoin de scroller sur toute la hauteur
-- [x] Le bouton de réindexation reste accessible depuis n'importe quel onglet
-
-**Livré le :** 13/09/2026 — branche `feature/admin-onglets`
-
----
-
 ### US-050 — Créer un KDoc autonome (sans KB source)
 
 **En tant que** rédacteur de la base de connaissance,
@@ -215,6 +146,75 @@ Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récu
 ---
 
 ## Terminé
+
+### ✅ US-054 — Petites corrections UI admin + seed KDocs
+
+**En tant qu'** administrateur,
+**Je veux** des indications discrètes sur l'interaction des listes de fiches, une fenêtre de génération KDoc plus large, et le pipeline KDoc documenté,
+**Afin de** fluidifier l'usage courant de l'admin et fiabiliser l'onboarding.
+
+**Comportement livré :**
+- Indication discrète (clic/double-clic) toujours visible sous chaque liste de fiches (Corpus, KBOffs, KDocs), plus seulement quand le filtre est sur « Toutes »
+- Fenêtre de génération KDoc élargie (900px → 1200px) ; les colonnes source/généré étaient déjà à largeur égale (`1fr 1fr`)
+- README : nouvelle section « Pipeline KB → KDoc » documentant les statuts KBOffs (`selected`/`out`/`duplicate`/`done`) et KDocs (`testing`/`passed`/`rejected`)
+- `corpus-seed/KDocs/` créé et versionné avec l'unique KDoc existant (`KDOC00001.md`) ; `corpus-reset.js` mis à jour en conséquence
+
+**Critères d'acceptance :**
+- [x] L'indication d'interaction reste visible quel que soit le filtre de statut actif
+- [x] La fenêtre de génération KDoc est plus large
+- [x] Le README documente les statuts KBOffs/KDocs et les étapes de génération
+- [x] `npm run corpus:reset -- --force` restaure `KDocs/` depuis le seed
+
+**Livré le :** 13/09/2026 — branche `feature/admin-ui-fixes-kdocs-seed`
+
+---
+
+### ✅ US-053 — Switch KBOld actif/inactif + onglet Catalogue dédié
+
+**En tant qu'** administrateur préparant une démo,
+**Je veux** pouvoir désactiver temporairement `KBOld/` de l'indexation RAG sans le supprimer, et retrouver le Catalogue IT dans son propre onglet,
+**Afin de** tester la pertinence du RAG avec seulement quelques fiches `KDocs/`, tout en gardant `KBOld/` actif par défaut pour des réponses pertinentes en présentation.
+
+**Comportement livré :**
+- Switch « KBOld actif » dans la barre globale de la modale admin (visible quel que soit l'onglet), coché par défaut
+- Basculer le switch relance immédiatement l'indexation avec/sans `KBOld/`, sans fermer la modale
+- Préférence persistée en `localStorage` (`kboldEnabled`)
+- Le Catalogue IT quitte l'onglet Corpus pour son propre onglet **Catalogue IT**
+
+**Critères d'acceptance :**
+- [x] KBOld actif par défaut au premier chargement
+- [x] Désactiver le switch retire les fiches KBOld de l'index sans les supprimer du disque
+- [x] Réactiver le switch les réintègre immédiatement
+- [x] Le Catalogue IT est accessible depuis un onglet séparé de Corpus
+
+**Livré le :** 13/09/2026 — branche `feature/admin-kbold-switch-catalogue-tab`
+
+---
+
+### ✅ US-052 — Modale admin en onglets
+
+**En tant qu'** administrateur,
+**Je veux** que la modale d'administration soit organisée en onglets plutôt qu'en une longue liste de sections empilées,
+**Afin de** ne pas avoir à scroller sur toute la hauteur pour accéder à une section.
+
+**Contexte :**
+La modale admin comptait 6 sections empilées verticalement (Corpus, Fiches du corpus, Catalogue IT, Profil technicien, Sources, Pré-prompt). US-019 (Révision du UX) était trop générique pour couvrir ce besoin précis.
+
+**Comportement livré :**
+- 3 onglets, regroupement logique des 6 sections :
+  - **Corpus** : ajout de fiche, liste des fiches du corpus, catalogue IT
+  - **Sources KDocs** : gestionnaire de sources (KBOffs/KDocs)
+  - **Préférences** : profil technicien, pré-prompt
+- Le bouton « Réindexer le corpus » reste visible en permanence au-dessus des onglets (action globale, pas liée à un seul onglet)
+
+**Critères d'acceptance :**
+- [x] Les 6 sections d'origine sont accessibles sans régression fonctionnelle
+- [x] Un seul onglet est affiché à la fois, plus besoin de scroller sur toute la hauteur
+- [x] Le bouton de réindexation reste accessible depuis n'importe quel onglet
+
+**Livré le :** 13/09/2026 — branche `feature/admin-onglets`
+
+---
 
 ### ✅ US-049 — Affichage soigné d'une fiche/KDoc pour le technicien
 

@@ -31,6 +31,7 @@ Write-Host "  back/package.json"
 Write-Host "  front/dist/            (dossier complet)"
 Write-Host "  corpus/                (dossier complet)"
 Write-Host "  system-prompt.md"
+Write-Host "  system-prompt.default.md"
 Write-Host ""
 Write-Host "Sur le nouveau poste, dans back/ :" -ForegroundColor Yellow
 Write-Host "  npm install"
