@@ -245,14 +245,12 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
               ))}
             </div>
 
-            {statusFilter === 'all' && (
-              <p className="admin-section-desc">
-                {folder === 'kboffs'
-                  ? 'Clic : attribuer un statut — Double-clic : ouvrir et générer un KDoc.'
-                  : 'Clic : modifier le statut — Double-clic : visualiser et éditer le KDoc.'
-                }
-              </p>
-            )}
+            <p className="admin-section-desc admin-hint">
+              {folder === 'kboffs'
+                ? 'Clic : attribuer un statut — Double-clic : ouvrir et générer un KDoc.'
+                : 'Clic : modifier le statut — Double-clic : visualiser et éditer le KDoc.'
+              }
+            </p>
 
             <CorpusFileList
               files={corpusFiles}

@@ -87,7 +87,7 @@ Les embeddings sont mis en cache dans IndexedDB — les lancements suivants sont
 
 | Paramètre | Description |
 |-----------|-------------|
-| **Modèle** | Sélecteur de modèle Groq (llama-3.3-70b par défaut) |
+| **Modèle** | Sélecteur de modèle Groq (GPT OSS 120B par défaut) |
 | **Mémoire** | Nombre d'échanges précédents envoyés au LLM (0 à 6) |
 | **Réindexer** | Force la ré-indexation du corpus (utile après ajout de fichiers) |
 
@@ -121,10 +121,10 @@ Le corpus est séparé en deux dossiers :
 
 | Dossier | Rôle | Versionné ? |
 |---------|------|-------------|
-| **`corpus-seed/`** | Patrimoine figé : `KBOld/` + `KBOffs/` (avec leurs annotations) + catalogue racine + `references.seed.json` vierge. Source de vérité. | ✅ Oui |
-| **`corpus/`** | Bac à sable de l'application : KDocs générés, statuts, expérimentations. Jetable. | ❌ Non (gitignoré) |
+| **`corpus-seed/`** | Patrimoine figé : `KBOld/` + `KBOffs/` + `KDocs/` + catalogue racine + `references.seed.json` vierge. Source de vérité. | ✅ Oui |
+| **`corpus/`** | Bac à sable de l'application : statuts, expérimentations. Jetable. | ❌ Non (gitignoré) |
 
-À la racine de `corpus/` ne restent que le catalogue matériel (`catalogue-it.json`/`.md`) et `references.json` (bookkeeping du pipeline KDocs). Les anciennes fiches KB « officielles » (héritées du principe initial d'un corpus dédié, abandonné au profit d'une base de connaissances unique côté entreprise) vivent dans **`KBOld/`** — toujours indexées pour le RAG, comme avant leur déplacement.
+À la racine de `corpus/` ne restent que le catalogue matériel (`catalogue-it.json`/`.md`) et `references.json` (bookkeeping du pipeline KDocs, toujours vierge après un reset — voir [Pipeline KB → KDoc](#pipeline-kb--kdoc)). Les anciennes fiches KB « officielles » (héritées du principe initial d'un corpus dédié, abandonné au profit d'une base de connaissances unique côté entreprise) vivent dans **`KBOld/`** — toujours indexées pour le RAG, comme avant leur déplacement.
 
 Ainsi, **expérimenter dans l'app ne pollue jamais git**.
 
@@ -133,9 +133,11 @@ Ainsi, **expérimenter dans l'app ne pollue jamais git**.
 Depuis `back/` :
 
 ```bash
-# Recrée corpus/ depuis le seed (references vierge, KDocs vidé, KBOffs restaurés)
+# Recrée corpus/ depuis le seed (KBOld/KBOffs/KDocs restaurés, references.json remis à vide)
 npm run corpus:reset -- --force
 ```
+
+> Les statuts KBOffs/KDocs (`references.json`) ne sont jamais versionnés : après un reset, les fichiers `KBOffs/`/`KDocs/` du seed sont bien présents mais apparaissent « non répertoriés » dans l'admin — à réattribuer si besoin.
 
 > Le `-- --force` est obligatoire pour écraser un `corpus/` existant (garde-fou anti-accident).
 > Sur un dossier `corpus/` absent (après un clone), `npm run corpus:reset` suffit.
@@ -143,6 +145,40 @@ npm run corpus:reset -- --force
 ### Promouvoir un essai au patrimoine
 
 Pour qu'une fiche ou une KB modifiée survive aux resets, la copier dans `corpus-seed/` et la committer (`corpus: …`).
+
+---
+
+## Pipeline KB → KDoc
+
+L'onglet **Sources KDocs** de l'administration gère la transformation d'une KB officielle brute (`KBOffs/`) en fiche `KDoc` propre et indexable (`KDocs/`). Accès : sous-onglets **KBOffs** / **KDocs**, avec filtres par statut ; clic pour sélectionner/attribuer un statut, double-clic pour ouvrir.
+
+### Statuts d'une KB (`KBOffs/`)
+
+| Statut | Signification |
+|--------|---------------|
+| *(non répertorié)* | KB pas encore triée |
+| `selected` | KB retenue, à transformer en KDoc |
+| `out` | KB écartée (obsolète, hors périmètre, non pertinente) |
+| `duplicate` | Doublon d'une KB déjà traitée |
+| `done` | Un KDoc a déjà été généré à partir de cette KB (liaison via le champ `kdoc`) |
+
+### Statuts d'un KDoc (`KDocs/`)
+
+| Statut | Signification |
+|--------|---------------|
+| `testing` | KDoc généré, statut par défaut, pas encore validé |
+| `passed` | KDoc validé, contenu jugé fiable |
+| `rejected` | KDoc à revoir ou à supprimer |
+
+> Le statut n'affecte pas l'indexation RAG : un KDoc est indexé dès qu'il existe dans `KDocs/`, quel que soit son statut. Les statuts ne servent qu'au suivi humain du pipeline, via `references.json` (bac à sable, jamais versionné).
+
+### Générer un KDoc
+
+1. Double-cliquer une KB dans le sous-onglet **KBOffs** pour l'ouvrir.
+2. Cliquer **Générer un KDoc** : le contenu brut est envoyé au LLM avec un prompt dédié qui produit une fiche au format KABIT (frontmatter + sections *Symptômes*, *Précautions*, *Procédure*, *Vérification*, *Notes*), fidèle à la source, limitée à 3000 caractères.
+3. Relire/corriger le texte généré, ajouter une **note technicien** optionnelle (hors-embedding, ajoutée après le marqueur `<<<NOTE>>>` — visible au technicien mais exclue du RAG).
+4. **Enregistrer dans KDocs/** : crée le fichier (statut `testing`) et marque la KB source `done`. Une KB n'a jamais plus d'un KDoc — un enregistrement ultérieur met à jour le même fichier plutôt que d'en créer un second.
+5. Une fois testé, basculer le statut du KDoc vers `passed` ou `rejected` depuis le sous-onglet **KDocs**.
 
 ---
 
@@ -162,7 +198,9 @@ kabit/
 │   └── scripts/
 │       └── corpus-reset.js # Régénère corpus/ depuis corpus-seed/
 ├── corpus-seed/            # Patrimoine versionné (seed du corpus)
-│   └── KBOld/                       # Anciennes fiches KB officielles (indexées)
+│   ├── KBOld/                       # Anciennes fiches KB officielles (indexées)
+│   ├── KBOffs/                      # KB officielles brutes, en attente de tri
+│   └── KDocs/                       # KDocs déjà générés et validés
 ├── corpus/                 # Bac à sable de l'app — GITIGNORÉ (recréé par corpus:reset)
 │   └── KBOld/                       # Copie de travail des fiches KBOld (indexées)
 └── BACKLOG-PO.md           # Backlog Product Owner

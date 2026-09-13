@@ -261,6 +261,7 @@ export default function AdminModal({
           {/* ── Section Fiches du corpus ─────────────────────────────── */}
           <section className="admin-section">
             <h2 className="admin-section-title">Fiches du corpus ({mdFiles.length})</h2>
+            <p className="admin-section-desc admin-hint">Clic : ouvrir la fiche.</p>
             <CorpusFileList
               files={mdFiles}
               onSelect={(path, title) => { onOpenDoc(path, title); onClose(); }}

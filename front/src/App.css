@@ -779,6 +779,12 @@
   margin: 0;
 }
 
+.admin-hint {
+  font-size: 0.78rem;
+  font-style: italic;
+  opacity: 0.75;
+}
+
 .admin-reindex-row {
   display: flex;
   align-items: center;
@@ -1582,7 +1588,7 @@
 
 /* ── KBOff Viewer ────────────────────────────────────────────────────────────── */
 .kdoc-viewer-card {
-  width: min(900px, 95vw);
+  width: min(1200px, 96vw);
   max-height: 92vh;
   display: flex;
   flex-direction: column;

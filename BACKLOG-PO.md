@@ -4,6 +4,28 @@
 
 ## À faire
 
+### ✅ US-054 — Petites corrections UI admin + seed KDocs
+
+**En tant qu'** administrateur,
+**Je veux** des indications discrètes sur l'interaction des listes de fiches, une fenêtre de génération KDoc plus large, et le pipeline KDoc documenté,
+**Afin de** fluidifier l'usage courant de l'admin et fiabiliser l'onboarding.
+
+**Comportement livré :**
+- Indication discrète (clic/double-clic) toujours visible sous chaque liste de fiches (Corpus, KBOffs, KDocs), plus seulement quand le filtre est sur « Toutes »
+- Fenêtre de génération KDoc élargie (900px → 1200px) ; les colonnes source/généré étaient déjà à largeur égale (`1fr 1fr`)
+- README : nouvelle section « Pipeline KB → KDoc » documentant les statuts KBOffs (`selected`/`out`/`duplicate`/`done`) et KDocs (`testing`/`passed`/`rejected`)
+- `corpus-seed/KDocs/` créé et versionné avec l'unique KDoc existant (`KDOC00001.md`) ; `corpus-reset.js` mis à jour en conséquence
+
+**Critères d'acceptance :**
+- [x] L'indication d'interaction reste visible quel que soit le filtre de statut actif
+- [x] La fenêtre de génération KDoc est plus large
+- [x] Le README documente les statuts KBOffs/KDocs et les étapes de génération
+- [x] `npm run corpus:reset -- --force` restaure `KDocs/` depuis le seed
+
+**Livré le :** 13/09/2026 — branche `feature/admin-ui-fixes-kdocs-seed`
+
+---
+
 ### ✅ US-053 — Switch KBOld actif/inactif + onglet Catalogue dédié
 
 **En tant qu'** administrateur préparant une démo,

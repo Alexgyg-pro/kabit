@@ -63,7 +63,7 @@ fs.cpSync(SEED, CORPUS, {
   filter: (src) => path.basename(src) !== SEED_REFERENCES,
 });
 
-// references.json vierge + dossier KDocs/ vide pour l'app
+// references.json vierge (les statuts KBOffs/KDocs sont du bac à sable, jamais versionnés)
 fs.writeFileSync(path.join(CORPUS, 'references.json'), EMPTY_REFERENCES, 'utf-8');
 fs.mkdirSync(path.join(CORPUS, 'KDocs'), { recursive: true });
 
@@ -74,9 +74,11 @@ const kbold = fs.existsSync(path.join(CORPUS, 'KBOld'))
 const kboffs = fs.existsSync(path.join(CORPUS, 'KBOffs'))
   ? fs.readdirSync(path.join(CORPUS, 'KBOffs')).length
   : 0;
+const kdocs = fs.readdirSync(path.join(CORPUS, 'KDocs')).length;
 
 console.log('✅ corpus/ régénéré depuis corpus-seed/');
 console.log(`   • ${fiches} fiches racine (catalogue)`);
 console.log(`   • ${kbold} fichiers KBOld/`);
 console.log(`   • ${kboffs} fichiers KBOffs/`);
-console.log('   • references.json vierge, KDocs/ vide');
+console.log(`   • ${kdocs} fichiers KDocs/ (depuis le seed)`);
+console.log('   • references.json vierge — les statuts KBOffs/KDocs sont à réattribuer dans l\'admin');

@@ -53,8 +53,9 @@ Exemples :
 - `corpus/` — bac à sable d'exécution de l'app, gitignoré (voir ci-dessous)
 
 ## Corpus : patrimoine vs bac à sable
-- **`corpus-seed/`** : patrimoine versionné et figé (`KBOld/` + `KBOffs/` + catalogue racine + `references.seed.json` vierge). Source de vérité.
-- **`corpus/`** : espace de travail de l'app, **gitignoré et jetable** (KDocs générés, statuts, expérimentations). Git ne le suit pas.
+- **`corpus-seed/`** : patrimoine versionné et figé (`KBOld/` + `KBOffs/` + `KDocs/` + catalogue racine + `references.seed.json` vierge). Source de vérité.
+- **`corpus/`** : espace de travail de l'app, **gitignoré et jetable** (statuts, expérimentations). Git ne le suit pas.
+- Les statuts `references.json` (KBOffs/KDocs) ne sont **jamais** versionnés — `corpus:reset` les remet systématiquement à vide, même si des fichiers `KBOffs/`/`KDocs/` existent dans le seed.
 - **`KBOld/`** : anciennes fiches KB « officielles » (héritées du principe initial d'un corpus dédié RAG, abandonné — l'entreprise ne veut qu'une seule base de connaissances). Toujours indexées pour le RAG comme avant, juste déplacées hors de la racine de `corpus/`. Servies/éditées via `/corpus/file` (préfixe `KBOld/` supporté) et listées via `/corpus/kbold/list`. Les nouvelles fiches créées depuis l'admin (`POST /corpus/add`) y sont désormais écrites aussi.
 - Après un clone, recréer `corpus/` : `cd back && npm run corpus:reset`.
 - Pour repartir d'un corpus propre : `npm run corpus:reset -- --force` (écrase le bac à sable).
