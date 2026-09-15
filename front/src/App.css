@@ -250,15 +250,10 @@
 .main-col { min-width: 0; }
 
 .main-col--right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 16px 24px 0;
-  /* Reste visible au scroll : la colonne est étirée sur toute la hauteur
-     du fil de conversation (comportement grid par défaut), position:sticky
-     epingle son contenu en haut de la zone défilante .main-columns. */
-  position: sticky;
-  top: 0;
+  /* Vierge : le bouton "Nouvelle conversation" qu'elle héberge est en
+     position fixe (cf. .btn-new-conversation) et ne participe plus au
+     flux normal de la grille — sticky sur l'item de grille ne suffisait
+     pas à le garder visible en pratique. */
 }
 
 @media (max-width: 900px) {
@@ -266,16 +261,28 @@
   .main-col--left, .main-col--right { display: none; }
 }
 
+/* Fixe par rapport à la fenêtre : reste visible quel que soit le scroll
+   de .main-columns, sans dépendre du comportement sticky d'un item de
+   grille. */
 .btn-new-conversation {
-  background: transparent;
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 10;
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
   border-radius: 6px;
   padding: 5px 12px;
   font-size: 0.8rem;
   cursor: pointer;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
 }
 .btn-new-conversation:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+
+@media (max-width: 900px) {
+  .btn-new-conversation { display: none; }
+}
 
 .chat-thread {
   padding: 16px 24px 32px;
