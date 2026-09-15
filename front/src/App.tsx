@@ -205,9 +205,13 @@ interface Source {
   content: string;
 }
 
-interface HistoryEntry {
-  role: 'user' | 'assistant';
-  content: string;
+interface Turn {
+  id: string;
+  question: string;
+  answer: string;
+  sources: Source[];
+  liked: boolean;
+  disliked: boolean;
 }
 
 const HISTORY_OPTIONS = [
@@ -276,9 +280,10 @@ export default function App() {
     runIndexing(enabled);
   }
 
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [turns, setTurns] = useState<Turn[]>([]);
   const [historyDepth, setHistoryDepth] = useState('0');
-  const [copied, setCopied] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
 
   const abortRef = useRef<AbortController | null>(null);
@@ -410,6 +415,24 @@ export default function App() {
     setAnswer('');
     setSources([]);
 
+    const askedQ = question;
+    let fullAnswer = '';
+    let turnSources: Source[] = [];
+
+    // Bascule la question courante dans le fil de conversation, quelle que soit
+    // l'issue (réponse complète, aucune source, erreur ou arrêt manuel) — sans
+    // ça le message resterait affiché de façon transitoire puis disparaîtrait
+    // dès que isAsking repasse à false (retour à l'écran d'accueil).
+    function finalizeTurn(answerText: string) {
+      setTurns((prev) => [
+        ...prev,
+        { id: crypto.randomUUID(), question: askedQ, answer: answerText, sources: turnSources, liked: false, disliked: false },
+      ]);
+      setAskedQuestion('');
+      setAnswer('');
+      setSources([]);
+    }
+
     try {
       // 1. Embedding de la question
       const qEmbed = await embed(question);
@@ -426,12 +449,12 @@ export default function App() {
         .slice(0, TOP_K);
 
       if (scored.length === 0) {
-        setAnswer('Aucune procédure correspondante trouvée dans le corpus. Reformulez votre question ou ajoutez des documents.');
-        setIsAsking(false);
+        finalizeTurn('Aucune procédure correspondante trouvée dans le corpus. Reformulez votre question ou ajoutez des documents.');
         return;
       }
 
-      setSources(scored.map((r) => ({ id: r.doc.id, path: r.doc.path, title: r.doc.title, section: r.doc.section, score: r.score, content: r.doc.content })));
+      turnSources = scored.map((r) => ({ id: r.doc.id, path: r.doc.path, title: r.doc.title, section: r.doc.section, score: r.score, content: r.doc.content }));
+      setSources(turnSources);
 
       // 3. Contexte
       const contextBlocks = scored
@@ -464,10 +487,11 @@ export default function App() {
         },
       ];
 
-      if (depth > 0 && history.length > 0) {
-        history.slice(-depth * 2).forEach((h) =>
-          messages.push({ role: h.role, content: h.content })
-        );
+      if (depth > 0 && turns.length > 0) {
+        turns.slice(-depth).forEach((t) => {
+          messages.push({ role: 'user', content: t.question });
+          messages.push({ role: 'assistant', content: t.answer });
+        });
       }
 
       messages.push({ role: 'user', content: question });
@@ -491,7 +515,6 @@ export default function App() {
 
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
-      let fullAnswer = '';
       let buffer = '';
 
       while (true) {
@@ -516,19 +539,14 @@ export default function App() {
         }
       }
 
-      // Historique
-      setHistory((prev) => [
-        ...prev,
-        { role: 'user', content: question },
-        { role: 'assistant', content: fullAnswer },
-      ]);
+      finalizeTurn(fullAnswer);
       setQuestion('');
     } catch (e: unknown) {
       if ((e as { name?: string }).name === 'AbortError') {
-        setAnswer((prev) => prev + '\n\n[Arrêté par l\'utilisateur]');
+        finalizeTurn(fullAnswer + '\n\n[Arrêté par l\'utilisateur]');
       } else {
         const msg = e instanceof Error ? e.message : String(e);
-        setAnswer(`Erreur : ${msg}`);
+        finalizeTurn(`Erreur : ${msg}`);
       }
     } finally {
       setIsAsking(false);
@@ -539,12 +557,24 @@ export default function App() {
     abortRef.current?.abort();
   }
 
-  function handleCopy() {
-    const text = `Q : ${askedQuestion}\n\nR : ${answer}`;
+  function handleCopy(id: string, q: string, a: string) {
+    const text = `Q : ${q}\n\nR : ${a}`;
     navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId((cur) => (cur === id ? null : cur)), 2000);
     });
+  }
+
+  function toggleLike(id: string) {
+    setTurns((prev) => prev.map((t) => t.id === id ? { ...t, liked: !t.liked, disliked: false } : t));
+  }
+
+  function toggleDislike(id: string) {
+    setTurns((prev) => prev.map((t) => t.id === id ? { ...t, disliked: !t.disliked, liked: false } : t));
+  }
+
+  function handleNewConversation() {
+    setTurns([]);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -600,46 +630,46 @@ export default function App() {
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
+  const hasConversation = turns.length > 0 || isAsking;
+
+  function renderQuestionBox(variant: 'hero' | 'dock') {
+    return (
+      <div className={`question-area question-area--${variant}`}>
+        <textarea
+          className="question-input"
+          placeholder="Posez votre question technique... (Entrée pour envoyer, Shift+Entrée pour sauter une ligne)"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={appStatus !== 'ready' || isAsking}
+          rows={3}
+        />
+        <div className="question-actions">
+          {isAsking
+            ? <button className="btn-stop" onClick={handleStop}>Arrêter</button>
+            : <button
+                className="btn-ask"
+                onClick={handleAsk}
+                disabled={!question.trim() || appStatus !== 'ready'}
+              >
+                Envoyer
+              </button>
+          }
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
-      {/* Header */}
-      <header className="header">
-        <h1>KABIT — Assistant Techniciens Support</h1>
-        <div className="header-actions">
-          <button
-            className={`btn-role-toggle ${role === 'admin' ? 'btn-role-toggle--admin' : ''}`}
-            onClick={toggleRole}
-            title={role === 'tech' ? 'Passer en mode Administrateur' : 'Passer en mode Technicien'}
-          >
-            {role === 'tech' ? '👤 Technicien' : '🔑 Admin'}
-          </button>
-          <button
-            className="btn-theme-toggle"
-            onClick={() => toggleTheme(theme === 'dark' ? 'light' : 'dark')}
-            title={theme === 'dark' ? 'Passer en thème clair' : 'Passer en thème sombre'}
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
-          {role === 'admin' && (
-            <button className="btn-admin-open" onClick={() => setShowAdmin(true)} title="Administration">⚙</button>
-          )}
-        </div>
-      </header>
+      {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Bannières de statut */}
-      <div className="status-bar">
-        <StatusBadge
-          hasKey={!!GROQ_API_KEY}
-          docCount={docCount}
-          appStatus={appStatus}
-          statusMsg={statusMsg}
-          systemPrompt={systemPrompt}
-          onShowSystemPrompt={() => setShowSystemPrompt(true)}
-        />
+      <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''}`}>
+        <div className="sidebar-logo"><span className="sidebar-logo-k">K</span>ABIT</div>
 
-        <div className="controls">
-          <label>
-            Modèle :&nbsp;
+        <div className="sidebar-controls">
+          <label className="sidebar-field">
+            Modèle
             <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
               {GROQ_MODELS.map((m) => (
                 <option key={m.id} value={m.id}>{m.label}</option>
@@ -647,8 +677,8 @@ export default function App() {
             </select>
           </label>
 
-          <label>
-            Historique :&nbsp;
+          <label className="sidebar-field">
+            Historique
             <select value={historyDepth} onChange={(e) => setHistoryDepth(e.target.value)}>
               {HISTORY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
@@ -661,96 +691,100 @@ export default function App() {
           >
             Réindexer
           </button>
-        </div>
-      </div>
 
-      {/* Clé Groq manquante */}
-      {!GROQ_API_KEY && (
-        <div className="ollama-missing">
-          <strong>Clé API Groq manquante</strong> — ajoute dans <code>front/.env.local</code> :
-          <pre>VITE_GROQ_API_KEY=ta_clé</pre>
-          Puis redémarre le serveur Vite.
+          <StatusBadge
+            hasKey={!!GROQ_API_KEY}
+            docCount={docCount}
+            appStatus={appStatus}
+            statusMsg={statusMsg}
+            systemPrompt={systemPrompt}
+            onShowSystemPrompt={() => setShowSystemPrompt(true)}
+          />
         </div>
-      )}
 
-      {/* Indexation en cours */}
-      {appStatus === 'indexing' && (
-        <div className="indexing-bar">
-          <span className="spinner" /> {statusMsg}
+        <div className="sidebar-spacer" />
+
+        <div className="sidebar-footer">
+          <button
+            className="sidebar-role"
+            onClick={toggleRole}
+            title={role === 'tech' ? 'Passer en mode Administrateur' : 'Passer en mode Technicien'}
+          >
+            {role === 'tech' ? 'Technicien' : 'Administrateur'}
+          </button>
+          {role === 'admin' && (
+            <button className="btn-admin-open" onClick={() => setShowAdmin(true)} title="Administration">⚙</button>
+          )}
+          <button
+            className="btn-theme-toggle"
+            onClick={() => toggleTheme(theme === 'dark' ? 'light' : 'dark')}
+            title={theme === 'dark' ? 'Passer en thème clair' : 'Passer en thème sombre'}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
         </div>
-      )}
+      </aside>
 
       <main className="main">
-        {/* Zone de question */}
-        <div className="question-area">
-          <textarea
-            className="question-input"
-            placeholder="Posez votre question technique... (Entrée pour envoyer, Shift+Entrée pour sauter une ligne)"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={appStatus !== 'ready' || isAsking}
-            rows={3}
-          />
-          <div className="question-actions">
-            {isAsking
-              ? <button className="btn-stop" onClick={handleStop}>Arrêter</button>
-              : <button
-                  className="btn-ask"
-                  onClick={handleAsk}
-                  disabled={!question.trim() || appStatus !== 'ready'}
-                >
-                  Envoyer
-                </button>
-            }
-          </div>
-        </div>
+        <button className="btn-sidebar-toggle" onClick={() => setSidebarOpen((o) => !o)} title="Menu">
+          {sidebarOpen ? '✕' : '☰'}
+        </button>
 
-        {/* Réponse */}
-        {(answer || isAsking) && (
-          <div className="answer-area">
-            {askedQuestion && (
-              <div className="asked-question">{askedQuestion}</div>
-            )}
-            <div className="answer-label">
-              <span>Réponse{isAsking && <span className="cursor-blink"> ▊</span>} :</span>
-              {answer && !isAsking && (
-                <button className="btn-copy" onClick={handleCopy}>
-                  {copied ? '✓ Copié' : 'Copier'}
-                </button>
-              )}
-            </div>
-            <div className="answer-content" ref={answerRef}>
-              {answer
-                ? <ReactMarkdown>{answer}</ReactMarkdown>
-                : <span className="thinking">Recherche dans le corpus...</span>
-              }
-            </div>
-
-            {sources.length > 0 && (
-              <div className="sources">
-                <div className="sources-label">Sources :</div>
-                {sources.map((s) => (
-                  <div key={s.id} className="source-item source-item--clickable" onClick={() => openDoc(s)}>
-                    <span className="source-icon">📄</span>
-                    <span className="source-name">{s.title || s.path}</span>
-                    <span className="source-score">similarité : {s.score.toFixed(2)}</span>
-                    <span className="source-open">Voir</span>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Clé Groq manquante */}
+        {!GROQ_API_KEY && (
+          <div className="ollama-missing">
+            <strong>Clé API Groq manquante</strong> — ajoute dans <code>front/.env.local</code> :
+            <pre>VITE_GROQ_API_KEY=ta_clé</pre>
+            Puis redémarre le serveur Vite.
           </div>
         )}
 
-        {/* Historique */}
-        {history.length > 0 && (
-          <div className="history-summary">
-            <span>{history.length / 2} échange(s) en mémoire</span>
-            <button className="btn-clear-history" onClick={() => setHistory([])}>
-              Effacer l'historique
-            </button>
+        {!hasConversation ? (
+          <div className="hero">
+            {renderQuestionBox('hero')}
           </div>
+        ) : (
+          <>
+            {turns.length > 0 && (
+              <div className="chat-topbar">
+                <button className="btn-new-conversation" onClick={handleNewConversation}>
+                  Nouvelle conversation
+                </button>
+              </div>
+            )}
+
+            <div className="chat-thread">
+              {turns.map((t) => (
+                <ConversationTurn
+                  key={t.id}
+                  question={t.question}
+                  answer={t.answer}
+                  sources={t.sources}
+                  liked={t.liked}
+                  disliked={t.disliked}
+                  copied={copiedId === t.id}
+                  onCopy={() => handleCopy(t.id, t.question, t.answer)}
+                  onLike={() => toggleLike(t.id)}
+                  onDislike={() => toggleDislike(t.id)}
+                  onOpenSource={openDoc}
+                />
+              ))}
+
+              {isAsking && (
+                <ConversationTurn
+                  question={askedQuestion}
+                  answer={answer}
+                  sources={[]}
+                  isStreaming
+                  onOpenSource={openDoc}
+                />
+              )}
+
+              <div ref={answerRef} />
+            </div>
+
+            {renderQuestionBox('dock')}
+          </>
         )}
       </main>
 
@@ -859,6 +893,85 @@ function StatusBadge({
         ? <span className="badge badge-green badge--clickable" onClick={onShowSystemPrompt}>📋 Pré-prompt actif</span>
         : <span className="badge badge-grey">📋 Pas de pré-prompt</span>
       }
+    </div>
+  );
+}
+
+// ── Composant tour de conversation (question + réponse) ────────────────────
+function ConversationTurn({
+  question,
+  answer,
+  sources,
+  liked,
+  disliked,
+  isStreaming,
+  copied,
+  onCopy,
+  onLike,
+  onDislike,
+  onOpenSource,
+}: {
+  question: string;
+  answer: string;
+  sources: Source[];
+  liked?: boolean;
+  disliked?: boolean;
+  isStreaming?: boolean;
+  copied?: boolean;
+  onCopy?: () => void;
+  onLike?: () => void;
+  onDislike?: () => void;
+  onOpenSource: (s: Source) => void;
+}) {
+  return (
+    <div className="turn">
+      <div className="turn-question">{question}</div>
+
+      <div className="turn-answer">
+        <div className="answer-content">
+          {answer
+            ? <ReactMarkdown>{answer}</ReactMarkdown>
+            : <span className="thinking">Recherche dans le corpus...</span>
+          }
+          {isStreaming && answer && <span className="cursor-blink"> ▊</span>}
+        </div>
+
+        {!isStreaming && answer && (
+          <div className="turn-actions">
+            <button className="turn-action-btn" onClick={onCopy} title="Copier">
+              {copied ? '✓' : '📋'}
+            </button>
+            <button
+              className={`turn-action-btn ${liked ? 'turn-action-btn--active' : ''}`}
+              onClick={onLike}
+              title="Utile"
+            >
+              👍
+            </button>
+            <button
+              className={`turn-action-btn ${disliked ? 'turn-action-btn--active' : ''}`}
+              onClick={onDislike}
+              title="Pas utile"
+            >
+              👎
+            </button>
+          </div>
+        )}
+
+        {!isStreaming && sources.length > 0 && (
+          <div className="sources">
+            <div className="sources-label">Sources :</div>
+            {sources.map((s) => (
+              <div key={s.id} className="source-item source-item--clickable" onClick={() => onOpenSource(s)}>
+                <span className="source-icon">📄</span>
+                <span className="source-name">{s.title || s.path}</span>
+                <span className="source-score">similarité : {s.score.toFixed(2)}</span>
+                <span className="source-open">Voir</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
