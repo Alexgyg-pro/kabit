@@ -1662,4 +1662,5 @@
   font-family: monospace;
   font-size: 0.82rem;
   border-left: 3px solid var(--accent);
+  margin-bottom: 12px;
 }
