@@ -147,6 +147,35 @@ Le chunking par section `##` produit des chunks trop fragmentés. Le chunk récu
 
 ## Terminé
 
+### ✅ ÉPIQUE — Interface façon Claude/ChatGPT (sidebar + fil de conversation)
+
+**Contexte :** en montrant KABIT à un collègue, constat que l'UI ne respectait aucun des codes visuels des assistants de référence (Claude, ChatGPT, DeepSeek) que l'état-major connaît — au risque de nuire à la crédibilité de la démo. Objectif : reproduire ces codes (sidebar fixe + fil de conversation) sans toucher à la logique métier (RAG, indexation, admin) ni aux modales, pour mettre le public en terrain connu.
+
+**Changement de fond :** jusque-là, l'appli n'affichait que le dernier échange à l'écran — `history` ne servait qu'à fournir du contexte au LLM, jamais rendu. Le modèle d'état a été revu (`Turn[]` remplace `HistoryEntry[]`) pour afficher l'intégralité de la conversation, question après réponse, dans l'ordre.
+
+**Comportement livré :**
+- Sidebar fixe (300px, masquée + bouton ☰ en overlay plein écran sous 900px de large) : logo KABIT (K agrandi), Modèle/Historique/Réindexer/badges de statut empilés verticalement, espace vide (pas de liste de conversations), pied de colonne avec rôle (cliquable, bascule Technicien/Administrateur) + bouton admin + thème
+- Zone de saisie centrée et élargie avant le premier envoi, ancrée en bas ensuite ; fil de conversation complet avec question en bulle alignée à droite et réponse pleine largeur
+- Copier/pouces en icônes SVG contour/plein monochromes (au lieu d'emoji multicolores) et sources RAG affichées sous chaque réponse de l'historique, pas seulement la dernière
+- Zone principale en 3 colonnes une fois la conversation démarrée (colonnes 1/3 vierges façon Claude web, à l'exception du bouton « Nouvelle conversation » en colonne 3, fixe pendant le défilement) ; défilement recentré sur l'ensemble des 3 colonnes avec fondu progressif juste avant la zone de saisie
+- Badges de statut neutralisés (plus de pastilles vertes/rouges/jaunes) et uniformisés avec une icône unique en mode contour
+- Bouton Réindexer de la sidebar distingué du même bouton dans la modale admin (resté inchangé) : neutre, moitié moins large
+
+**Corrections apportées en cours de route :**
+- Cas « aucune source trouvée », erreur et arrêt manuel : ne finalisaient pas de tour de conversation dans l'implémentation initiale du nouveau modèle `Turn[]`, ce qui aurait fait disparaître le message en repassant à l'écran d'accueil
+- Bouton « Nouvelle conversation » : `position:sticky` sur l'item de grille insuffisant en pratique pour rester visible au scroll → remplacé par `position:fixed`
+- Bouton menu mobile masqué par la sidebar ouverte (z-index inférieur) une fois celle-ci en overlay plein écran
+
+**Critères d'acceptance :**
+- [x] Le fil de conversation affiche l'intégralité des échanges, pas seulement le dernier
+- [x] La sidebar bascule correctement en overlay sous 900px, ouverture et fermeture fonctionnelles
+- [x] Aucune régression sur le RAG, l'indexation, l'administration ni les modales
+- [x] Palette de couleurs (`index.css`) inchangée
+
+**Livré le :** 15-16/09/2026 — branche `feature/ui-claude-like`
+
+---
+
 ### ✅ US-054 — Petites corrections UI admin + seed KDocs
 
 **En tant qu'** administrateur,
