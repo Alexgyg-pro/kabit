@@ -744,18 +744,11 @@ export default function App() {
             {renderQuestionBox('hero')}
           </div>
         ) : (
+          <>
           <div className="main-columns">
             <div className="main-col main-col--left" />
 
             <div className="main-col main-col--center">
-              {turns.length > 0 && (
-                <div className="chat-topbar">
-                  <button className="btn-new-conversation" onClick={handleNewConversation}>
-                    Nouvelle conversation
-                  </button>
-                </div>
-              )}
-
               <div className="chat-thread">
                 {turns.map((t) => (
                   <ConversationTurn
@@ -785,12 +778,19 @@ export default function App() {
 
                 <div ref={answerRef} />
               </div>
-
-              {renderQuestionBox('dock')}
             </div>
 
-            <div className="main-col main-col--right" />
+            <div className="main-col main-col--right">
+              {turns.length > 0 && (
+                <button className="btn-new-conversation" onClick={handleNewConversation}>
+                  Nouvelle conversation
+                </button>
+              )}
+            </div>
           </div>
+
+          {renderQuestionBox('dock')}
+          </>
         )}
       </main>
 
@@ -878,28 +878,34 @@ function StatusBadge({
   systemPrompt: string;
   onShowSystemPrompt: () => void;
 }) {
-  const groqBadge = hasKey
-    ? { cls: 'badge-green', label: '✅ Groq prêt' }
-    : { cls: 'badge-red',   label: '❌ Clé Groq manquante' };
+  const groqBadge = hasKey ? 'Groq prêt' : 'Clé Groq manquante';
 
   const cacheBadge =
     appStatus === 'ready' && docCount > 0
-      ? { cls: 'badge-green',  label: `📦 Cache : ${docCount} document${docCount > 1 ? 's' : ''}` }
+      ? `Cache : ${docCount} document${docCount > 1 ? 's' : ''}`
       : appStatus === 'indexing'
-      ? { cls: 'badge-yellow', label: `⏳ ${statusMsg}` }
+      ? statusMsg
       : appStatus === 'loading-model'
-      ? { cls: 'badge-yellow', label: `⏳ ${statusMsg}` }
-      : { cls: 'badge-grey',   label: '📦 Cache vide' };
+      ? statusMsg
+      : 'Cache vide';
 
   return (
     <div className="badges">
-      <span className={`badge ${groqBadge.cls}`}>{groqBadge.label}</span>
-      <span className={`badge ${cacheBadge.cls}`}>{cacheBadge.label}</span>
+      <span className="badge"><IconDot />{groqBadge}</span>
+      <span className="badge"><IconDot />{cacheBadge}</span>
       {systemPrompt
-        ? <span className="badge badge-green badge--clickable" onClick={onShowSystemPrompt}>📋 Pré-prompt actif</span>
-        : <span className="badge badge-grey">📋 Pas de pré-prompt</span>
+        ? <span className="badge badge--clickable" onClick={onShowSystemPrompt}><IconDot />Pré-prompt actif</span>
+        : <span className="badge"><IconDot />Pas de pré-prompt</span>
       }
     </div>
+  );
+}
+
+function IconDot() {
+  return (
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="4" cy="4" r="3" />
+    </svg>
   );
 }
 
