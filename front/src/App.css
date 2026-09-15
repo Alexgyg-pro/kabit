@@ -7,7 +7,7 @@
 
 /* ── Sidebar ─────────────────────────────────────────────────────────────── */
 .sidebar {
-  width: 260px;
+  width: 300px;
   flex-shrink: 0;
   background: var(--bg-surface);
   border-right: 1px solid var(--border);
@@ -146,17 +146,12 @@
 
 .badge {
   font-size: 0.8rem;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-weight: 600;
+  font-weight: 500;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
-.badge-green  { background: #14532d; color: #86efac; border: 1px solid #16a34a; }
-.badge-red    { background: #450a0a; color: #fca5a5; border: 1px solid #dc2626; }
-.badge-yellow { background: #422006; color: #fde68a; border: 1px solid #ca8a04; }
-.badge-grey   { background: #162035; color: #9ca3af; border: 1px solid #2a4068; }
 .badge--clickable { cursor: pointer; }
-.badge--clickable:hover { filter: brightness(1.2); }
+.badge--clickable:hover { color: var(--text-primary); }
 
 /* ── Bouton Réindexer ────────────────────────────────────────────────────── */
 .btn-reindex {
@@ -217,6 +212,29 @@
   padding: 24px;
 }
 
+/* ── Zone principale : 3 colonnes façon Claude web ──────────────────────────
+   Colonnes 1 et 3 vierges (titre d'échange / bouton Partager côté Claude,
+   pas repris ici) ; seule la colonne centrale contient la conversation. */
+.main-columns {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 760px) minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.main-col { min-width: 0; }
+
+.main-col--center {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .main-columns { grid-template-columns: 1fr; }
+  .main-col--left, .main-col--right { display: none; }
+}
+
 .chat-topbar {
   display: flex;
   justify-content: flex-end;
@@ -255,7 +273,7 @@
 }
 
 .question-area--hero {
-  width: min(700px, 100%);
+  width: min(860px, 92%);
 }
 
 .question-area--dock {
@@ -325,7 +343,8 @@
 .turn-question {
   align-self: flex-end;
   max-width: 70%;
-  background: var(--bg-deep);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 10px 16px;
   color: var(--text-primary);
@@ -344,29 +363,24 @@
 .turn-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
 }
 
 .turn-action-btn {
   background: transparent;
-  border: 1px solid var(--border-subtle);
+  border: none;
   color: var(--text-secondary);
-  border-radius: 50%;
+  border-radius: 6px;
   width: 28px;
   height: 28px;
-  font-size: 0.85rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
-.turn-action-btn:hover { border-color: var(--text-secondary); color: var(--text-primary); }
-.turn-action-btn--active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-}
+.turn-action-btn:hover { background: var(--border); color: var(--text-primary); }
+.turn-action-btn--active { color: var(--text-primary); }
 
 .answer-content {
   color: var(--text-primary);

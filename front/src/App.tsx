@@ -744,47 +744,53 @@ export default function App() {
             {renderQuestionBox('hero')}
           </div>
         ) : (
-          <>
-            {turns.length > 0 && (
-              <div className="chat-topbar">
-                <button className="btn-new-conversation" onClick={handleNewConversation}>
-                  Nouvelle conversation
-                </button>
-              </div>
-            )}
+          <div className="main-columns">
+            <div className="main-col main-col--left" />
 
-            <div className="chat-thread">
-              {turns.map((t) => (
-                <ConversationTurn
-                  key={t.id}
-                  question={t.question}
-                  answer={t.answer}
-                  sources={t.sources}
-                  liked={t.liked}
-                  disliked={t.disliked}
-                  copied={copiedId === t.id}
-                  onCopy={() => handleCopy(t.id, t.question, t.answer)}
-                  onLike={() => toggleLike(t.id)}
-                  onDislike={() => toggleDislike(t.id)}
-                  onOpenSource={openDoc}
-                />
-              ))}
-
-              {isAsking && (
-                <ConversationTurn
-                  question={askedQuestion}
-                  answer={answer}
-                  sources={[]}
-                  isStreaming
-                  onOpenSource={openDoc}
-                />
+            <div className="main-col main-col--center">
+              {turns.length > 0 && (
+                <div className="chat-topbar">
+                  <button className="btn-new-conversation" onClick={handleNewConversation}>
+                    Nouvelle conversation
+                  </button>
+                </div>
               )}
 
-              <div ref={answerRef} />
+              <div className="chat-thread">
+                {turns.map((t) => (
+                  <ConversationTurn
+                    key={t.id}
+                    question={t.question}
+                    answer={t.answer}
+                    sources={t.sources}
+                    liked={t.liked}
+                    disliked={t.disliked}
+                    copied={copiedId === t.id}
+                    onCopy={() => handleCopy(t.id, t.question, t.answer)}
+                    onLike={() => toggleLike(t.id)}
+                    onDislike={() => toggleDislike(t.id)}
+                    onOpenSource={openDoc}
+                  />
+                ))}
+
+                {isAsking && (
+                  <ConversationTurn
+                    question={askedQuestion}
+                    answer={answer}
+                    sources={[]}
+                    isStreaming
+                    onOpenSource={openDoc}
+                  />
+                )}
+
+                <div ref={answerRef} />
+              </div>
+
+              {renderQuestionBox('dock')}
             </div>
 
-            {renderQuestionBox('dock')}
-          </>
+            <div className="main-col main-col--right" />
+          </div>
         )}
       </main>
 
@@ -897,6 +903,40 @@ function StatusBadge({
   );
 }
 
+// ── Icônes (contour/plein, monochromes façon Claude) ────────────────────────
+function IconCopy() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function IconCheck() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function IconThumb({ filled, flipped }: { filled?: boolean; flipped?: boolean }) {
+  return (
+    <svg
+      width="15" height="15" viewBox="0 0 24 24"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={flipped ? { transform: 'scaleY(-1)' } : undefined}
+    >
+      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+    </svg>
+  );
+}
+
 // ── Composant tour de conversation (question + réponse) ────────────────────
 function ConversationTurn({
   question,
@@ -939,21 +979,21 @@ function ConversationTurn({
         {!isStreaming && answer && (
           <div className="turn-actions">
             <button className="turn-action-btn" onClick={onCopy} title="Copier">
-              {copied ? '✓' : '📋'}
+              {copied ? <IconCheck /> : <IconCopy />}
             </button>
             <button
               className={`turn-action-btn ${liked ? 'turn-action-btn--active' : ''}`}
               onClick={onLike}
               title="Utile"
             >
-              👍
+              <IconThumb filled={liked} />
             </button>
             <button
               className={`turn-action-btn ${disliked ? 'turn-action-btn--active' : ''}`}
               onClick={onDislike}
               title="Pas utile"
             >
-              👎
+              <IconThumb filled={disliked} flipped />
             </button>
           </div>
         )}
