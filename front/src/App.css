@@ -254,6 +254,11 @@
   flex-direction: column;
   align-items: flex-start;
   padding: 16px 24px 0;
+  /* Reste visible au scroll : la colonne est étirée sur toute la hauteur
+     du fil de conversation (comportement grid par défaut), position:sticky
+     epingle son contenu en haut de la zone défilante .main-columns. */
+  position: sticky;
+  top: 0;
 }
 
 @media (max-width: 900px) {
