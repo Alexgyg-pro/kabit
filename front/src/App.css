@@ -1588,7 +1588,8 @@
 
 /* ── KBOff Viewer ────────────────────────────────────────────────────────────── */
 .kdoc-viewer-card {
-  width: min(1200px, 96vw);
+  width: 50vw;
+  max-width: none;
   max-height: 92vh;
   display: flex;
   flex-direction: column;
@@ -1606,6 +1607,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
 }
 
 .kdoc-viewer-section-title {
