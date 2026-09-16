@@ -4,6 +4,26 @@
 
 ## À faire
 
+### US-056 — Décomposition des KB-arbres de décision en KDocs multiples (Teams, Outlook, Mac, VPN, ...)
+
+**En tant qu'** administrateur,
+**Je veux** pouvoir décomposer une KB officielle très longue, structurée en arbre de décision, en plusieurs KDocs atomiques reliés entre eux par une carte JSON,
+**Afin de** ne perdre aucune information (la génération d'un KDoc est plafonnée à 3000 caractères) et de conserver une bonne précision de retrouvaille RAG (un KDoc ciblé par symptôme plutôt qu'un KDoc fourre-tout).
+
+**Contexte :**
+Certains sujets transverses (Teams, Outlook, Mac, VPN...) ont une KB officielle qui prend la forme d'un arbre de décision : « si X, faire Y ; tester Z ; si résultat A, faire ceci, si B, faire cela ». Ces KB sont souvent bien plus longues que ce qu'un seul KDoc peut absorber sans couper de branches (limite de 3000 caractères dans le prompt de génération, `front/src/KBOffViewerModal.tsx`). Phénomène estimé rare et circonscrit : à la louche 4 sujets concernés aujourd'hui (Teams, Outlook, Mac, VPN), 10 grand maximum. La grande majorité des KDocs resteront des fiches autonomes, sans lien avec un arbre.
+
+**Piste retenue :**
+- Un fichier JSON par sujet-arbre (ex. `corpus/Arbres/teams.json`) décrivant les nœuds de décision (symptôme/test → branches) jusqu'aux feuilles
+- Chaque feuille référence un KDoc (id/fichier) — le contenu réellement indexé pour le RAG reste les KDocs eux-mêmes, inchangé ; le JSON n'est pas consulté au moment de répondre à une question, seulement pour la construction/maintenance du corpus côté admin
+- Sert d'aide à la décomposition : suivre quelles feuilles ont déjà leur KDoc généré, lesquelles restent à faire
+
+**Point à trancher en conception :** l'invariant de l'US-046 (« une KB ne génère qu'un seul KDoc », voir `POST /kdocs/save` dans `back/server.js`) doit être assoupli spécifiquement pour ces KB-arbres — une même KB source doit pouvoir engendrer plusieurs KDocs (un par feuille). Pour toutes les autres KB (l'immense majorité), l'invariant actuel reste inchangé.
+
+**Statut :** Idée validée en échange avec le PO — conception à affiner (structure exacte du JSON, UI de décomposition côté admin) avant implémentation.
+
+---
+
 ### US-055 — Référence à la KB source visible dans le KDoc
 
 **En tant que** technicien de support,
