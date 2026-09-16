@@ -4,6 +4,28 @@
 
 ## À faire
 
+### US-055 — Référence à la KB source visible dans le KDoc
+
+**En tant que** technicien de support,
+**Je veux** voir de quelle KB officielle un KDoc a été généré,
+**Afin de** pouvoir consulter la source brute si besoin (contexte, détails non repris dans la reformulation).
+
+**Contexte :**
+Le lien KDoc → KB source existe déjà, mais seulement côté bac à sable : `references.json` porte un champ `source_kb` sur l'entrée KDoc (voir `POST /kdocs/save`, `back/server.js`), invisible pour le technicien puisque ce fichier n'est jamais affiché dans l'interface RAG. Le contenu du KDoc lui-même (frontmatter + corps) ne mentionne pas la KB d'origine. Repéré en confondant la numérotation (`KDOC00004` généré depuis `KB00027`) — les deux compteurs sont indépendants depuis le début (choix assumé), mais rien ne raccroche visuellement l'un à l'autre pour qui consulte la fiche.
+
+**Comportement attendu :**
+- Le frontmatter d'un KDoc généré depuis une KB inclut un champ (ex. `kb_source: KB00027`)
+- `DocViewerModal` affiche déjà génériquement toute paire clé/valeur du frontmatter dans son bloc méta (`front/src/components/DocViewerModal.tsx`, fonction `parseDoc`) — ce champ doit donc apparaître automatiquement, sans changement supplémentaire côté affichage
+- Le prompt de génération (`SYSTEM_PROMPT` dans `front/src/KBOffViewerModal.tsx`) doit produire ce champ, ou à défaut il est ajouté programmatiquement à l'enregistrement (`handleSave`) plutôt que délégué au LLM
+- Un KDoc autonome (US-050, sans KB source) n'a simplement pas ce champ
+
+**Critères d'acceptance :**
+- [ ] Un KDoc généré depuis une KB affiche sa référence source dans le bloc méta de la modale de visualisation
+- [ ] Le champ reste correct après une régénération ou une édition manuelle du KDoc
+- [ ] Aucune régression sur les KDocs déjà existants sans ce champ (affichage gracieux, pas d'erreur)
+
+---
+
 ### US-050 — Créer un KDoc autonome (sans KB source)
 
 **En tant que** rédacteur de la base de connaissance,
