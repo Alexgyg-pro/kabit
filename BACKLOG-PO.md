@@ -4,6 +4,39 @@
 
 ## À faire
 
+### US-057 — Pré-prompt en couches : admin, nature de fiche (rédacteur), préférence technicien
+
+**En tant que** Product Owner,
+**Je veux** que le prompt système envoyé au LLM s'appuie sur plusieurs couches indépendantes de pré-prompt,
+**Afin de** personnaliser le ton et le style de réponse selon la nature du contenu et les préférences individuelles des techniciens, sans dupliquer la configuration ni tout réécrire.
+
+**Contexte :**
+Le prompt système empile déjà deux couches (`front/src/App.tsx`, `handleAsk`) : le pré-prompt admin (`systemPrompt`, éditable dans `system-prompt.md`, s'applique à toute réponse) et un pré-prompt par niveau technicien (`levelHint`, via `TECH_LEVEL_HINTS` selon le `techLevel` choisi dans Préférences). L'idée validée avec le PO est d'étendre cette même mécanique de superposition, sans la changer, à deux couches supplémentaires :
+
+1. **Admin (existant, inchangé)** — pré-prompt global, s'applique à toutes les réponses.
+2. **Rédacteur (nouveau)** — un pré-prompt par *nature* de fiche, indépendante du thème/sujet. Taxonomie fournie par le PO (issue du document de présentation à l'état-major) :
+   - **Fiches contextuelles** — culture générale, environnement CAGIP/PDTA, options retenues (VPN, ports USB bridés...)
+   - **Fiches procédures** — marche à suivre : enrôlement téléphone, déblocage badge CAPS, échange matériel Boutique/stock
+   - **Fiches techniques** — refonte de profil, réparation WMI, mise à niveau pilotes, appairage casque/dongle
+   - **Fiches matériel** — dépannage, critères de remplacement d'accessoires
+   - **Fiches outils** — ServiceNow, consoles téléphonie
+   Sélection **automatique**, sans action du technicien : la nature vient d'un nouveau champ frontmatter sur la fiche/KDoc (ex. `nature:`, distinct de `catégorie` qui reste plus fin/thématique) ; le pré-prompt correspondant à la nature de la/les source(s) retrouvée(s) par le RAG est injecté.
+3. **Technicien (nouveau, couche personnelle)** — préférence individuelle libre (ex. tutoiement/vouvoiement), stockée côté client comme `techLevel` aujourd'hui (`localStorage`, par poste). Un seul rôle « Technicien », mêmes droits pour tous — seule la préférence personnelle change d'un technicien à l'autre, ce n'est pas un second rôle.
+
+**Comportement attendu :**
+- Un pré-prompt éditable par nature de fiche (5 valeurs), géré quelque part côté admin (à localiser en conception)
+- Nouveau champ frontmatter `nature` sur les fiches/KDocs ; absence du champ sur les fiches existantes ne casse rien (couche simplement absente pour elles)
+- Nouveau champ de préférence personnelle libre pour le technicien, édité depuis l'onglet Préférences existant, stocké en `localStorage`
+- Les couches se concatènent dans le prompt système exactement comme admin+niveau aujourd'hui — aucune réécriture de la mécanique existante
+
+**Points à trancher en conception :**
+- Où vit la gestion des pré-prompts « rédacteur » : nouvel onglet dédié dans l'admin, ou section de l'onglet Préférences existant ? Le rôle « rédacteur » doit-il apparaître comme un état à part dans le sélecteur de rôle (aujourd'hui binaire Technicien/Administrateur), ou rester une fonctionnalité accessible depuis le rôle Administrateur ?
+- Si les sources retrouvées par le RAG pour une même question ont des natures différentes : concaténer tous les pré-prompts concernés, ou n'en retenir qu'un (lequel) ?
+
+**Statut :** Idée validée en échange avec le PO — conception à affiner avant implémentation.
+
+---
+
 ### US-056 — Décomposition des KB-arbres de décision en KDocs multiples (Teams, Outlook, Mac, VPN, ...)
 
 **En tant qu'** administrateur,
