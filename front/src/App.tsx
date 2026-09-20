@@ -289,6 +289,32 @@ export default function App() {
     setTechLevelState(level);
   }
 
+  // Pré-prompt personnel du technicien (tutoiement/vouvoiement, etc.) — scopé
+  // par profil comme techLevel, s'ajoute au pré-prompt admin + niveau existants.
+  const [personalPrompt, setPersonalPromptState] = useState<string>(
+    () => localStorage.getItem(`techPersonalPrompt:${profile}`) ?? ''
+  );
+  useEffect(() => {
+    setPersonalPromptState(localStorage.getItem(`techPersonalPrompt:${profile}`) ?? '');
+  }, [profile]);
+
+  const [showPersonalPrompt, setShowPersonalPrompt] = useState(false);
+  const [personalPromptDraft, setPersonalPromptDraft] = useState('');
+  const [personalPromptSaved, setPersonalPromptSaved] = useState(false);
+
+  function openPersonalPrompt() {
+    setPersonalPromptDraft(personalPrompt);
+    setPersonalPromptSaved(false);
+    setShowPersonalPrompt(true);
+  }
+
+  function savePersonalPrompt() {
+    localStorage.setItem(`techPersonalPrompt:${profile}`, personalPromptDraft);
+    setPersonalPromptState(personalPromptDraft);
+    setPersonalPromptSaved(true);
+    setTimeout(() => setPersonalPromptSaved(false), 2000);
+  }
+
   const [kboldEnabled, setKboldEnabled] = useState<boolean>(
     () => localStorage.getItem('kboldEnabled') !== 'false'
   );
@@ -497,6 +523,7 @@ export default function App() {
           content:
             (systemPrompt ? systemPrompt.trim() + '\n\n' : '') +
             (levelHint ? levelHint + '\n\n' : '') +
+            (personalPrompt ? personalPrompt.trim() + '\n\n' : '') +
             `Tu es un assistant pour techniciens support informatique chez FinCorp Solutions.\n` +
             `Les documents ci-dessous sont les procédures internes pertinentes. Utilise-les pour répondre.\n` +
             `Si un document est partiellement pertinent, exploite les informations disponibles pour aider le technicien.\n` +
@@ -746,8 +773,10 @@ export default function App() {
             </div>
           )}
 
-          {hasAdminAccess && (
+          {hasAdminAccess ? (
             <button className="btn-admin-open" onClick={() => setShowAdmin(true)} title="Administration">⚙</button>
+          ) : (
+            <button className="btn-admin-open" onClick={openPersonalPrompt} title="Pré-prompt personnel">⚙</button>
           )}
           <button
             className="btn-theme-toggle"
@@ -839,6 +868,33 @@ export default function App() {
             <div className="modal-meta">system-prompt.md</div>
             <div className="modal-body">
               <pre className="system-prompt-content">{systemPrompt.trim()}</pre>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale pré-prompt personnel (technicien) */}
+      {showPersonalPrompt && (
+        <div className="modal-overlay" onClick={() => setShowPersonalPrompt(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">
+                Pré-prompt personnel — {PROFILES.find((p) => p.id === profile)?.label}
+              </span>
+              <button className="modal-close" onClick={() => setShowPersonalPrompt(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <textarea
+                className="admin-textarea"
+                rows={6}
+                value={personalPromptDraft}
+                onChange={(e) => setPersonalPromptDraft(e.target.value)}
+                placeholder="Instructions ajoutées à chaque question (ex. « tutoie-moi », « réponses très courtes »...)"
+              />
+              <div className="admin-save-row">
+                <button className="btn-save" onClick={savePersonalPrompt}>Sauvegarder</button>
+                {personalPromptSaved && <span className="admin-msg">✅ Sauvegardé</span>}
+              </div>
             </div>
           </div>
         </div>
