@@ -19,8 +19,18 @@ interface AdminModalProps {
   onSaveSystemPrompt: (content: string) => Promise<void>;
   onSaveJson: (content: string) => Promise<void>;
   onOpenDoc: (path: string, title: string) => Promise<void>;
+  naturePrompts: Record<string, string>;
+  onSaveNaturePrompts: (data: Record<string, string>) => Promise<void>;
   onClose: () => void;
 }
+
+const NATURES: { id: string; label: string }[] = [
+  { id: 'contextuelle', label: 'Fiches contextuelles' },
+  { id: 'procedure',    label: 'Fiches procédures' },
+  { id: 'technique',    label: 'Fiches techniques' },
+  { id: 'materiel',     label: 'Fiches matériel' },
+  { id: 'outil',        label: 'Fiches outils' },
+];
 
 export default function AdminModal({
   systemPrompt,
@@ -38,6 +48,8 @@ export default function AdminModal({
   onSaveSystemPrompt,
   onSaveJson,
   onOpenDoc,
+  naturePrompts,
+  onSaveNaturePrompts,
   onClose,
 }: AdminModalProps) {
   const [title, setTitle] = useState('');
@@ -58,14 +70,27 @@ export default function AdminModal({
   const [showCatalogue, setShowCatalogue] = useState(false);
   const [showKDocs, setShowKDocs] = useState(false);
 
-  type AdminTab = 'corpus' | 'catalogue' | 'sources' | 'preferences';
+  type AdminTab = 'corpus' | 'catalogue' | 'sources' | 'redacteur' | 'preferences';
   const [activeTab, setActiveTab] = useState<AdminTab>('corpus');
   const TABS: { id: AdminTab; label: string }[] = [
     { id: 'corpus',      label: 'Corpus' },
     { id: 'catalogue',   label: 'Catalogue IT' },
     { id: 'sources',     label: 'Sources KDocs' },
+    { id: 'redacteur',   label: 'Rédacteur' },
     { id: 'preferences', label: 'Préférences' },
   ];
+
+  const [natureDraft, setNatureDraft] = useState<Record<string, string>>(naturePrompts);
+  const [natureMsg, setNatureMsg] = useState('');
+
+  async function handleSaveNature() {
+    try {
+      await onSaveNaturePrompts(natureDraft);
+      setNatureMsg('✅ Pré-prompts sauvegardés');
+    } catch (e) {
+      setNatureMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
 
   async function fetchCatalogue() {
     try {
@@ -310,6 +335,36 @@ export default function AdminModal({
             <button className="btn-cat-open" onClick={() => setShowKDocs(true)}>
               Ouvrir le gestionnaire de sources
             </button>
+          </section>
+
+          </>}
+
+          {activeTab === 'redacteur' && <>
+
+          {/* ── Section Pré-prompts par nature de fiche ─────────────────── */}
+          <section className="admin-section">
+            <h2 className="admin-section-title">Pré-prompts par nature de fiche</h2>
+            <p className="admin-section-desc">
+              S'ajoutent au pré-prompt admin quand une réponse s'appuie sur une fiche de cette
+              nature (champ <code>nature:</code> dans son frontmatter). Plusieurs natures dans une
+              même réponse : leurs pré-prompts se cumulent.
+            </p>
+            {NATURES.map((n) => (
+              <div key={n.id} className="admin-form">
+                <label className="admin-label">{n.label} <code>({n.id})</code></label>
+                <textarea
+                  className="admin-textarea"
+                  rows={3}
+                  value={natureDraft[n.id] ?? ''}
+                  onChange={(e) => setNatureDraft((prev) => ({ ...prev, [n.id]: e.target.value }))}
+                  placeholder={`Instructions pour les réponses basées sur des ${n.label.toLowerCase()}...`}
+                />
+              </div>
+            ))}
+            <div className="admin-save-row">
+              <button className="btn-save" onClick={handleSaveNature}>Sauvegarder</button>
+              {natureMsg && <span className="admin-msg">{natureMsg}</span>}
+            </div>
           </section>
 
           </>}

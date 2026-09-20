@@ -278,6 +278,9 @@ export default function App() {
   const [systemPrompt, setSystemPrompt] = useState('');
   const [showSystemPrompt, setShowSystemPrompt] = useState(false);
 
+  // Pré-prompts rédacteur par nature de fiche (US-057 phase 2).
+  const [naturePrompts, setNaturePrompts] = useState<Record<string, string>>({});
+
   const [question, setQuestion] = useState('');
   const [askedQuestion, setAskedQuestion] = useState('');
   const [answer, setAnswer] = useState('');
@@ -377,6 +380,11 @@ export default function App() {
       const pRes = await fetch(`${BACKEND}/profils`);
       if (pRes.ok) setProfilesData(await pRes.json());
     } catch { /* backend absent, on continue avec des profils vides */ }
+
+    try {
+      const npRes = await fetch(`${BACKEND}/nature-preprompts`);
+      if (npRes.ok) setNaturePrompts(await npRes.json());
+    } catch { /* backend absent, on continue sans pré-prompts par nature */ }
 
     const count = await countDocs();
     if (count > 0) {
@@ -524,6 +532,11 @@ export default function App() {
       turnSources = scored.map((r) => ({ id: r.doc.id, path: r.doc.path, title: r.doc.title, section: r.doc.section, score: r.score, content: r.doc.content }));
       setSources(turnSources);
 
+      // Pré-prompt(s) rédacteur : natures distinctes parmi les sources retrouvées
+      // (US-057 phase 2). Sources sans champ `nature` : aucune contribution.
+      const natures = [...new Set(scored.map((r) => extractNature(r.doc.content)).filter((n): n is string => !!n))];
+      const naturePrompt = natures.map((n) => naturePrompts[n]).filter(Boolean).join('\n\n');
+
       // 3. Contexte
       const contextBlocks = scored
         .map((r, i) => {
@@ -545,6 +558,7 @@ export default function App() {
           role: 'system',
           content:
             (systemPrompt ? systemPrompt.trim() + '\n\n' : '') +
+            (naturePrompt ? naturePrompt.trim() + '\n\n' : '') +
             (levelHint ? levelHint + '\n\n' : '') +
             (personalPrompt ? personalPrompt.trim() + '\n\n' : '') +
             `Tu es un assistant pour techniciens support informatique chez FinCorp Solutions.\n` +
@@ -696,6 +710,24 @@ export default function App() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     setSystemPrompt(content);
+  }
+
+  async function handleSaveNaturePrompts(data: Record<string, string>): Promise<void> {
+    const res = await fetch(`${BACKEND}/nature-preprompts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error((await res.json()).error);
+    setNaturePrompts(data);
+  }
+
+  // Extrait le champ `nature:` du frontmatter d'une fiche (US-057 phase 2).
+  function extractNature(content: string): string | null {
+    const m = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (!m) return null;
+    const line = m[1].match(/^nature:\s*(.+)$/m);
+    return line ? line[1].trim() : null;
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -984,6 +1016,8 @@ export default function App() {
           onReindex={() => { runIndexing(); setShowAdmin(false); }}
           onSave={handleAdminSave}
           onSaveSystemPrompt={handleSaveSystemPrompt}
+          naturePrompts={naturePrompts}
+          onSaveNaturePrompts={handleSaveNaturePrompts}
           onSaveJson={handleSaveJson}
           onOpenDoc={handleOpenCorpusDoc}
           onClose={() => setShowAdmin(false)}

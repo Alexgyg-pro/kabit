@@ -10,6 +10,7 @@ const SYSTEM_PROMPT_PATH = path.join(__dirname, '..', 'system-prompt.md');
 const SYSTEM_PROMPT_DEFAULT_PATH = path.join(__dirname, '..', 'system-prompt.default.md');
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const PROFILES_PATH = path.join(DATA_DIR, 'profils.json');
+const NATURE_PREPROMPTS_PATH = path.join(DATA_DIR, 'nature-preprompts.json');
 
 // dev : frontend Vite sur 5173 — prod : même origine (frontend servi par ce serveur)
 app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:3001'] }));
@@ -91,6 +92,35 @@ app.put('/profils/:id', (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('Erreur PUT /profils/:id:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /nature-preprompts — pré-prompts rédacteur par nature de fiche ({} si absent)
+app.get('/nature-preprompts', (req, res) => {
+  try {
+    if (!fs.existsSync(NATURE_PREPROMPTS_PATH)) {
+      return res.json({});
+    }
+    res.json(JSON.parse(fs.readFileSync(NATURE_PREPROMPTS_PATH, 'utf-8')));
+  } catch (err) {
+    console.error('Erreur GET /nature-preprompts:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /nature-preprompts — remplace l'ensemble des pré-prompts par nature
+app.post('/nature-preprompts', (req, res) => {
+  try {
+    const data = req.body;
+    if (typeof data !== 'object' || data === null) {
+      return res.status(400).json({ error: 'Corps JSON requis' });
+    }
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(NATURE_PREPROMPTS_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erreur POST /nature-preprompts:', err);
     res.status(500).json({ error: err.message });
   }
 });
