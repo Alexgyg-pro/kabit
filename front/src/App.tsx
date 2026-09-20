@@ -255,6 +255,9 @@ export default function App() {
   }
 
   const isAdmin = profile === 'admin';
+  // Rédacteur : mêmes accès que l'administrateur pour l'instant (à affiner en
+  // phase 2, quand la gestion des pré-prompts par nature existera).
+  const hasAdminAccess = isAdmin || profile === 'redacteur';
 
   const [appStatus, setAppStatus] = useState<AppStatus>('init');
   const [statusMsg, setStatusMsg] = useState('Initialisation...');
@@ -743,7 +746,7 @@ export default function App() {
             </div>
           )}
 
-          {isAdmin && (
+          {hasAdminAccess && (
             <button className="btn-admin-open" onClick={() => setShowAdmin(true)} title="Administration">⚙</button>
           )}
           <button
@@ -850,7 +853,7 @@ export default function App() {
           content={selectedDoc.content}
           meta={`${selectedDoc.path}${selectedDoc.score > 0 ? ` · similarité : ${selectedDoc.score.toFixed(2)}` : ''}`}
           isJson={selectedDoc.path.endsWith('.json')}
-          onSave={isAdmin && !selectedDoc.path.endsWith('.json') && !selectedDoc.path.startsWith('KDocs/')
+          onSave={hasAdminAccess && !selectedDoc.path.endsWith('.json') && !selectedDoc.path.startsWith('KDocs/')
             ? async (content) => {
                 const res = await fetch(`${BACKEND}/corpus/file`, {
                   method: 'PUT',
