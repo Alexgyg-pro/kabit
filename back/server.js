@@ -8,6 +8,8 @@ const PORT = 3001;
 const CORPUS_DIR = path.join(__dirname, '..', 'corpus');
 const SYSTEM_PROMPT_PATH = path.join(__dirname, '..', 'system-prompt.md');
 const SYSTEM_PROMPT_DEFAULT_PATH = path.join(__dirname, '..', 'system-prompt.default.md');
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const PROFILES_PATH = path.join(DATA_DIR, 'profils.json');
 
 // dev : frontend Vite sur 5173 — prod : même origine (frontend servi par ce serveur)
 app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:3001'] }));
@@ -52,6 +54,43 @@ app.post('/system-prompt', (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Erreur POST /system-prompt:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /profils — retourne data/profils.json ({} si absent). Paramètres par
+// profil (niveau technicien, pré-prompt personnel...) : côté serveur plutôt
+// que localStorage, pour ne pas dépendre du port/navigateur et rester
+// exportable/importable (cf. US-057).
+app.get('/profils', (req, res) => {
+  try {
+    if (!fs.existsSync(PROFILES_PATH)) {
+      return res.json({});
+    }
+    res.json(JSON.parse(fs.readFileSync(PROFILES_PATH, 'utf-8')));
+  } catch (err) {
+    console.error('Erreur GET /profils:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /profils/:id — fusionne les champs fournis dans les paramètres du profil
+app.put('/profils/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    if (!id || typeof updates !== 'object' || updates === null) {
+      return res.status(400).json({ error: 'id et corps JSON requis' });
+    }
+    const data = fs.existsSync(PROFILES_PATH)
+      ? JSON.parse(fs.readFileSync(PROFILES_PATH, 'utf-8'))
+      : {};
+    data[id] = { ...data[id], ...updates };
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(PROFILES_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    res.json(data);
+  } catch (err) {
+    console.error('Erreur PUT /profils/:id:', err);
     res.status(500).json({ error: err.message });
   }
 });

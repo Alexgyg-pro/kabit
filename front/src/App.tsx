@@ -22,6 +22,10 @@ const GROQ_MODELS = [
 ];
 
 type Profile = 'tech-a' | 'tech-b' | 'redacteur' | 'admin';
+interface ProfileSettings {
+  techLevel?: string;
+  personalPrompt?: string;
+}
 const PROFILES: { id: Profile; label: string }[] = [
   { id: 'tech-a',    label: 'Technicien A' },
   { id: 'tech-b',    label: 'Technicien B' },
@@ -276,27 +280,29 @@ export default function App() {
   const [isAsking, setIsAsking] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<Source | null>(null);
 
-  const [techLevel, setTechLevelState] = useState<string>(
-    () => localStorage.getItem(`techLevel:${profile}`) ?? 'none'
-  );
-  // Recharge le niveau technicien propre au profil sélectionné à chaque bascule.
-  useEffect(() => {
-    setTechLevelState(localStorage.getItem(`techLevel:${profile}`) ?? 'none');
-  }, [profile]);
+  // Paramètres par profil (niveau technicien, pré-prompt personnel...) —
+  // servis par le backend (data/profils.json) plutôt que localStorage : pas
+  // de cloisonnement par port/navigateur, et exportable/importable comme un
+  // vrai fichier de config (cf. US-057).
+  const [profilesData, setProfilesData] = useState<Record<string, ProfileSettings>>({});
 
-  function handleTechLevelChange(level: string) {
-    localStorage.setItem(`techLevel:${profile}`, level);
-    setTechLevelState(level);
+  const techLevel = profilesData[profile]?.techLevel ?? 'none';
+  const personalPrompt = profilesData[profile]?.personalPrompt ?? '';
+
+  async function saveProfileSettings(updates: ProfileSettings) {
+    setProfilesData((prev) => ({ ...prev, [profile]: { ...prev[profile], ...updates } }));
+    try {
+      await fetch(`${BACKEND}/profils/${profile}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+    } catch { /* backend absent : reste en mémoire pour la session */ }
   }
 
-  // Pré-prompt personnel du technicien (tutoiement/vouvoiement, etc.) — scopé
-  // par profil comme techLevel, s'ajoute au pré-prompt admin + niveau existants.
-  const [personalPrompt, setPersonalPromptState] = useState<string>(
-    () => localStorage.getItem(`techPersonalPrompt:${profile}`) ?? ''
-  );
-  useEffect(() => {
-    setPersonalPromptState(localStorage.getItem(`techPersonalPrompt:${profile}`) ?? '');
-  }, [profile]);
+  function handleTechLevelChange(level: string) {
+    saveProfileSettings({ techLevel: level });
+  }
 
   const [showPersonalPrompt, setShowPersonalPrompt] = useState(false);
   const [personalPromptDraft, setPersonalPromptDraft] = useState('');
@@ -309,8 +315,7 @@ export default function App() {
   }
 
   function savePersonalPrompt() {
-    localStorage.setItem(`techPersonalPrompt:${profile}`, personalPromptDraft);
-    setPersonalPromptState(personalPromptDraft);
+    saveProfileSettings({ personalPrompt: personalPromptDraft });
     setPersonalPromptSaved(true);
     setTimeout(() => setPersonalPromptSaved(false), 2000);
   }
@@ -354,6 +359,11 @@ export default function App() {
       const spRes = await fetch(`${BACKEND}/system-prompt`);
       if (spRes.ok) setSystemPrompt(await spRes.text());
     } catch { /* backend absent, on continue sans pré-prompt */ }
+
+    try {
+      const pRes = await fetch(`${BACKEND}/profils`);
+      if (pRes.ok) setProfilesData(await pRes.json());
+    } catch { /* backend absent, on continue avec des profils vides */ }
 
     const count = await countDocs();
     if (count > 0) {
@@ -971,7 +981,9 @@ function StatusBadge({
   const groqBadge = hasKey ? 'Groq prêt' : 'Clé Groq manquante';
 
   const cacheBadge =
-    appStatus === 'ready' && docCount > 0
+    appStatus === 'error'
+      ? statusMsg
+      : appStatus === 'ready' && docCount > 0
       ? `Cache : ${docCount} document${docCount > 1 ? 's' : ''}`
       : appStatus === 'indexing'
       ? statusMsg
