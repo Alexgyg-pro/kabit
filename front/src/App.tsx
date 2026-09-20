@@ -21,6 +21,14 @@ const GROQ_MODELS = [
   { id: 'qwen/qwen3.8-27b',    label: 'Qwen3.8 27B' },
 ];
 
+type Profile = 'tech-a' | 'tech-b' | 'redacteur' | 'admin';
+const PROFILES: { id: Profile; label: string }[] = [
+  { id: 'tech-a',    label: 'Technicien A' },
+  { id: 'tech-b',    label: 'Technicien B' },
+  { id: 'redacteur', label: 'Rédacteur' },
+  { id: 'admin',     label: 'Administrateur' },
+];
+
 const TECH_LEVELS = [
   { id: 'none',      label: 'Non spécifié' },
   { id: 'desk',      label: 'Service Desk (N1)' },
@@ -234,15 +242,19 @@ export default function App() {
     setTheme(t);
   }
 
-  const [role, setRole] = useState<'tech' | 'admin'>(() => {
-    return (localStorage.getItem('role') as 'tech' | 'admin') || 'tech';
+  const [profile, setProfile] = useState<Profile>(() => {
+    const saved = localStorage.getItem('profile');
+    return (PROFILES.some(p => p.id === saved) ? saved : 'tech-a') as Profile;
   });
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-  function toggleRole() {
-    const next = role === 'tech' ? 'admin' : 'tech';
-    localStorage.setItem('role', next);
-    setRole(next);
+  function selectProfile(next: Profile) {
+    localStorage.setItem('profile', next);
+    setProfile(next);
+    setProfileMenuOpen(false);
   }
+
+  const isAdmin = profile === 'admin';
 
   const [appStatus, setAppStatus] = useState<AppStatus>('init');
   const [statusMsg, setStatusMsg] = useState('Initialisation...');
@@ -261,13 +273,17 @@ export default function App() {
   const [isAsking, setIsAsking] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<Source | null>(null);
 
-  const [techLevel, setTechLevel] = useState<string>(
-    () => localStorage.getItem('techLevel') ?? 'none'
+  const [techLevel, setTechLevelState] = useState<string>(
+    () => localStorage.getItem(`techLevel:${profile}`) ?? 'none'
   );
+  // Recharge le niveau technicien propre au profil sélectionné à chaque bascule.
+  useEffect(() => {
+    setTechLevelState(localStorage.getItem(`techLevel:${profile}`) ?? 'none');
+  }, [profile]);
 
   function handleTechLevelChange(level: string) {
-    localStorage.setItem('techLevel', level);
-    setTechLevel(level);
+    localStorage.setItem(`techLevel:${profile}`, level);
+    setTechLevelState(level);
   }
 
   const [kboldEnabled, setKboldEnabled] = useState<boolean>(
@@ -705,14 +721,29 @@ export default function App() {
         <div className="sidebar-spacer" />
 
         <div className="sidebar-footer">
-          <button
-            className="sidebar-role"
-            onClick={toggleRole}
-            title={role === 'tech' ? 'Passer en mode Administrateur' : 'Passer en mode Technicien'}
-          >
-            {role === 'tech' ? 'Technicien' : 'Administrateur'}
+          {profileMenuOpen && (
+            <div className="profile-menu-backdrop" onClick={() => setProfileMenuOpen(false)} />
+          )}
+
+          <button className="sidebar-role" onClick={() => setProfileMenuOpen((o) => !o)}>
+            {PROFILES.find((p) => p.id === profile)?.label}
           </button>
-          {role === 'admin' && (
+
+          {profileMenuOpen && (
+            <div className="profile-menu">
+              {PROFILES.map((p) => (
+                <button
+                  key={p.id}
+                  className={`profile-menu-item ${p.id === profile ? 'profile-menu-item--active' : ''}`}
+                  onClick={() => selectProfile(p.id)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {isAdmin && (
             <button className="btn-admin-open" onClick={() => setShowAdmin(true)} title="Administration">⚙</button>
           )}
           <button
@@ -819,7 +850,7 @@ export default function App() {
           content={selectedDoc.content}
           meta={`${selectedDoc.path}${selectedDoc.score > 0 ? ` · similarité : ${selectedDoc.score.toFixed(2)}` : ''}`}
           isJson={selectedDoc.path.endsWith('.json')}
-          onSave={role === 'admin' && !selectedDoc.path.endsWith('.json') && !selectedDoc.path.startsWith('KDocs/')
+          onSave={isAdmin && !selectedDoc.path.endsWith('.json') && !selectedDoc.path.startsWith('KDocs/')
             ? async (content) => {
                 const res = await fetch(`${BACKEND}/corpus/file`, {
                   method: 'PUT',

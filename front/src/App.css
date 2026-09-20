@@ -64,12 +64,48 @@
 .sidebar-spacer { flex: 1; }
 
 .sidebar-footer {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   padding-top: 14px;
   border-top: 1px solid var(--border);
 }
+
+.profile-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: transparent;
+}
+
+.profile-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 56;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.profile-menu-item {
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.profile-menu-item:hover { background: var(--border); }
+.profile-menu-item--active { font-weight: 700; color: var(--accent-link); }
 
 .sidebar-role {
   background: transparent;
