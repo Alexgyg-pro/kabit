@@ -1,0 +1,11 @@
+{
+  "name": "kabit",
+  "private": true,
+  "description": "Lanceur racine KABIT — voir back/ et front/ pour les projets réels",
+  "scripts": {
+    "dev": "concurrently -n back,front -c blue,green \"npm run dev --prefix back\" \"npm run dev --prefix front\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -17,6 +17,9 @@ Le développement (Git, Claude Code, scripts) se pilote depuis la racine `kabit/
 ### 2. Cloner et installer les dépendances
 
 ```bash
+# Racine (lanceur npm run dev commun, cf. plus bas)
+npm install
+
 # Backend
 cd back
 npm install
@@ -49,16 +52,24 @@ npm run corpus:reset
 
 ## Lancer le projet
 
-Il faut deux terminaux ouverts simultanément.
+KABIT a besoin des deux serveurs (backend + frontend) en même temps — l'un ne suffit pas à l'autre.
 
-**Terminal 1 — Backend :**
+**Option A — Un seul terminal (recommandé) :**
+```bash
+npm install   # une fois, à la racine (installe concurrently)
+npm run dev   # lance back + front ensemble, logs préfixés
+```
+
+**Option B — Deux terminaux séparés** (utile pour isoler les logs de chacun) :
+
+Terminal 1 — Backend :
 ```bash
 cd back
 npm run dev
 # → http://localhost:3001
 ```
 
-**Terminal 2 — Frontend :**
+Terminal 2 — Frontend :
 ```bash
 cd front
 npm run dev
@@ -66,6 +77,8 @@ npm run dev
 ```
 
 Ouvrir `http://localhost:5173` dans le navigateur.
+
+> ⚠️ Le frontend seul suffit à donner l'illusion que tout fonctionne (le RAG répond via le cache du navigateur une fois indexé, sans repasser par le backend) — mais sans backend, le pré-prompt, les profils et toute réindexation resteront muets ou en échec silencieux.
 
 ### Premier lancement
 
@@ -98,6 +111,7 @@ back/server.js
 back/package.json
 front/dist/                 (dossier complet)
 corpus/                     (dossier complet)
+data/profils.json
 system-prompt.md
 system-prompt.default.md
 ```
@@ -227,6 +241,8 @@ L'onglet **Sources KDocs** de l'administration gère la transformation d'une KB 
 
 ```
 kabit/
+├── package.json            # Lanceur racine (npm run dev = back + front ensemble)
+├── data/                   # Paramètres de profil (data/profils.json), versionné
 ├── front/                  # React/Vite/TypeScript (port 5173)
 │   ├── .env.local          # Clé API Groq — NE PAS COMMITTER
 │   └── src/
