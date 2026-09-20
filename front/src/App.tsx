@@ -294,15 +294,20 @@ export default function App() {
   const techLevel = profilesData[profile]?.techLevel ?? 'none';
   const personalPrompt = profilesData[profile]?.personalPrompt ?? '';
 
-  async function saveProfileSettings(updates: ProfileSettings) {
+  // Renvoie true si la sauvegarde a bien été persistée côté serveur (permet
+  // aux appelants de signaler l'échec au lieu de le passer sous silence).
+  async function saveProfileSettings(updates: ProfileSettings): Promise<boolean> {
     setProfilesData((prev) => ({ ...prev, [profile]: { ...prev[profile], ...updates } }));
     try {
-      await fetch(`${BACKEND}/profils/${profile}`, {
+      const res = await fetch(`${BACKEND}/profils/${profile}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
-    } catch { /* backend absent : reste en mémoire pour la session */ }
+      return res.ok;
+    } catch {
+      return false; // backend absent/injoignable : reste en mémoire pour la session
+    }
   }
 
   function handleTechLevelChange(level: string) {
@@ -312,17 +317,20 @@ export default function App() {
   const [showPersonalPrompt, setShowPersonalPrompt] = useState(false);
   const [personalPromptDraft, setPersonalPromptDraft] = useState('');
   const [personalPromptSaved, setPersonalPromptSaved] = useState(false);
+  const [personalPromptError, setPersonalPromptError] = useState(false);
 
   function openPersonalPrompt() {
     setPersonalPromptDraft(personalPrompt);
     setPersonalPromptSaved(false);
+    setPersonalPromptError(false);
     setShowPersonalPrompt(true);
   }
 
-  function savePersonalPrompt() {
-    saveProfileSettings({ personalPrompt: personalPromptDraft });
-    setPersonalPromptSaved(true);
-    setTimeout(() => setPersonalPromptSaved(false), 2000);
+  async function savePersonalPrompt() {
+    const ok = await saveProfileSettings({ personalPrompt: personalPromptDraft });
+    setPersonalPromptSaved(ok);
+    setPersonalPromptError(!ok);
+    if (ok) setTimeout(() => setPersonalPromptSaved(false), 2000);
   }
 
   const [kboldEnabled, setKboldEnabled] = useState<boolean>(
@@ -920,7 +928,13 @@ export default function App() {
               />
               <div className="admin-save-row">
                 <button className="btn-save" onClick={savePersonalPrompt}>Sauvegarder</button>
+                <button className="btn-doc-cancel" onClick={() => setShowPersonalPrompt(false)}>Fermer</button>
                 {personalPromptSaved && <span className="admin-msg">✅ Sauvegardé</span>}
+                {personalPromptError && (
+                  <span className="admin-msg" style={{ color: '#f87171' }}>
+                    ⚠️ Non enregistré côté serveur (backend injoignable ou pas à jour) — reste en mémoire pour cette session seulement
+                  </span>
+                )}
               </div>
             </div>
           </div>
