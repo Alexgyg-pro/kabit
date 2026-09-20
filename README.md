@@ -3,6 +3,18 @@
 Assistant de support basé sur RAG (Retrieval-Augmented Generation) :
 embeddings 100% navigateur + cache IndexedDB + génération via l'API Groq (LLM cloud).
 
+## Démarrage rapide
+
+Déjà installé au moins une fois (sinon, voir [Installation](#installation)) ? Depuis la racine :
+
+```bash
+npm run dev
+```
+
+Lance le backend (`http://localhost:3001`) et le frontend (`http://localhost:5173`) ensemble, dans le même terminal. Ouvrir `http://localhost:5173` dans le navigateur.
+
+---
+
 ## Prérequis
 
 - **Node.js** >= 18
