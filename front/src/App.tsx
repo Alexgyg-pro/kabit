@@ -8,6 +8,11 @@ import { splitNote } from './note';
 import './App.css';
 
 const BACKEND = 'http://localhost:3001';
+// Ports autorisés en CORS par le backend (back/server.js) — à tenir synchronisé
+// avec ce fichier. Vite bascule sur le port suivant (5174, 5175...) si 5173
+// est déjà pris par un ancien `npm run dev` resté ouvert ; dans ce cas, tous
+// les appels vers le backend échouent silencieusement (CORS).
+const EXPECTED_FRONT_PORTS = ['5173', '3001'];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const GROQ_API_KEY: string | undefined = (import.meta as any).env?.VITE_GROQ_API_KEY;
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
@@ -802,6 +807,18 @@ export default function App() {
         <button className="btn-sidebar-toggle" onClick={() => setSidebarOpen((o) => !o)} title="Menu">
           {sidebarOpen ? '✕' : '☰'}
         </button>
+
+        {/* Port du frontend hors de la liste CORS du backend */}
+        {!EXPECTED_FRONT_PORTS.includes(window.location.port) && (
+          <div className="ollama-missing">
+            <strong>Erreur de port</strong> — ce frontend tourne sur le port{' '}
+            <code>{window.location.port || '80'}</code>, que le backend n'autorise pas en CORS
+            (seuls <code>{EXPECTED_FRONT_PORTS.join(', ')}</code> le sont, voir{' '}
+            <code>back/server.js</code>). Tout ce qui dépend du backend (pré-prompt, profils,
+            corpus, indexation) échoue silencieusement tant que c'est le cas.
+            <pre>Ferme les anciens `npm run dev` du front restés ouverts, puis recharge sur http://localhost:5173/</pre>
+          </div>
+        )}
 
         {/* Clé Groq manquante */}
         {!GROQ_API_KEY && (
