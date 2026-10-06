@@ -4,6 +4,31 @@
 
 ## À faire
 
+### US-058 — Diagnostic par élimination d'hypothèses (au lieu du pavé complet)
+
+**En tant que** technicien de support,
+**Je veux** que pour une question générique (ex. « l'ordinateur est lent »), l'assistant me présente une liste d'hypothèses à tester une par une plutôt qu'un pavé listant toutes les pistes en détail,
+**Afin de** avancer étape par étape sans me noyer dans un texte interminable — je teste une piste, si ça échoue elle est écartée et les suivantes s'affichent.
+
+**Contexte :**
+Repéré en discussion avec le PO : certaines fiches couvrent plusieurs causes possibles pour un même symptôme (lenteur, par exemple), et la réponse actuelle égraine tout d'un bloc. Le PO imagine une liste cliquable d'hypothèses, avec un état par hypothèse (à tester / écartée), plutôt qu'un fil de discussion classique.
+
+**Pourquoi un simple pré-prompt ne suffit pas :**
+- Un pré-prompt peut faire dire au LLM de *lister* les hypothèses sans les détailler toutes dans la première réponse — ça aide, mais ne résout pas la boucle d'élimination.
+- Cette boucle (« ça n'a pas marché, hypothèse suivante ») casse la retrouvaille RAG actuelle : chaque question relance un `embed()` sur le texte tapé (`front/src/App.tsx`, `handleAsk`) — une réponse du type « ça n'a pas marché » n'a aucun signal sémantique exploitable, le RAG risque de retrouver une fiche sans rapport pour la relance. L'historique de conversation (`turns`) rejoue la réponse précédente du LLM, pas la fiche source brute.
+- La liste cliquable avec état (testé/écarté/restant) décrite par le PO est une interaction avec mémoire, pas du texte généré — ça suppose un format structuré en sortie du LLM (liste d'hypothèses nommées, pas du prose libre) et une UI dédiée pour la sélection/le retour d'échec.
+
+**Lien avec l'US-056 :** une fiche décomposée en hypothèses nommées est exactement la structure dont cette UI a besoin — peut converger avec le travail de décomposition des KB-arbres de décision (Teams, Outlook, Mac, VPN...) plutôt que d'être un chantier séparé.
+
+**Pistes techniques (à affiner en conception) :**
+- Format de sortie structuré pour les hypothèses (JSON ou balisage dédié) quand une fiche en contient plusieurs
+- Au clic « ça n'a pas marché » : ne pas relancer tout le pipeline RAG sur ce texte — cibler directement l'hypothèse suivante déjà identifiée, sans nouvel `embed()`
+- UI : liste de boutons/cases, état par hypothèse (à tester/écartée/résolue)
+
+**Statut :** Idée validée en échange avec le PO — conception à affiner avant implémentation (nécessite du code, pas seulement un pré-prompt).
+
+---
+
 ### US-057 — Pré-prompt en couches : admin, nature de fiche (rédacteur), préférence technicien
 
 **En tant que** Product Owner,
