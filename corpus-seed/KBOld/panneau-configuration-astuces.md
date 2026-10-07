@@ -5,6 +5,7 @@ service: Tous services
 équipes: Boutique IT
 dernière_revision: 30/04/2026
 statut: Publié
+nature: outil
 commentaire: Le Panneau de configuration reste plus complet que les Paramètres Windows pour le support avancé
 ---
 

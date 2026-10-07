@@ -5,6 +5,7 @@ service: Tous services
 équipes: Boutique IT
 dernière_revision: 15/05/2026
 statut: Publié
+nature: contextuelle
 commentaire: Ce document décrit les règles d'escalade depuis la Boutique IT vers les autres équipes. Ne couvre que les incidents en production (RUN) ; les projets BUILD ont leurs propres équipes dédiées.
 ---
 
