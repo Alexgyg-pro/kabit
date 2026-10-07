@@ -20,7 +20,7 @@ FinCorp Solutions naît en 1987 de la fusion de deux sociétés de services fina
 
 ## Philosophie informatique
 
-FinCorp Solutions applique une politique de maîtrise stricte du poste de travail, héritée de son activité réglementée (lutte anti-blanchiment, protection des données clients) : catalogue logiciel fermé, aucune installation de logiciel tiers non validé par la DSI, traçabilité des accès. Cette rigueur explique certains irritants bien connus du support N1 (voir par exemple la fiche sur les consoles d'appairage HP/Dell) — l'entreprise préfère assumer un inconfort ponctuel du technicien plutôt qu'un risque de sécurité, même mineur.
+FinCorp Solutions applique une politique de maîtrise du poste de travail, héritée de son activité réglementée (lutte anti-blanchiment, protection des données clients) : catalogue logiciel contrôlé, validation DSI avant tout déploiement, traçabilité des accès. Les utilitaires fournis par les fabricants de matériel (ex. consoles d'appairage HP/Dell, voir la fiche dédiée) font partie du catalogue standard dès lors qu'ils sont officiellement signés par le constructeur — l'entreprise distingue un outil officiel maîtrisé d'un logiciel tiers non contrôlé.
 
 ## Repères
 
