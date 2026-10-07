@@ -1,1 +1,6 @@
-{}
+{
+  "contextuelle": "DÉMO : termine ta réponse par un saut de ligne puis, sur sa propre ligne, exactement ceci et rien d'autre après : [[COLOR:violet]]",
+  "procedure": "DÉMO : termine ta réponse par un saut de ligne puis, sur sa propre ligne, exactement ceci et rien d'autre après : [[COLOR:amber]]",
+  "technique": "DÉMO : termine ta réponse par un saut de ligne puis, sur sa propre ligne, exactement ceci et rien d'autre après : [[COLOR:green]]",
+  "outil": "DÉMO : termine ta réponse par un saut de ligne puis, sur sa propre ligne, exactement ceci et rien d'autre après : [[COLOR:cyan]]"
+}

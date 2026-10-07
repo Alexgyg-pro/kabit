@@ -229,6 +229,41 @@ interface Turn {
   sources: Source[];
   liked: boolean;
   disliked: boolean;
+  colorKey?: string; // US-059 : artifice de démo, cf. stripColorMarker
+}
+
+// ── US-059 : code couleur de démo par nature de fiche ───────────────────────
+// Artifice de démonstration : chaque pré-prompt rédacteur (data/nature-
+// preprompts.json) demande au LLM de terminer sa réponse par [[COLOR:xxx]].
+// On le détecte ici plutôt que de laisser le LLM écrire du HTML (que le
+// rendu Markdown du projet n'affiche pas, et qui casse de toute façon dès
+// qu'une ligne vide apparaît dans la réponse).
+const DEMO_COLORS: Record<string, string> = {
+  violet: '#7c3aed',
+  amber:  '#d97706',
+  green:  '#16a34a',
+  cyan:   '#0e7490',
+};
+const COLOR_MARKER_RE = /\[\[COLOR:(\w+)\]\]/;
+const COLOR_MARKER_PREFIX = '[[COLOR:';
+
+// Retire le marqueur final (texte stocké/copié/rejoué en historique : jamais
+// vu) et renvoie la couleur qu'il désignait, si présent.
+function stripColorMarker(text: string): { clean: string; colorKey?: string } {
+  const m = text.match(COLOR_MARKER_RE);
+  if (!m) return { clean: text };
+  return { clean: text.slice(0, m.index).trim(), colorKey: m[1] };
+}
+
+// Pendant le streaming, masque un marqueur en cours de réception (même
+// partiel) pour qu'il ne s'affiche jamais à l'écran, même un instant.
+function hideStreamingMarker(text: string): string {
+  const full = text.match(/\[\[COLOR:\w*\]?\]?$/);
+  if (full) return text.slice(0, full.index);
+  for (let i = COLOR_MARKER_PREFIX.length - 1; i > 0; i--) {
+    if (text.endsWith(COLOR_MARKER_PREFIX.slice(0, i))) return text.slice(0, -i);
+  }
+  return text;
 }
 
 const HISTORY_OPTIONS = [
@@ -500,9 +535,10 @@ export default function App() {
     // ça le message resterait affiché de façon transitoire puis disparaîtrait
     // dès que isAsking repasse à false (retour à l'écran d'accueil).
     function finalizeTurn(answerText: string) {
+      const { clean, colorKey } = stripColorMarker(answerText);
       setTurns((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), question: askedQ, answer: answerText, sources: turnSources, liked: false, disliked: false },
+        { id: crypto.randomUUID(), question: askedQ, answer: clean, sources: turnSources, liked: false, disliked: false, colorKey },
       ]);
       setAskedQuestion('');
       setAnswer('');
@@ -732,6 +768,10 @@ export default function App() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   const hasConversation = turns.length > 0 || isAsking;
+  // US-059 : marqueur couleur du tour en cours de streaming — jamais affiché
+  // tel quel, même partiellement reçu (cf. hideStreamingMarker).
+  const liveAnswer = hideStreamingMarker(answer);
+  const liveColorKey = answer.match(COLOR_MARKER_RE)?.[1];
 
   function renderQuestionBox(variant: 'hero' | 'dock') {
     return (
@@ -885,6 +925,7 @@ export default function App() {
                     key={t.id}
                     question={t.question}
                     answer={t.answer}
+                    colorKey={t.colorKey}
                     sources={t.sources}
                     liked={t.liked}
                     disliked={t.disliked}
@@ -899,7 +940,8 @@ export default function App() {
                 {isAsking && (
                   <ConversationTurn
                     question={askedQuestion}
-                    answer={answer}
+                    answer={liveAnswer}
+                    colorKey={liveColorKey}
                     sources={[]}
                     isStreaming
                     onOpenSource={openDoc}
@@ -1114,6 +1156,7 @@ function IconThumb({ filled, flipped }: { filled?: boolean; flipped?: boolean })
 function ConversationTurn({
   question,
   answer,
+  colorKey,
   sources,
   liked,
   disliked,
@@ -1126,6 +1169,7 @@ function ConversationTurn({
 }: {
   question: string;
   answer: string;
+  colorKey?: string;
   sources: Source[];
   liked?: boolean;
   disliked?: boolean;
@@ -1136,12 +1180,16 @@ function ConversationTurn({
   onDislike?: () => void;
   onOpenSource: (s: Source) => void;
 }) {
+  // US-059 : artifice de démo — teinte le corps de la réponse selon la
+  // couleur demandée par le pré-prompt rédacteur actif (titres/liens/code
+  // gardent leur style, seul le texte courant en hérite).
+  const demoColor = colorKey ? DEMO_COLORS[colorKey] : undefined;
   return (
     <div className="turn">
       <div className="turn-question">{question}</div>
 
       <div className="turn-answer">
-        <div className="answer-content">
+        <div className="answer-content" style={demoColor ? { color: demoColor } : undefined}>
           {answer
             ? <ReactMarkdown>{answer}</ReactMarkdown>
             : <span className="thinking">Recherche dans le corpus...</span>
