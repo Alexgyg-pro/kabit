@@ -4,6 +4,24 @@
 
 ## À faire
 
+### US-060 — Héritage de la nature de fiche lors de la génération KBOffs → KDoc
+
+**En tant que** rédacteur,
+**Je veux** que la nature assignée à une KBOffs se propage automatiquement au KDoc généré à partir d'elle,
+**Afin de** ne pas avoir à retaguer chaque KDoc après coup — la classification se fait une fois, au moment où je trie les KBOffs.
+
+**Contexte :**
+Repéré en discussion avec le PO pendant le tagage de l'US-057/059 : `KBOffs/` n'a pas de frontmatter YAML (format différent de `KBOld/`/`KDocs/`, voir commit du tagage) et n'est de toute façon jamais indexé pour le RAG — donc pas question d'ajouter `nature:` directement dans ces fichiers `.md`. En revanche, `references.json` porte déjà des métadonnées par KBOffs (`status`, `title`, via `POST /kdocs/references`, `back/server.js`) : `nature` irait au même endroit.
+
+**Piste retenue :**
+- Ajouter un sélecteur de nature (les 4 valeurs de l'US-057) dans le formulaire de statut KBOffs existant (`KDocsModal.tsx`), enregistré dans `references.json` comme un champ de plus sur l'entrée `kboffs`
+- Au moment de la génération/sauvegarde d'un KDoc depuis cette KBOffs (`POST /kdocs/save`, `back/server.js` ; déclenché depuis `KBOffViewerModal.tsx`), lire la nature de la KBOffs source et l'injecter automatiquement dans le frontmatter du KDoc généré (`nature: ...`)
+- Un KDoc généré sans nature sur sa KBOffs source, ou un KDoc autonome (US-050, sans KB source), n'a simplement pas ce champ — comportement déjà géré par l'US-057
+
+**Statut :** Idée validée avec le PO — pas prioritaire, conception/implémentation à faire plus tard.
+
+---
+
 ### ✅ US-059 — Code couleur de démonstration par nature de fiche
 
 **En tant que** Product Owner,
