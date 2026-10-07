@@ -35,30 +35,29 @@ Repéré en discussion avec le PO : certaines fiches couvrent plusieurs causes p
 **Je veux** que le prompt système envoyé au LLM s'appuie sur plusieurs couches indépendantes de pré-prompt,
 **Afin de** personnaliser le ton et le style de réponse selon la nature du contenu et les préférences individuelles des techniciens, sans dupliquer la configuration ni tout réécrire.
 
-**Contexte :**
-Le prompt système empile déjà deux couches (`front/src/App.tsx`, `handleAsk`) : le pré-prompt admin (`systemPrompt`, éditable dans `system-prompt.md`, s'applique à toute réponse) et un pré-prompt par niveau technicien (`levelHint`, via `TECH_LEVEL_HINTS` selon le `techLevel` choisi dans Préférences). L'idée validée avec le PO est d'étendre cette même mécanique de superposition, sans la changer, à deux couches supplémentaires :
+**Mécanisme livré (`front/src/App.tsx`, `handleAsk` ; branche `feature/profils-multiples`, mergée) :**
+1. **Admin** — pré-prompt global (`system-prompt.md`), inchangé, s'applique à toute réponse.
+2. **Rédacteur** — un pré-prompt par *nature* de fiche (`data/nature-preprompts.json`, onglet « Rédacteur » de l'admin). Sélection **automatique** via le champ frontmatter `nature:` des fiches retrouvées par le RAG ; natures multiples dans une même réponse → pré-prompts concaténés.
+3. **Technicien** — préférence personnelle libre par profil (`data/profils.json`, modale dédiée derrière la roue crantée du profil technicien actif).
 
-1. **Admin (existant, inchangé)** — pré-prompt global, s'applique à toutes les réponses.
-2. **Rédacteur (nouveau)** — un pré-prompt par *nature* de fiche, indépendante du thème/sujet. Taxonomie fournie par le PO (issue du document de présentation à l'état-major) :
-   - **Fiches contextuelles** — culture générale, environnement CAGIP/PDTA, options retenues (VPN, ports USB bridés...)
-   - **Fiches procédures** — marche à suivre : enrôlement téléphone, déblocage badge CAPS, échange matériel Boutique/stock
-   - **Fiches techniques** — refonte de profil, réparation WMI, mise à niveau pilotes, appairage casque/dongle
-   - **Fiches matériel** — dépannage, critères de remplacement d'accessoires
-   - **Fiches outils** — ServiceNow, consoles téléphonie
-   Sélection **automatique**, sans action du technicien : la nature vient d'un nouveau champ frontmatter sur la fiche/KDoc (ex. `nature:`, distinct de `catégorie` qui reste plus fin/thématique) ; le pré-prompt correspondant à la nature de la/les source(s) retrouvée(s) par le RAG est injecté.
-3. **Technicien (nouveau, couche personnelle)** — préférence individuelle libre (ex. tutoiement/vouvoiement), stockée côté client comme `techLevel` aujourd'hui (`localStorage`, par poste). Un seul rôle « Technicien », mêmes droits pour tous — seule la préférence personnelle change d'un technicien à l'autre, ce n'est pas un second rôle.
+Construit en même temps : un **sélecteur à 4 profils** (Technicien A, Technicien B, Rédacteur, Administrateur — menu façon Claude depuis le pied de la sidebar). Rédacteur a pour l'instant les mêmes accès qu'Administrateur, à affiner si besoin.
 
-**Comportement attendu :**
-- Un pré-prompt éditable par nature de fiche (5 valeurs), géré quelque part côté admin (à localiser en conception)
-- Nouveau champ frontmatter `nature` sur les fiches/KDocs ; absence du champ sur les fiches existantes ne casse rien (couche simplement absente pour elles)
-- Nouveau champ de préférence personnelle libre pour le technicien, édité depuis l'onglet Préférences existant, stocké en `localStorage`
-- Les couches se concatènent dans le prompt système exactement comme admin+niveau aujourd'hui — aucune réécriture de la mécanique existante
+**Taxonomie des natures de fiche (finalisée avec le PO — remplace la version à 5 catégories du document de présentation) :**
+- **Contextuel** — culture générale dans le contexte de l'entreprise : son histoire, les options techniques retenues à un niveau général (ex. principes SCCM, histoire SILCA → CA-GIP)
+- **Procédures** — marches à suivre à caractère administratif : droits au matériel selon le profil, conditions d'échange, procédure en cas de perte ou de vol
+- **Technique** — gestes concrets sur l'appareil, courts ou longs, physiques ou logiciels : purge de condensateurs, suppression d'un périphérique pour réinstallation par GPO, refonte de profil, réparation WMI (fusionne « technique » et « matériel » — même registre attendu, que la procédure fasse 3 ou 15 étapes)
+- **Outils** — mode d'emploi des outils du technicien (ServiceNow, consoles téléphonie)
 
-**Points à trancher en conception :**
-- Où vit la gestion des pré-prompts « rédacteur » : nouvel onglet dédié dans l'admin, ou section de l'onglet Préférences existant ? Le rôle « rédacteur » doit-il apparaître comme un état à part dans le sélecteur de rôle (aujourd'hui binaire Technicien/Administrateur), ou rester une fonctionnalité accessible depuis le rôle Administrateur ?
-- Si les sources retrouvées par le RAG pour une même question ont des natures différentes : concaténer tous les pré-prompts concernés, ou n'en retenir qu'un (lequel) ?
+> Taxonomie alternative explorée en parallèle (discussion du PO avec Claude AI, hors de cette session) — solution immédiate / procédure administrative / how-to technique / pédagogique — écartée après réflexion : « solution immédiate » relève du *style* de réponse, déjà couvert par l'US-045 (sélecteur technicien, pas une nature de fiche) ; « pédagogique » rejoint **Contextuel** (même registre explicatif/narratif).
 
-**Statut :** Idée validée en échange avec le PO — conception à affiner avant implémentation.
+> Décision actée au passage : les règles absolues et non négociables (RGPD, ne jamais demander un mot de passe utilisateur, rien ne sort du poste) n'ont pas leur place dans une nature de fiche — une nature ne s'active que si une fiche de ce type est retrouvée par le RAG, alors que ces règles doivent tenir *quelle que soit* la question. Elles appartiennent au pré-prompt **admin**, seule couche inconditionnelle. Pas encore écrites dans `system-prompt.md`.
+
+**Reste à faire (du contenu/config, plus du code) :**
+- Rédiger les 4 pré-prompts rédacteur (`data/nature-preprompts.json` est vide pour l'instant)
+- Tagger des fiches/KDocs avec `nature:` — aucune ne l'est à ce jour, le mécanisme est donc sans effet visible tant que ça n'est pas fait
+- Ajouter les règles absolues (RGPD/mots de passe/données) au pré-prompt admin
+
+**Statut :** Mécanisme livré. Reste en configuration/contenu, pas en développement.
 
 ---
 
@@ -77,6 +76,8 @@ Certains sujets transverses (Teams, Outlook, Mac, VPN...) ont une KB officielle 
 - Sert d'aide à la décomposition : suivre quelles feuilles ont déjà leur KDoc généré, lesquelles restent à faire
 
 **Point à trancher en conception :** l'invariant de l'US-046 (« une KB ne génère qu'un seul KDoc », voir `POST /kdocs/save` dans `back/server.js`) doit être assoupli spécifiquement pour ces KB-arbres — une même KB source doit pouvoir engendrer plusieurs KDocs (un par feuille). Pour toutes les autres KB (l'immense majorité), l'invariant actuel reste inchangé.
+
+**Deuxième cas d'usage envisagé, dans un esprit différent :** un arbre de *navigation* pour tout ce qui part de « Paramètres » Windows et/ou du Panneau de configuration — pas un diagnostic de panne (symptôme → test → branche), mais une arborescence répondant à « où est tel réglage, comment le changer ». Même mécanisme technique (JSON, feuilles → KDocs), mais la sémantique des nœuds diffère (catégories de menu plutôt que symptôme/test/résultat). À garder à l'esprit en conception pour que la structure JSON retenue ne soit pas conçue uniquement pour le cas diagnostic.
 
 **Statut :** Idée validée en échange avec le PO — conception à affiner (structure exacte du JSON, UI de décomposition côté admin) avant implémentation.
 
