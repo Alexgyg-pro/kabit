@@ -69,15 +69,25 @@ export default function AdminModal({
   const [showCatalogue, setShowCatalogue] = useState(false);
   const [showKDocs, setShowKDocs] = useState(false);
 
-  type AdminTab = 'corpus' | 'catalogue' | 'sources' | 'redacteur' | 'preferences';
+  type AdminTab = 'corpus' | 'donnees' | 'sources' | 'redacteur' | 'preferences';
   const [activeTab, setActiveTab] = useState<AdminTab>('corpus');
   const TABS: { id: AdminTab; label: string }[] = [
     { id: 'corpus',      label: 'Corpus' },
-    { id: 'catalogue',   label: 'Catalogue IT' },
+    { id: 'donnees',     label: 'Données structurées' },
     { id: 'sources',     label: 'Sources KDocs' },
     { id: 'redacteur',   label: 'Rédacteur' },
     { id: 'preferences', label: 'Préférences' },
   ];
+
+  const [arbreMsg, setArbreMsg] = useState('');
+  async function openArbre(path: string, title: string) {
+    setArbreMsg('');
+    try {
+      await onOpenDoc(path, title);
+    } catch {
+      setArbreMsg(`« ${title} » n'existe pas encore (${path}).`);
+    }
+  }
 
   const [natureDraft, setNatureDraft] = useState<Record<string, string>>(naturePrompts);
   const [natureMsg, setNatureMsg] = useState('');
@@ -294,7 +304,7 @@ export default function AdminModal({
 
           </>}
 
-          {activeTab === 'catalogue' && <>
+          {activeTab === 'donnees' && <>
 
           {/* ── Section Catalogue IT ────────────────────────────────── */}
           <section className="admin-section">
@@ -320,6 +330,35 @@ export default function AdminModal({
               />
             )}
           </section>
+
+          {/* ── Section corpus/Arbres/ — JSON structurés indexés au RAG ── */}
+          <section className="admin-section">
+            <h2 className="admin-section-title">Matrice d'escalade</h2>
+            <p className="admin-section-desc">
+              Table de décision (incident → équipe) — <code>corpus/Arbres/matrice-escalade.json</code>.
+            </p>
+            <button
+              className="btn-cat-open"
+              onClick={() => openArbre('Arbres/matrice-escalade.json', 'Matrice d\'escalade')}
+            >
+              📋 Ouvrir la matrice d'escalade
+            </button>
+          </section>
+
+          <section className="admin-section">
+            <h2 className="admin-section-title">Paramètres &amp; Panneau de configuration</h2>
+            <p className="admin-section-desc">
+              Emplacements des réglages par version de Windows — <code>corpus/Arbres/parametres-windows.json</code>.
+            </p>
+            <button
+              className="btn-cat-open"
+              onClick={() => openArbre('Arbres/parametres-windows.json', 'Paramètres & Panneau de configuration')}
+            >
+              📋 Ouvrir les paramètres Windows
+            </button>
+          </section>
+
+          {arbreMsg && <p className="admin-msg">{arbreMsg}</p>}
 
           </>}
 

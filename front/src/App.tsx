@@ -1021,7 +1021,7 @@ export default function App() {
           content={selectedDoc.content}
           meta={`${selectedDoc.path}${selectedDoc.score > 0 ? ` · similarité : ${selectedDoc.score.toFixed(2)}` : ''}`}
           isJson={selectedDoc.path.endsWith('.json')}
-          onSave={hasAdminAccess && !selectedDoc.path.endsWith('.json') && !selectedDoc.path.startsWith('KDocs/')
+          onSave={hasAdminAccess && selectedDoc.path !== 'catalogue-it.json' && !selectedDoc.path.startsWith('KDocs/')
             ? async (content) => {
                 const res = await fetch(`${BACKEND}/corpus/file`, {
                   method: 'PUT',
