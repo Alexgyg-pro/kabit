@@ -1012,7 +1012,33 @@ export default function App() {
         </div>
       )}
 
-      {/* Modale document source */}
+      {/* Modale admin */}
+      {showAdmin && (
+        <AdminModal
+          systemPrompt={systemPrompt}
+          needsReindex={needsReindex}
+          backend={BACKEND}
+          groqApiKey={GROQ_API_KEY ?? ''}
+          groqModel={selectedModel}
+          techLevel={techLevel}
+          techLevels={TECH_LEVELS}
+          onTechLevelChange={handleTechLevelChange}
+          kboldEnabled={kboldEnabled}
+          onToggleKbold={handleToggleKbold}
+          onReindex={() => { runIndexing(); setShowAdmin(false); }}
+          onSave={handleAdminSave}
+          onSaveSystemPrompt={handleSaveSystemPrompt}
+          naturePrompts={naturePrompts}
+          onSaveNaturePrompts={handleSaveNaturePrompts}
+          onSaveJson={handleSaveJson}
+          onOpenDoc={handleOpenCorpusDoc}
+          onClose={() => setShowAdmin(false)}
+        />
+      )}
+
+      {/* Modale document source — rendue après AdminModal pour s'afficher
+          au-dessus quand ouverte depuis l'admin (meme z-index, l'ordre DOM
+          decide ; sinon elle restait cachee derriere). */}
       {selectedDoc && (
         <DocViewerModal
           title={selectedDoc.title}
@@ -1036,30 +1062,6 @@ export default function App() {
             : undefined
           }
           onClose={closeDoc}
-        />
-      )}
-
-      {/* Modale admin */}
-      {showAdmin && (
-        <AdminModal
-          systemPrompt={systemPrompt}
-          needsReindex={needsReindex}
-          backend={BACKEND}
-          groqApiKey={GROQ_API_KEY ?? ''}
-          groqModel={selectedModel}
-          techLevel={techLevel}
-          techLevels={TECH_LEVELS}
-          onTechLevelChange={handleTechLevelChange}
-          kboldEnabled={kboldEnabled}
-          onToggleKbold={handleToggleKbold}
-          onReindex={() => { runIndexing(); setShowAdmin(false); }}
-          onSave={handleAdminSave}
-          onSaveSystemPrompt={handleSaveSystemPrompt}
-          naturePrompts={naturePrompts}
-          onSaveNaturePrompts={handleSaveNaturePrompts}
-          onSaveJson={handleSaveJson}
-          onOpenDoc={handleOpenCorpusDoc}
-          onClose={() => setShowAdmin(false)}
         />
       )}
     </div>
