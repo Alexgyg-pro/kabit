@@ -22,32 +22,15 @@ Repéré en discussion avec le PO pendant le tagage de l'US-057/059 : `KBOffs/` 
 
 ---
 
-### ✅ US-059 — Code couleur de démonstration par nature de fiche
+### ❌ US-059 — Code couleur de démonstration par nature de fiche (abandonné)
 
-**En tant que** Product Owner,
-**Je veux** que chaque réponse du RAG s'affiche dans une couleur dépendant de la nature de la fiche qui a produit son pré-prompt,
-**Afin de** prouver visuellement, en démo, que le pré-prompt rédacteur influence réellement la réponse du LLM — pas juste l'affirmer.
+**Idée initiale :** faire varier la couleur du corps de la réponse selon la nature de la fiche source, pour prouver visuellement en démo que le pré-prompt rédacteur influence réellement la réponse du LLM.
 
-**Contexte :**
-Idée du PO : chaque pré-prompt rédacteur se limite à une consigne de couleur (« affiche en bleu », etc.), pour qu'on voie littéralement où s'applique l'instruction. Le rendu Markdown du projet (`react-markdown`, sans plugin) n'affiche aucun HTML brut par défaut (sécurité). Option envisagée (activer `rehype-raw` pour laisser le LLM écrire du HTML de couleur) écartée : en plus du risque XSS (jugé acceptable par le PO pour un projet encore au stade démonstrateur — le code serait de toute façon refait pour s'intégrer aux technologies du groupe en cas de reprise en production), le Markdown casse la balise HTML dès qu'une ligne vide apparaît dans la réponse (quasi systématique), ce qui aurait pu visiblement casser le rendu en plein direct devant le manager.
+**Mécanisme livré puis retiré :** un marqueur texte (`[[COLOR:<nom>]]`) que chaque pré-prompt rédacteur demandait au LLM d'ajouter en fin de réponse, détecté et retiré côté frontend pour appliquer la couleur correspondante. Testé en conditions réelles (08/10) : le LLM suit l'instruction de façon imparfaite (couleur bien appliquée au corps du texte, mais incohérence avec les styles explicites de `strong`/`em`/`h1-h3` dans `App.css`), révélant surtout un problème de fond — **le client connaît déjà la nature des sources retrouvées côté code, avant même d'appeler le LLM** (`extractNature()`). Faire deviner une couleur déjà connue au LLM via un protocole texte était donc un détour inutile, fragile par construction.
 
-**Mécanisme retenu à la place :** un marqueur texte simple plutôt que du HTML. Chaque pré-prompt rédacteur demande au LLM de terminer sa réponse par `[[COLOR:<nom>]]` (ex. `[[COLOR:violet]]`). Le frontend détecte ce marqueur, l'retire du texte affiché/copié/rejoué en historique, et applique la couleur correspondante sur le corps de la réponse (texte courant uniquement — titres, liens et blocs de code gardent leur style existant). Avantages : aucune dépendance supplémentaire, aucun risque XSS, rendu fiable même en flux (streaming) — un marqueur partiellement reçu est masqué à l'affichage jusqu'à réception complète.
+**Pourquoi abandonné plutôt que corrigé :** rendre la couleur déterministe côté code aurait réglé la fiabilité, mais aurait démontré l'inverse de ce qui était recherché — une fonctionnalité câblée en dur, pas la flexibilité du pré-prompt rédacteur. Le PO a reformulé l'objectif réel : montrer qu'un pré-prompt texte en clair (ex. « mets un maximum de dates ») change visiblement et de façon fiable le contenu de la réponse à question identique — sans aucun contrat technique caché entre le pré-prompt et le code. Le marqueur couleur et tout le code associé (`DEMO_COLORS`, `stripColorMarker`, `hideStreamingMarker`, `colorKey`) ont été retirés de `front/src/App.tsx` ; `data/nature-preprompts.json` est revenu à 4 entrées vides, prêtes pour ce nouveau script de démo.
 
-**Couleurs retenues** (choisies pour rester lisibles sur fond clair *et* fond sombre, et se distinguer du bleu d'accent déjà utilisé ailleurs dans l'UI) :
-- Contextuel → violet `#7c3aed`
-- Procédures → ambre `#d97706`
-- Technique → vert `#16a34a`
-- Outils → cyan `#0e7490`
-
-**⚠️ Artifice de démonstration, pas une fonctionnalité produit** — à retirer ou neutraliser si le projet est repris pour un usage réel (le marqueur et le code couleur n'ont aucune valeur fonctionnelle pour un technicien, seulement pédagogique en démo).
-
-**Critères d'acceptance :**
-- [x] Chaque nature de fiche a son pré-prompt « couleur » dans `data/nature-preprompts.json`
-- [x] La couleur s'applique au corps de la réponse quand une fiche source porte la nature correspondante
-- [x] Le marqueur n'apparaît jamais à l'écran, ni dans le texte copié, ni répété dans l'historique envoyé au LLM
-- [x] Aucun flash visuel du marqueur pendant le streaming de la réponse
-
-**Statut :** Livré (démonstration uniquement). Reste, comme pour l'US-057 : tagger des fiches avec `nature:` pour que ça se déclenche sur de vraies questions (voir prochain échange avec le PO).
+**Statut :** Abandonné (08/10/2026). Remplacé par une démo de pré-prompt en clair, sans mécanisme dédié côté code — voir US-057.
 
 ---
 
@@ -100,8 +83,8 @@ Construit en même temps : un **sélecteur à 4 profils** (Technicien A, Technic
 > Décision actée au passage : les règles absolues et non négociables (RGPD, ne jamais demander un mot de passe utilisateur, rien ne sort du poste) n'ont pas leur place dans une nature de fiche — une nature ne s'active que si une fiche de ce type est retrouvée par le RAG, alors que ces règles doivent tenir *quelle que soit* la question. Elles appartiennent au pré-prompt **admin**, seule couche inconditionnelle. Pas encore écrites dans `system-prompt.md`.
 
 **Reste à faire (du contenu/config, plus du code) :**
-- Rédiger les 4 pré-prompts rédacteur (`data/nature-preprompts.json` est vide pour l'instant)
-- Tagger des fiches/KDocs avec `nature:` — aucune ne l'est à ce jour, le mécanisme est donc sans effet visible tant que ça n'est pas fait
+- Rédiger les 4 pré-prompts rédacteur (`data/nature-preprompts.json` vidé le 08/10 après l'abandon de l'US-059, voir ci-dessous — prêt à être rempli pour une démo de pré-prompt en clair, ex. « mets un maximum de dates » sur la nature contextuelle)
+- Tagger des fiches/KDocs avec `nature:` — 7 fiches le sont à ce jour (US-059)
 - Ajouter les règles absolues (RGPD/mots de passe/données) au pré-prompt admin
 
 **Statut :** Mécanisme livré. Reste en configuration/contenu, pas en développement.
