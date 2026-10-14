@@ -23,6 +23,24 @@ function parseDoc(raw: string): { title: string; meta: [string, string][]; body:
   return { title, meta, body: m[2] };
 }
 
+// Localise une erreur JSON.parse dans le texte source : le message V8 donne
+// parfois "(line X column Y)", parfois juste "position N" — on calcule la
+// ligne/colonne nous-mêmes dans ce second cas pour rester cohérent.
+function describeJsonError(text: string, err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const lineCol = msg.match(/\(line (\d+) column (\d+)\)/);
+  if (lineCol) return `ligne ${lineCol[1]}, colonne ${lineCol[2]} — ${msg}`;
+  const pos = msg.match(/position (\d+)/);
+  if (pos) {
+    const index = parseInt(pos[1], 10);
+    const before = text.slice(0, index);
+    const line = before.split('\n').length;
+    const col = index - before.lastIndexOf('\n');
+    return `ligne ${line}, colonne ${col} — ${msg}`;
+  }
+  return msg;
+}
+
 interface Props {
   title: string;
   fileId?: string;       // identifiant du fichier (ex. KDOC00001) préfixé au titre
@@ -49,8 +67,16 @@ export default function DocViewerModal({ title, fileId, subtitle, content, meta,
 
   async function handleSave() {
     if (!onSave) return;
-    setSaving(true);
     setMsg('');
+    if (isJson) {
+      try {
+        JSON.parse(editContent);
+      } catch (e) {
+        setMsg(`JSON invalide, ${describeJsonError(editContent, e)}`);
+        return;
+      }
+    }
+    setSaving(true);
     try {
       await onSave(editContent);
       setLocalContent(editContent);
