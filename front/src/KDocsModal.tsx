@@ -16,6 +16,7 @@ interface KBOffsRef {
   title?: string;
   status: 'selected' | 'out' | 'duplicate' | 'done';
   kdoc?: string;          // fichier de l'unique KDoc généré depuis cette KB ('' = aucun)
+  nature?: string;        // US-060 : reportée automatiquement dans le KDoc généré (POST /kdocs/save)
   updatedAt: string;
 }
 
@@ -38,6 +39,12 @@ type Folder = 'kboffs' | 'kdocs';
 
 const KBOFFS_STATUSES = ['selected', 'out', 'duplicate', 'done'] as const;
 const KDOCS_STATUSES  = ['testing', 'passed', 'rejected'] as const;
+const NATURES = [
+  { id: 'contextuelle', label: 'Contextuelle' },
+  { id: 'procedure',    label: 'Procédure' },
+  { id: 'technique',    label: 'Technique' },
+  { id: 'outil',        label: 'Outil' },
+];
 
 interface Props {
   backend: string;
@@ -57,6 +64,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
   const [kdocViewer, setKdocViewer]     = useState<{ file: KDocsFile; content: string } | null>(null);
   const [pendingStatus, setPendingStatus] = useState<string>('selected');
   const [pendingTitle, setPendingTitle]   = useState('');
+  const [pendingNature, setPendingNature] = useState<string>('none');
   const [msg, setMsg] = useState('');
 
   useEffect(() => { fetchFiles(); fetchReferences(); }, []);
@@ -121,6 +129,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
     // Pas de référence → statut neutre « none » (rien n'est attribué tant qu'on n'enregistre pas)
     setPendingStatus(ref?.status ?? 'none');
     setPendingTitle(ref?.title || file.title || file.name);
+    setPendingNature((ref as KBOffsRef | undefined)?.nature ?? 'none');
     setSelectedFile(file);
     setMsg('');
   }
@@ -145,6 +154,7 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
           path: selectedFile.path,
           status: pendingStatus,
           title: pendingTitle || undefined,
+          nature: selectedFile.folder === 'KBOffs' ? (pendingNature === 'none' ? '' : pendingNature) : undefined,
         }),
       });
       const data = await res.json();
@@ -293,6 +303,30 @@ export default function KDocsModal({ backend, groqApiKey, groqModel, onClose }: 
                   </label>
                 ))}
               </div>
+
+              {selectedFile.folder === 'KBOffs' && (
+                <>
+                  <h3 className="admin-section-subtitle">Nature</h3>
+                  <p className="admin-section-desc admin-hint">
+                    Reportée automatiquement dans le KDoc généré à partir de cette fiche.
+                  </p>
+                  <div className="kdocs-status-options">
+                    {[{ id: 'none', label: 'Aucune' }, ...NATURES].map(n => (
+                      <label key={n.id}>
+                        <input
+                          type="radio"
+                          name="kdocs-nature"
+                          value={n.id}
+                          checked={pendingNature === n.id}
+                          onChange={() => setPendingNature(n.id)}
+                        />
+                        {' '}{n.label}
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+
               <div className="admin-save-row">
                 <button className="btn-save" onClick={handleSave}>Enregistrer</button>
                 {getRef(selectedFile) && (
