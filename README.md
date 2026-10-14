@@ -124,6 +124,7 @@ back/package.json
 front/dist/                 (dossier complet)
 corpus/                     (dossier complet)
 data/profils.json
+data/nature-preprompts.json
 system-prompt.md
 system-prompt.default.md
 ```
@@ -254,7 +255,7 @@ L'onglet **Sources KDocs** de l'administration gère la transformation d'une KB 
 ```
 kabit/
 ├── package.json            # Lanceur racine (npm run dev = back + front ensemble)
-├── data/                   # Paramètres de profil (data/profils.json), versionné
+├── data/                   # Paramètres de profil (profils.json) et pré-prompts par nature (nature-preprompts.json), versionné
 ├── front/                  # React/Vite/TypeScript (port 5173)
 │   ├── .env.local          # Clé API Groq — NE PAS COMMITTER
 │   └── src/
