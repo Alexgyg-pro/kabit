@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { splitNote } from '../note';
 
 // Sépare le frontmatter (--- … ---) du corps markdown, en extrait le titre et les autres
@@ -122,11 +123,11 @@ export default function DocViewerModal({ title, fileId, subtitle, content, meta,
                 ))}
               </dl>
             )}
-            <ReactMarkdown>{body}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
             {note && (
               <div className="doc-note">
                 <div className="doc-note-title">💡 Note technicien</div>
-                <ReactMarkdown>{note}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{note}</ReactMarkdown>
               </div>
             )}
           </div>

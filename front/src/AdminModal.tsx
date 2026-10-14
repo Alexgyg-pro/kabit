@@ -28,7 +28,6 @@ const NATURES: { id: string; label: string }[] = [
   { id: 'contextuelle', label: 'Fiches contextuelles' },
   { id: 'procedure',    label: 'Fiches procédures' },
   { id: 'technique',    label: 'Fiches techniques' },
-  { id: 'materiel',     label: 'Fiches matériel' },
   { id: 'outil',        label: 'Fiches outils' },
 ];
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { loadEmbedder, embed, cosineSimilarity } from './embeddings';
 import { getAllDocs, putDoc, clearDocs, countDocs, DocRecord } from './db';
 import AdminModal from './AdminModal';
@@ -20,11 +21,19 @@ const THRESHOLD_JSON = 0.35;
 const THRESHOLD_MD = 0.20;
 const TOP_K = 5;
 
+// Fenêtre de contexte (tokens) par modèle Groq — valeurs publiées, à
+// reconfirmer si Groq les change (qwen3.8-27b est un modèle preview).
 const GROQ_MODELS = [
-  { id: 'openai/gpt-oss-20b',  label: 'GPT OSS 20B (rapide)' },
-  { id: 'openai/gpt-oss-120b', label: 'GPT OSS 120B (meilleur)' },
-  { id: 'qwen/qwen3.8-27b',    label: 'Qwen3.8 27B' },
+  { id: 'openai/gpt-oss-20b',  label: 'GPT OSS 20B (rapide)',  contextWindow: 131072 },
+  { id: 'openai/gpt-oss-120b', label: 'GPT OSS 120B (meilleur)', contextWindow: 131072 },
+  { id: 'qwen/qwen3.8-27b',    label: 'Qwen3.8 27B',           contextWindow: 131072 },
 ];
+
+// Estimation grossière (1 token ≈ 4 caractères) — pas le vrai tokenizer du
+// modèle, juste de quoi alimenter la jauge de contexte sans dépendance lourde.
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
 
 type Profile = 'tech-a' | 'tech-b' | 'redacteur' | 'admin';
 interface ProfileSettings {
@@ -213,6 +222,27 @@ function extractCatalogueChunks(content: string, filePath: string): JsonChunk[] 
   return chunks;
 }
 
+// Indexation générique d'un JSON structuré de corpus/Arbres/ (schéma libre, pas
+// de parseur dédié comme pour le catalogue) : un seul chunk, le fichier entier.
+// Convention attendue : un champ `title` et `description` en langage naturel
+// en tête du fichier, pour construire un texte d'embedding exploitable — le
+// JSON brut seul (accolades, virgules) s'embedde mal.
+function extractGenericJsonChunk(content: string, filePath: string): JsonChunk[] {
+  type Obj = Record<string, unknown>;
+  let data: Obj;
+  try { data = JSON.parse(content); } catch { return []; }
+
+  const title = typeof data.title === 'string' ? data.title : filePath.replace(/\.json$/, '');
+  const description = typeof data.description === 'string' ? data.description : '';
+
+  return [{
+    id: `${filePath}#0`,
+    title,
+    embeddingText: [title, description].filter(Boolean).join(' — '),
+    displayContent: content,
+  }];
+}
+
 interface Source {
   id: string;
   path: string;
@@ -229,49 +259,7 @@ interface Turn {
   sources: Source[];
   liked: boolean;
   disliked: boolean;
-  colorKey?: string; // US-059 : artifice de démo, cf. stripColorMarker
 }
-
-// ── US-059 : code couleur de démo par nature de fiche ───────────────────────
-// Artifice de démonstration : chaque pré-prompt rédacteur (data/nature-
-// preprompts.json) demande au LLM de terminer sa réponse par [[COLOR:xxx]].
-// On le détecte ici plutôt que de laisser le LLM écrire du HTML (que le
-// rendu Markdown du projet n'affiche pas, et qui casse de toute façon dès
-// qu'une ligne vide apparaît dans la réponse).
-const DEMO_COLORS: Record<string, string> = {
-  violet: '#7c3aed',
-  amber:  '#d97706',
-  green:  '#16a34a',
-  cyan:   '#0e7490',
-};
-const COLOR_MARKER_RE = /\[\[COLOR:(\w+)\]\]/;
-const COLOR_MARKER_PREFIX = '[[COLOR:';
-
-// Retire le marqueur final (texte stocké/copié/rejoué en historique : jamais
-// vu) et renvoie la couleur qu'il désignait, si présent.
-function stripColorMarker(text: string): { clean: string; colorKey?: string } {
-  const m = text.match(COLOR_MARKER_RE);
-  if (!m) return { clean: text };
-  return { clean: text.slice(0, m.index).trim(), colorKey: m[1] };
-}
-
-// Pendant le streaming, masque un marqueur en cours de réception (même
-// partiel) pour qu'il ne s'affiche jamais à l'écran, même un instant.
-function hideStreamingMarker(text: string): string {
-  const full = text.match(/\[\[COLOR:\w*\]?\]?$/);
-  if (full) return text.slice(0, full.index);
-  for (let i = COLOR_MARKER_PREFIX.length - 1; i > 0; i--) {
-    if (text.endsWith(COLOR_MARKER_PREFIX.slice(0, i))) return text.slice(0, -i);
-  }
-  return text;
-}
-
-const HISTORY_OPTIONS = [
-  { value: '0', label: 'Aucun' },
-  { value: '2', label: '2 derniers échanges' },
-  { value: '4', label: '4 derniers échanges' },
-  { value: '6', label: '6 derniers échanges' },
-];
 
 export default function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -382,7 +370,6 @@ export default function App() {
   }
 
   const [turns, setTurns] = useState<Turn[]>([]);
-  const [historyDepth, setHistoryDepth] = useState('0');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -439,17 +426,19 @@ export default function App() {
     setAppStatus('indexing');
     setNeedsReindex(false);
     try {
-      const [listRes, kboldRes, kdocsRes] = await Promise.all([
+      const [listRes, kboldRes, kdocsRes, arbresRes] = await Promise.all([
         fetch(`${BACKEND}/corpus/list`),
         useKbold ? fetch(`${BACKEND}/corpus/kbold/list`) : Promise.resolve(null),
         fetch(`${BACKEND}/kdocs/list`),
+        fetch(`${BACKEND}/corpus/arbres/list`),
       ]);
       if (!listRes.ok) throw new Error('Backend inaccessible');
 
       const corpusFiles: { path: string; title: string }[] = await listRes.json();
       const kboldFiles: { path: string; title: string }[]  = kboldRes?.ok ? await kboldRes.json() : [];
       const kdocsFiles: { path: string; title: string }[]  = kdocsRes.ok ? await kdocsRes.json() : [];
-      const allFiles = [...corpusFiles, ...kboldFiles, ...kdocsFiles];
+      const arbresFiles: { path: string; title: string }[] = arbresRes.ok ? await arbresRes.json() : [];
+      const allFiles = [...corpusFiles, ...kboldFiles, ...kdocsFiles, ...arbresFiles];
 
       if (allFiles.length === 0) {
         setStatusMsg('Corpus vide — ajoutez des procédures via l\'admin');
@@ -469,7 +458,9 @@ export default function App() {
         const content = await contentRes.text();
 
         if (file.path.endsWith('.json')) {
-          const chunks = extractCatalogueChunks(content, file.path);
+          const chunks = file.path.startsWith('Arbres/')
+            ? extractGenericJsonChunk(content, file.path)
+            : extractCatalogueChunks(content, file.path);
           for (const chunk of chunks) {
             setStatusMsg(`Indexation — ${chunk.title}`);
             const embedding = await embed(chunk.embeddingText);
@@ -535,10 +526,9 @@ export default function App() {
     // ça le message resterait affiché de façon transitoire puis disparaîtrait
     // dès que isAsking repasse à false (retour à l'écran d'accueil).
     function finalizeTurn(answerText: string) {
-      const { clean, colorKey } = stripColorMarker(answerText);
       setTurns((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), question: askedQ, answer: clean, sources: turnSources, liked: false, disliked: false, colorKey },
+        { id: crypto.randomUUID(), question: askedQ, answer: answerText, sources: turnSources, liked: false, disliked: false },
       ]);
       setAskedQuestion('');
       setAnswer('');
@@ -586,7 +576,6 @@ export default function App() {
         .join('\n\n');
 
       // 4. Historique + messages Groq (format chat)
-      const depth = parseInt(historyDepth);
       const levelHint = TECH_LEVEL_HINTS[techLevel] ?? '';
 
       const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
@@ -606,12 +595,12 @@ export default function App() {
         },
       ];
 
-      if (depth > 0 && turns.length > 0) {
-        turns.slice(-depth).forEach((t) => {
-          messages.push({ role: 'user', content: t.question });
-          messages.push({ role: 'assistant', content: t.answer });
-        });
-      }
+      // Historique complet rejoué à chaque question — pas de troncature,
+      // cf. la jauge de contexte dans la sidebar pour suivre la consommation.
+      turns.forEach((t) => {
+        messages.push({ role: 'user', content: t.question });
+        messages.push({ role: 'assistant', content: t.answer });
+      });
 
       messages.push({ role: 'user', content: question });
 
@@ -768,10 +757,17 @@ export default function App() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   const hasConversation = turns.length > 0 || isAsking;
-  // US-059 : marqueur couleur du tour en cours de streaming — jamais affiché
-  // tel quel, même partiellement reçu (cf. hideStreamingMarker).
-  const liveAnswer = hideStreamingMarker(answer);
-  const liveColorKey = answer.match(COLOR_MARKER_RE)?.[1];
+
+  // Jauge de contexte — estimation de ce que l'historique complet (rejoué à
+  // chaque question, cf. handleAsk) représente par rapport à la fenêtre de
+  // contexte du modèle choisi. N'inclut pas le pré-prompt du tour à venir ni
+  // les fiches qui seront retrouvées : sous-estime donc légèrement l'usage
+  // réel, ce qui reste préférable à alarmer trop tôt.
+  const historyChars = turns.reduce((sum, t) => sum + t.question.length + t.answer.length, 0);
+  const estimatedTokens = estimateTokens(systemPrompt) + Math.ceil(historyChars / 4);
+  const contextWindow = GROQ_MODELS.find((m) => m.id === selectedModel)?.contextWindow ?? 131072;
+  const contextPct = Math.min(100, Math.round((estimatedTokens / contextWindow) * 100));
+  const contextLevel = contextPct >= 80 ? 'high' : contextPct >= 50 ? 'medium' : 'low';
 
   function renderQuestionBox(variant: 'hero' | 'dock') {
     return (
@@ -818,12 +814,15 @@ export default function App() {
             </select>
           </label>
 
-          <label className="sidebar-field">
-            Historique
-            <select value={historyDepth} onChange={(e) => setHistoryDepth(e.target.value)}>
-              {HISTORY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </label>
+          <div
+            className="sidebar-field context-gauge"
+            title={`~${estimatedTokens.toLocaleString('fr-FR')} tokens estimés / ${contextWindow.toLocaleString('fr-FR')} (fenêtre de contexte du modèle, approximatif)`}
+          >
+            <span>Contexte · {contextPct}%</span>
+            <div className="context-gauge-track">
+              <div className="context-gauge-fill" data-level={contextLevel} style={{ width: `${contextPct}%` }} />
+            </div>
+          </div>
 
           <button
             className={`btn-reindex ${needsReindex ? 'pulse' : ''}`}
@@ -925,7 +924,6 @@ export default function App() {
                     key={t.id}
                     question={t.question}
                     answer={t.answer}
-                    colorKey={t.colorKey}
                     sources={t.sources}
                     liked={t.liked}
                     disliked={t.disliked}
@@ -940,8 +938,7 @@ export default function App() {
                 {isAsking && (
                   <ConversationTurn
                     question={askedQuestion}
-                    answer={liveAnswer}
-                    colorKey={liveColorKey}
+                    answer={answer}
                     sources={[]}
                     isStreaming
                     onOpenSource={openDoc}
@@ -1156,7 +1153,6 @@ function IconThumb({ filled, flipped }: { filled?: boolean; flipped?: boolean })
 function ConversationTurn({
   question,
   answer,
-  colorKey,
   sources,
   liked,
   disliked,
@@ -1169,7 +1165,6 @@ function ConversationTurn({
 }: {
   question: string;
   answer: string;
-  colorKey?: string;
   sources: Source[];
   liked?: boolean;
   disliked?: boolean;
@@ -1180,18 +1175,14 @@ function ConversationTurn({
   onDislike?: () => void;
   onOpenSource: (s: Source) => void;
 }) {
-  // US-059 : artifice de démo — teinte le corps de la réponse selon la
-  // couleur demandée par le pré-prompt rédacteur actif (titres/liens/code
-  // gardent leur style, seul le texte courant en hérite).
-  const demoColor = colorKey ? DEMO_COLORS[colorKey] : undefined;
   return (
     <div className="turn">
       <div className="turn-question">{question}</div>
 
       <div className="turn-answer">
-        <div className="answer-content" style={demoColor ? { color: demoColor } : undefined}>
+        <div className="answer-content">
           {answer
-            ? <ReactMarkdown>{answer}</ReactMarkdown>
+            ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown>
             : <span className="thinking">Recherche dans le corpus...</span>
           }
           {isStreaming && answer && <span className="cursor-blink"> ▊</span>}
