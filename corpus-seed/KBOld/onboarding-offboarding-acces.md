@@ -5,6 +5,7 @@ service: Ressources Humaines, Informatique
 équipes: Boutique IT
 dernière_revision: 30/04/2026
 statut: Publié
+nature: procedure
 commentaire: Le formulaire de demande doit parvenir à la Boutique IT 5 jours ouvrés avant l'arrivée ou le départ
 ---
 

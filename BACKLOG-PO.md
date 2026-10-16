@@ -4,6 +4,36 @@
 
 ## À faire
 
+### US-060 — Héritage de la nature de fiche lors de la génération KBOffs → KDoc
+
+**En tant que** rédacteur,
+**Je veux** que la nature assignée à une KBOffs se propage automatiquement au KDoc généré à partir d'elle,
+**Afin de** ne pas avoir à retaguer chaque KDoc après coup — la classification se fait une fois, au moment où je trie les KBOffs.
+
+**Contexte :**
+Repéré en discussion avec le PO pendant le tagage de l'US-057/059 : `KBOffs/` n'a pas de frontmatter YAML (format différent de `KBOld/`/`KDocs/`, voir commit du tagage) et n'est de toute façon jamais indexé pour le RAG — donc pas question d'ajouter `nature:` directement dans ces fichiers `.md`. En revanche, `references.json` porte déjà des métadonnées par KBOffs (`status`, `title`, via `POST /kdocs/references`, `back/server.js`) : `nature` irait au même endroit.
+
+**Piste retenue :**
+- Ajouter un sélecteur de nature (les 4 valeurs de l'US-057) dans le formulaire de statut KBOffs existant (`KDocsModal.tsx`), enregistré dans `references.json` comme un champ de plus sur l'entrée `kboffs`
+- Au moment de la génération/sauvegarde d'un KDoc depuis cette KBOffs (`POST /kdocs/save`, `back/server.js` ; déclenché depuis `KBOffViewerModal.tsx`), lire la nature de la KBOffs source et l'injecter automatiquement dans le frontmatter du KDoc généré (`nature: ...`)
+- Un KDoc généré sans nature sur sa KBOffs source, ou un KDoc autonome (US-050, sans KB source), n'a simplement pas ce champ — comportement déjà géré par l'US-057
+
+**Statut :** Idée validée avec le PO — pas prioritaire, conception/implémentation à faire plus tard.
+
+---
+
+### ❌ US-059 — Code couleur de démonstration par nature de fiche (abandonné)
+
+**Idée initiale :** faire varier la couleur du corps de la réponse selon la nature de la fiche source, pour prouver visuellement en démo que le pré-prompt rédacteur influence réellement la réponse du LLM.
+
+**Mécanisme livré puis retiré :** un marqueur texte (`[[COLOR:<nom>]]`) que chaque pré-prompt rédacteur demandait au LLM d'ajouter en fin de réponse, détecté et retiré côté frontend pour appliquer la couleur correspondante. Testé en conditions réelles (08/10) : le LLM suit l'instruction de façon imparfaite (couleur bien appliquée au corps du texte, mais incohérence avec les styles explicites de `strong`/`em`/`h1-h3` dans `App.css`), révélant surtout un problème de fond — **le client connaît déjà la nature des sources retrouvées côté code, avant même d'appeler le LLM** (`extractNature()`). Faire deviner une couleur déjà connue au LLM via un protocole texte était donc un détour inutile, fragile par construction.
+
+**Pourquoi abandonné plutôt que corrigé :** rendre la couleur déterministe côté code aurait réglé la fiabilité, mais aurait démontré l'inverse de ce qui était recherché — une fonctionnalité câblée en dur, pas la flexibilité du pré-prompt rédacteur. Le PO a reformulé l'objectif réel : montrer qu'un pré-prompt texte en clair (ex. « mets un maximum de dates ») change visiblement et de façon fiable le contenu de la réponse à question identique — sans aucun contrat technique caché entre le pré-prompt et le code. Le marqueur couleur et tout le code associé (`DEMO_COLORS`, `stripColorMarker`, `hideStreamingMarker`, `colorKey`) ont été retirés de `front/src/App.tsx` ; `data/nature-preprompts.json` est revenu à 4 entrées vides, prêtes pour ce nouveau script de démo.
+
+**Statut :** Abandonné (08/10/2026). Remplacé par une démo de pré-prompt en clair, sans mécanisme dédié côté code — voir US-057.
+
+---
+
 ### US-058 — Diagnostic par élimination d'hypothèses (au lieu du pavé complet)
 
 **En tant que** technicien de support,
@@ -53,8 +83,8 @@ Construit en même temps : un **sélecteur à 4 profils** (Technicien A, Technic
 > Décision actée au passage : les règles absolues et non négociables (RGPD, ne jamais demander un mot de passe utilisateur, rien ne sort du poste) n'ont pas leur place dans une nature de fiche — une nature ne s'active que si une fiche de ce type est retrouvée par le RAG, alors que ces règles doivent tenir *quelle que soit* la question. Elles appartiennent au pré-prompt **admin**, seule couche inconditionnelle. Pas encore écrites dans `system-prompt.md`.
 
 **Reste à faire (du contenu/config, plus du code) :**
-- Rédiger les 4 pré-prompts rédacteur (`data/nature-preprompts.json` est vide pour l'instant)
-- Tagger des fiches/KDocs avec `nature:` — aucune ne l'est à ce jour, le mécanisme est donc sans effet visible tant que ça n'est pas fait
+- Rédiger les 4 pré-prompts rédacteur (`data/nature-preprompts.json` vidé le 08/10 après l'abandon de l'US-059, voir ci-dessous — prêt à être rempli pour une démo de pré-prompt en clair, ex. « mets un maximum de dates » sur la nature contextuelle)
+- Tagger des fiches/KDocs avec `nature:` — 7 fiches le sont à ce jour (US-059)
 - Ajouter les règles absolues (RGPD/mots de passe/données) au pré-prompt admin
 
 **Statut :** Mécanisme livré. Reste en configuration/contenu, pas en développement.
