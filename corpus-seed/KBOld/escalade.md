@@ -15,8 +15,8 @@ commentaire: Ce document décrit les règles d'escalade depuis la Boutique IT ve
 
 Le support informatique est organisé en deux points d'entrée parallèles pour les utilisateurs :
 
-- **Service Desk (SD)** — support téléphonique, N1. Code ServiceNow : `CAGIP-SDW-SPU-SD_SQY`
-- **Boutique IT (BTQ)** — support physique sur site, N1. Code ServiceNow : `CAGIP-SDW-SPU-BTQ_SQY`
+- **Service Desk (SD)** — support téléphonique, N1. Code ServiceNow : `FINCORP-SD-N1`
+- **Boutique IT (BTQ)** — support physique sur site, N1. Code ServiceNow : `FINCORP-BTQ-N1`
 
 Les utilisateurs peuvent au choix appeler le Desk ou venir en Boutique. Si le Desk ne peut pas résoudre, il escalade à la Boutique. Si la Boutique ne peut pas résoudre, elle escalade vers les équipes spécialisées décrites ci-dessous.
 
@@ -34,7 +34,7 @@ Les utilisateurs peuvent au choix appeler le Desk ou venir en Boutique. Si le De
 
 **Logiciels du socle concernés :** Windows, CrowdStrike Falcon, SCCM/Intune (agent), outils de chiffrement (BitLocker), navigateurs gérés par GPO.
 
-**Code ServiceNow :** `CAGIP-SDW-SPU-N2_SQY` `[À COMPLÉTER — vérifier le code exact]`
+**Code ServiceNow :** `FINCORP-PDT-N2` `[À COMPLÉTER — vérifier le code exact]`
 
 **Canal :** ticket ServiceNow avec catégorie "Poste de travail"
 
