@@ -4,36 +4,90 @@
 
 ## À faire
 
+### US-060 — Héritage de la nature de fiche lors de la génération KBOffs → KDoc
+
+**En tant que** rédacteur,
+**Je veux** que la nature assignée à une KBOffs se propage automatiquement au KDoc généré à partir d'elle,
+**Afin de** ne pas avoir à retaguer chaque KDoc après coup — la classification se fait une fois, au moment où je trie les KBOffs.
+
+**Contexte :**
+Repéré en discussion avec le PO pendant le tagage de l'US-057/059 : `KBOffs/` n'a pas de frontmatter YAML (format différent de `KBOld/`/`KDocs/`, voir commit du tagage) et n'est de toute façon jamais indexé pour le RAG — donc pas question d'ajouter `nature:` directement dans ces fichiers `.md`. En revanche, `references.json` porte déjà des métadonnées par KBOffs (`status`, `title`, via `POST /kdocs/references`, `back/server.js`) : `nature` irait au même endroit.
+
+**Piste retenue :**
+- Ajouter un sélecteur de nature (les 4 valeurs de l'US-057) dans le formulaire de statut KBOffs existant (`KDocsModal.tsx`), enregistré dans `references.json` comme un champ de plus sur l'entrée `kboffs`
+- Au moment de la génération/sauvegarde d'un KDoc depuis cette KBOffs (`POST /kdocs/save`, `back/server.js` ; déclenché depuis `KBOffViewerModal.tsx`), lire la nature de la KBOffs source et l'injecter automatiquement dans le frontmatter du KDoc généré (`nature: ...`)
+- Un KDoc généré sans nature sur sa KBOffs source, ou un KDoc autonome (US-050, sans KB source), n'a simplement pas ce champ — comportement déjà géré par l'US-057
+
+**Statut :** Idée validée avec le PO — pas prioritaire, conception/implémentation à faire plus tard.
+
+---
+
+### ❌ US-059 — Code couleur de démonstration par nature de fiche (abandonné)
+
+**Idée initiale :** faire varier la couleur du corps de la réponse selon la nature de la fiche source, pour prouver visuellement en démo que le pré-prompt rédacteur influence réellement la réponse du LLM.
+
+**Mécanisme livré puis retiré :** un marqueur texte (`[[COLOR:<nom>]]`) que chaque pré-prompt rédacteur demandait au LLM d'ajouter en fin de réponse, détecté et retiré côté frontend pour appliquer la couleur correspondante. Testé en conditions réelles (08/10) : le LLM suit l'instruction de façon imparfaite (couleur bien appliquée au corps du texte, mais incohérence avec les styles explicites de `strong`/`em`/`h1-h3` dans `App.css`), révélant surtout un problème de fond — **le client connaît déjà la nature des sources retrouvées côté code, avant même d'appeler le LLM** (`extractNature()`). Faire deviner une couleur déjà connue au LLM via un protocole texte était donc un détour inutile, fragile par construction.
+
+**Pourquoi abandonné plutôt que corrigé :** rendre la couleur déterministe côté code aurait réglé la fiabilité, mais aurait démontré l'inverse de ce qui était recherché — une fonctionnalité câblée en dur, pas la flexibilité du pré-prompt rédacteur. Le PO a reformulé l'objectif réel : montrer qu'un pré-prompt texte en clair (ex. « mets un maximum de dates ») change visiblement et de façon fiable le contenu de la réponse à question identique — sans aucun contrat technique caché entre le pré-prompt et le code. Le marqueur couleur et tout le code associé (`DEMO_COLORS`, `stripColorMarker`, `hideStreamingMarker`, `colorKey`) ont été retirés de `front/src/App.tsx` ; `data/nature-preprompts.json` est revenu à 4 entrées vides, prêtes pour ce nouveau script de démo.
+
+**Statut :** Abandonné (08/10/2026). Remplacé par une démo de pré-prompt en clair, sans mécanisme dédié côté code — voir US-057.
+
+---
+
+### US-058 — Diagnostic par élimination d'hypothèses (au lieu du pavé complet)
+
+**En tant que** technicien de support,
+**Je veux** que pour une question générique (ex. « l'ordinateur est lent »), l'assistant me présente une liste d'hypothèses à tester une par une plutôt qu'un pavé listant toutes les pistes en détail,
+**Afin de** avancer étape par étape sans me noyer dans un texte interminable — je teste une piste, si ça échoue elle est écartée et les suivantes s'affichent.
+
+**Contexte :**
+Repéré en discussion avec le PO : certaines fiches couvrent plusieurs causes possibles pour un même symptôme (lenteur, par exemple), et la réponse actuelle égraine tout d'un bloc. Le PO imagine une liste cliquable d'hypothèses, avec un état par hypothèse (à tester / écartée), plutôt qu'un fil de discussion classique.
+
+**Pourquoi un simple pré-prompt ne suffit pas :**
+- Un pré-prompt peut faire dire au LLM de *lister* les hypothèses sans les détailler toutes dans la première réponse — ça aide, mais ne résout pas la boucle d'élimination.
+- Cette boucle (« ça n'a pas marché, hypothèse suivante ») casse la retrouvaille RAG actuelle : chaque question relance un `embed()` sur le texte tapé (`front/src/App.tsx`, `handleAsk`) — une réponse du type « ça n'a pas marché » n'a aucun signal sémantique exploitable, le RAG risque de retrouver une fiche sans rapport pour la relance. L'historique de conversation (`turns`) rejoue la réponse précédente du LLM, pas la fiche source brute.
+- La liste cliquable avec état (testé/écarté/restant) décrite par le PO est une interaction avec mémoire, pas du texte généré — ça suppose un format structuré en sortie du LLM (liste d'hypothèses nommées, pas du prose libre) et une UI dédiée pour la sélection/le retour d'échec.
+
+**Lien avec l'US-056 :** une fiche décomposée en hypothèses nommées est exactement la structure dont cette UI a besoin — peut converger avec le travail de décomposition des KB-arbres de décision (Teams, Outlook, Mac, VPN...) plutôt que d'être un chantier séparé.
+
+**Pistes techniques (à affiner en conception) :**
+- Format de sortie structuré pour les hypothèses (JSON ou balisage dédié) quand une fiche en contient plusieurs
+- Au clic « ça n'a pas marché » : ne pas relancer tout le pipeline RAG sur ce texte — cibler directement l'hypothèse suivante déjà identifiée, sans nouvel `embed()`
+- UI : liste de boutons/cases, état par hypothèse (à tester/écartée/résolue)
+
+**Statut :** Idée validée en échange avec le PO — conception à affiner avant implémentation (nécessite du code, pas seulement un pré-prompt).
+
+---
+
 ### US-057 — Pré-prompt en couches : admin, nature de fiche (rédacteur), préférence technicien
 
 **En tant que** Product Owner,
 **Je veux** que le prompt système envoyé au LLM s'appuie sur plusieurs couches indépendantes de pré-prompt,
 **Afin de** personnaliser le ton et le style de réponse selon la nature du contenu et les préférences individuelles des techniciens, sans dupliquer la configuration ni tout réécrire.
 
-**Contexte :**
-Le prompt système empile déjà deux couches (`front/src/App.tsx`, `handleAsk`) : le pré-prompt admin (`systemPrompt`, éditable dans `system-prompt.md`, s'applique à toute réponse) et un pré-prompt par niveau technicien (`levelHint`, via `TECH_LEVEL_HINTS` selon le `techLevel` choisi dans Préférences). L'idée validée avec le PO est d'étendre cette même mécanique de superposition, sans la changer, à deux couches supplémentaires :
+**Mécanisme livré (`front/src/App.tsx`, `handleAsk` ; branche `feature/profils-multiples`, mergée) :**
+1. **Admin** — pré-prompt global (`system-prompt.md`), inchangé, s'applique à toute réponse.
+2. **Rédacteur** — un pré-prompt par *nature* de fiche (`data/nature-preprompts.json`, onglet « Rédacteur » de l'admin). Sélection **automatique** via le champ frontmatter `nature:` des fiches retrouvées par le RAG ; natures multiples dans une même réponse → pré-prompts concaténés.
+3. **Technicien** — préférence personnelle libre par profil (`data/profils.json`, modale dédiée derrière la roue crantée du profil technicien actif).
 
-1. **Admin (existant, inchangé)** — pré-prompt global, s'applique à toutes les réponses.
-2. **Rédacteur (nouveau)** — un pré-prompt par *nature* de fiche, indépendante du thème/sujet. Taxonomie fournie par le PO (issue du document de présentation à l'état-major) :
-   - **Fiches contextuelles** — culture générale, environnement CAGIP/PDTA, options retenues (VPN, ports USB bridés...)
-   - **Fiches procédures** — marche à suivre : enrôlement téléphone, déblocage badge CAPS, échange matériel Boutique/stock
-   - **Fiches techniques** — refonte de profil, réparation WMI, mise à niveau pilotes, appairage casque/dongle
-   - **Fiches matériel** — dépannage, critères de remplacement d'accessoires
-   - **Fiches outils** — ServiceNow, consoles téléphonie
-   Sélection **automatique**, sans action du technicien : la nature vient d'un nouveau champ frontmatter sur la fiche/KDoc (ex. `nature:`, distinct de `catégorie` qui reste plus fin/thématique) ; le pré-prompt correspondant à la nature de la/les source(s) retrouvée(s) par le RAG est injecté.
-3. **Technicien (nouveau, couche personnelle)** — préférence individuelle libre (ex. tutoiement/vouvoiement), stockée côté client comme `techLevel` aujourd'hui (`localStorage`, par poste). Un seul rôle « Technicien », mêmes droits pour tous — seule la préférence personnelle change d'un technicien à l'autre, ce n'est pas un second rôle.
+Construit en même temps : un **sélecteur à 4 profils** (Technicien A, Technicien B, Rédacteur, Administrateur — menu façon Claude depuis le pied de la sidebar). Rédacteur a pour l'instant les mêmes accès qu'Administrateur, à affiner si besoin.
 
-**Comportement attendu :**
-- Un pré-prompt éditable par nature de fiche (5 valeurs), géré quelque part côté admin (à localiser en conception)
-- Nouveau champ frontmatter `nature` sur les fiches/KDocs ; absence du champ sur les fiches existantes ne casse rien (couche simplement absente pour elles)
-- Nouveau champ de préférence personnelle libre pour le technicien, édité depuis l'onglet Préférences existant, stocké en `localStorage`
-- Les couches se concatènent dans le prompt système exactement comme admin+niveau aujourd'hui — aucune réécriture de la mécanique existante
+**Taxonomie des natures de fiche (finalisée avec le PO — remplace la version à 5 catégories du document de présentation) :**
+- **Contextuel** — culture générale dans le contexte de l'entreprise : son histoire, les options techniques retenues à un niveau général (ex. principes SCCM, histoire SILCA → CA-GIP)
+- **Procédures** — marches à suivre à caractère administratif : droits au matériel selon le profil, conditions d'échange, procédure en cas de perte ou de vol
+- **Technique** — gestes concrets sur l'appareil, courts ou longs, physiques ou logiciels : purge de condensateurs, suppression d'un périphérique pour réinstallation par GPO, refonte de profil, réparation WMI (fusionne « technique » et « matériel » — même registre attendu, que la procédure fasse 3 ou 15 étapes)
+- **Outils** — mode d'emploi des outils du technicien (ServiceNow, consoles téléphonie)
 
-**Points à trancher en conception :**
-- Où vit la gestion des pré-prompts « rédacteur » : nouvel onglet dédié dans l'admin, ou section de l'onglet Préférences existant ? Le rôle « rédacteur » doit-il apparaître comme un état à part dans le sélecteur de rôle (aujourd'hui binaire Technicien/Administrateur), ou rester une fonctionnalité accessible depuis le rôle Administrateur ?
-- Si les sources retrouvées par le RAG pour une même question ont des natures différentes : concaténer tous les pré-prompts concernés, ou n'en retenir qu'un (lequel) ?
+> Taxonomie alternative explorée en parallèle (discussion du PO avec Claude AI, hors de cette session) — solution immédiate / procédure administrative / how-to technique / pédagogique — écartée après réflexion : « solution immédiate » relève du *style* de réponse, déjà couvert par l'US-045 (sélecteur technicien, pas une nature de fiche) ; « pédagogique » rejoint **Contextuel** (même registre explicatif/narratif).
 
-**Statut :** Idée validée en échange avec le PO — conception à affiner avant implémentation.
+> Décision actée au passage : les règles absolues et non négociables (RGPD, ne jamais demander un mot de passe utilisateur, rien ne sort du poste) n'ont pas leur place dans une nature de fiche — une nature ne s'active que si une fiche de ce type est retrouvée par le RAG, alors que ces règles doivent tenir *quelle que soit* la question. Elles appartiennent au pré-prompt **admin**, seule couche inconditionnelle. Pas encore écrites dans `system-prompt.md`.
+
+**Reste à faire (du contenu/config, plus du code) :**
+- Rédiger les 4 pré-prompts rédacteur (`data/nature-preprompts.json` vidé le 08/10 après l'abandon de l'US-059, voir ci-dessous — prêt à être rempli pour une démo de pré-prompt en clair, ex. « mets un maximum de dates » sur la nature contextuelle)
+- Tagger des fiches/KDocs avec `nature:` — 7 fiches le sont à ce jour (US-059)
+- Ajouter les règles absolues (RGPD/mots de passe/données) au pré-prompt admin
+
+**Statut :** Mécanisme livré. Reste en configuration/contenu, pas en développement.
 
 ---
 
@@ -52,6 +106,8 @@ Certains sujets transverses (Teams, Outlook, Mac, VPN...) ont une KB officielle 
 - Sert d'aide à la décomposition : suivre quelles feuilles ont déjà leur KDoc généré, lesquelles restent à faire
 
 **Point à trancher en conception :** l'invariant de l'US-046 (« une KB ne génère qu'un seul KDoc », voir `POST /kdocs/save` dans `back/server.js`) doit être assoupli spécifiquement pour ces KB-arbres — une même KB source doit pouvoir engendrer plusieurs KDocs (un par feuille). Pour toutes les autres KB (l'immense majorité), l'invariant actuel reste inchangé.
+
+**Deuxième cas d'usage envisagé, dans un esprit différent :** un arbre de *navigation* pour tout ce qui part de « Paramètres » Windows et/ou du Panneau de configuration — pas un diagnostic de panne (symptôme → test → branche), mais une arborescence répondant à « où est tel réglage, comment le changer ». Même mécanisme technique (JSON, feuilles → KDocs), mais la sémantique des nœuds diffère (catégories de menu plutôt que symptôme/test/résultat). À garder à l'esprit en conception pour que la structure JSON retenue ne soit pas conçue uniquement pour le cas diagnostic.
 
 **Statut :** Idée validée en échange avec le PO — conception à affiner (structure exacte du JSON, UI de décomposition côté admin) avant implémentation.
 

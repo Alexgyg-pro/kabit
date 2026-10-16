@@ -4,5 +4,11 @@
   },
   "tech-b": {
     "personalPrompt": "Je veux que tu me tutoies."
+  },
+  "redacteur": {
+    "techLevel": "boutique"
+  },
+  "admin": {
+    "techLevel": "desk"
   }
 }

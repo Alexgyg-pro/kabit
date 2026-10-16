@@ -54,6 +54,23 @@
   cursor: pointer;
 }
 
+.context-gauge-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+.context-gauge-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.context-gauge-fill[data-level="low"]    { background: #16a34a; }
+.context-gauge-fill[data-level="medium"] { background: #d97706; }
+.context-gauge-fill[data-level="high"]   { background: #dc2626; }
+
 .sidebar-controls .badges {
   flex-direction: column;
   align-items: stretch;
@@ -892,6 +909,15 @@
   font-size: 0.83rem;
   color: var(--text-muted);
   margin: 0;
+}
+
+.admin-section-subtitle {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 10px 0 0;
 }
 
 .admin-hint {

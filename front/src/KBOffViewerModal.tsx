@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { NOTE_MARKER, splitNote } from './note';
 
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
@@ -169,7 +170,7 @@ export default function KBOffViewerModal({ backend, groqApiKey, groqModel, file,
             <div className="kdoc-kb-content">
               {loading
                 ? <p className="admin-section-desc">Chargement…</p>
-                : <ReactMarkdown>{content}</ReactMarkdown>
+                : <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
               }
             </div>
           </div>

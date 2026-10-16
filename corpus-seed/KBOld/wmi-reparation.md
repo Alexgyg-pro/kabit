@@ -5,6 +5,7 @@ service: Tous services
 équipes: Boutique IT
 dernière_revision: 15/05/2026
 statut: Publié
+nature: technique
 commentaire: Tenter la méthode légère en premier ; la reconstruction complète du dépôt est réservée aux cas bloquants
 ---
 

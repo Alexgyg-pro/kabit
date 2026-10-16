@@ -149,7 +149,7 @@ app.get('/corpus/list', (req, res) => {
 
 // Résout un path de /corpus/file en chemin disque sûr.
 // Racine ("file.md") ou sous-dossier whitelisté ("KBOld/file.md") — jamais de traversal.
-const CORPUS_SUBFOLDERS = ['KBOld'];
+const CORPUS_SUBFOLDERS = ['KBOld', 'Arbres'];
 function resolveCorpusFilePath(filePath) {
   const subfolder = CORPUS_SUBFOLDERS.find(d => filePath.startsWith(d + '/'));
   if (subfolder) {
@@ -216,6 +216,27 @@ app.get('/corpus/kbold/list', (req, res) => {
   }
 });
 
+// GET /corpus/arbres/list — liste les fichiers JSON structurés (lookups, tables de décision) de Arbres/
+app.get('/corpus/arbres/list', (req, res) => {
+  try {
+    const dirPath = path.join(CORPUS_DIR, 'Arbres');
+    if (!fs.existsSync(dirPath)) return res.json([]);
+    const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.json'));
+    const list = files.map(file => {
+      let title = file.replace(/\.json$/, '');
+      try {
+        const data = JSON.parse(fs.readFileSync(path.join(dirPath, file), 'utf-8'));
+        if (data.title) title = data.title;
+      } catch { /* JSON invalide : on garde le nom de fichier */ }
+      return { path: `Arbres/${file}`, title };
+    });
+    res.json(list);
+  } catch (err) {
+    console.error('Erreur GET /corpus/arbres/list:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /corpus/add — ajoute une nouvelle procédure
 app.post('/corpus/add', (req, res) => {
   try {
@@ -272,6 +293,21 @@ function generateId(data, folder) {
 
 const KBOFFS_STATUSES = ['selected', 'out', 'duplicate', 'done'];
 const KDOCS_STATUSES  = ['testing', 'passed', 'rejected'];
+const NATURES         = ['contextuelle', 'procedure', 'technique', 'outil'];
+
+// US-060 : insère/remplace le champ `nature:` dans le frontmatter YAML d'un
+// KDoc généré, à partir de la nature déjà assignée à sa KBOffs source — pas
+// question de demander au LLM de le reporter lui-même dans le contenu généré
+// (pas fiable, cf. l'épisode du marqueur couleur).
+function injectNature(content, nature) {
+  if (!nature) return content;
+  const fm = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!fm) return content;
+  const body = /^nature:\s*.+$/m.test(fm[1])
+    ? fm[1].replace(/^nature:\s*.+$/m, `nature: ${nature}`)
+    : `${fm[1]}\nnature: ${nature}`;
+  return content.replace(fm[1], body);
+}
 
 // Titre lisible d'un fichier source : KDoc → frontmatter `title:`, KB → H1 `# …`
 function extractFileTitle(content, folder) {
@@ -321,7 +357,7 @@ app.get('/kdocs/references', (req, res) => {
 // POST /kdocs/references — ajoute ou met à jour une référence
 app.post('/kdocs/references', (req, res) => {
   try {
-    const { path: filePath, status, title } = req.body;
+    const { path: filePath, status, title, nature } = req.body;
     const folder = KDOCS_FOLDERS.find(d => filePath?.startsWith(d + '/'));
     if (!folder || !filePath || !status) {
       return res.status(400).json({ error: 'path et status requis ; dossier invalide' });
@@ -330,6 +366,9 @@ app.post('/kdocs/references', (req, res) => {
     const validSt   = folder === 'KBOffs' ? KBOFFS_STATUSES : KDOCS_STATUSES;
     if (!validSt.includes(status)) {
       return res.status(400).json({ error: `Statut invalide pour ${folder} : ${validSt.join(', ')}` });
+    }
+    if (nature && !NATURES.includes(nature)) {
+      return res.status(400).json({ error: `Nature invalide : ${NATURES.join(', ')}` });
     }
 
     const filename = filePath.slice(folder.length + 1);
@@ -341,8 +380,10 @@ app.post('/kdocs/references', (req, res) => {
       existing.status    = status;
       existing.updatedAt = now;
       if (title !== undefined) existing.title = title;
+      if (folder === 'KBOffs' && nature !== undefined) existing.nature = nature;
     } else {
       const entry = { id: generateId(data, folder), file: filename, status, updatedAt: now };
+      if (folder === 'KBOffs' && nature) entry.nature = nature;
       if (title) entry.title = title;
       data[section].push(entry);
     }
@@ -493,7 +534,8 @@ app.post('/kdocs/save', (req, res) => {
         updatedAt: now,
       });
     }
-    fs.writeFileSync(path.join(CORPUS_DIR, 'KDocs', filename), content, 'utf-8');
+    const finalContent = kb?.nature ? injectNature(content, kb.nature) : content;
+    fs.writeFileSync(path.join(CORPUS_DIR, 'KDocs', filename), finalContent, 'utf-8');
     if (kb) kb.kdoc = filename; // lier (ou re-lier) la KB à son unique KDoc
 
     writeReferences(data);
